@@ -118,7 +118,7 @@ The shared vocabulary. Still editable, but these are our canon.
 | Their refuges | Sietch | **Hollows / Warrens** |
 | The protagonist's house | House Atreides | **House Calder** |
 | The rival power | House Harkonnen | **House Vorrin** |
-| The galactic ruler | House Corrino / the Emperor | **House Corinthians** — the Imperial throne |
+| The galactic ruler | House Corrino / the Emperor | **House Korinth** — the Imperial throne |
 | The protagonist | Paul | **Eren**, called **the Seir** by the Shamen |
 
 ### Naming as politics
@@ -134,7 +134,7 @@ official name — while the world beneath it is always _Aridun_.
 
 A three-house triangle, in Herbert's tradition:
 
-- **House Corinthians** — the Imperial throne. Distant, decadent, and addicted
+- **House Korinth** — the Imperial throne. Distant, decadent, and addicted
   to Aurun. Owns the registry name _Arradius_.
 - **House Vorrin** — the cruel, industrial house working Aridun for Aurun.
   Quietly favoured by the throne.
