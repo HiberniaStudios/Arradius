@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import Ambient from '../audio/Ambient.js';
+import AudioManager from '../audio/AudioManager.js';
 import { enablePainterly, togglePainterly } from '../shaders/KuwaharaPostFX.js';
 
 // The War Map — Arradius seen from above. The first strategic screen: your seat,
@@ -210,8 +210,11 @@ export default class WorldMapScene extends Phaser.Scene {
   }
 
   createAudio() {
-    if (!this.game.ambient) this.game.ambient = new Ambient();
-    this.ambient = this.game.ambient;
+    if (!this.game.audio) this.game.audio = new AudioManager();
+    this.ambient = this.game.audio;
+    // The war map shares the Communications Room's relay atmosphere.
+    this.ambient.setMusicState('residency');
+    this.ambient.setAmbience('map');
     const startOnce = () => this.ambient.start();
     this.input.once('pointerdown', startOnce);
     this.input.keyboard.once('keydown', startOnce);
