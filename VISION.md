@@ -1,6 +1,6 @@
 # Vision
 
-> **Working title:** _(TBD)_
+> **Working title:** _Arradius_ (front-runner — shortlist in World & characters)
 > **Logline:** An atmospheric, painterly exploration-platformer wrapped in a
 > strategy/adventure meta-layer, set in an original desert world that wears
 > Frank Herbert's thematic DNA — prophecy, ecology, water-as-life, and the slow
@@ -104,20 +104,23 @@ _The current procedural chiptune track is a stand-in and will be replaced._
 
 ---
 
-## World & characters — naming palette _(working)_
+## World & characters — naming palette _(locked)_
 
-Placeholders to give us a shared vocabulary. Swap any of these.
+The shared vocabulary. Still editable, but these are our canon.
 
-| Role | Dune analogue | Working name |
+| Role | Dune analogue | Name |
 | --- | --- | --- |
-| The desert world | Arrakis | **Sarroch** _(working)_ |
-| The precious substance | Spice / water | **Aurun** _(working)_ — the glowing bloom |
-| The deep monsters | Sandworms | **Leviathans** / **the Coil** _(working)_ |
-| Desert nomads | Fremen | **the Ashborn** _(working)_ |
-| Their refuges | Sietch | **hollows** / **warrens** _(working)_ |
-| The protagonist's house | House Atreides | **House —** _(TBD)_ |
-| The rival power | House Harkonnen | **the Carrion** _(working)_ |
-| The protagonist | Paul | a prescient heir _(TBD)_ |
+| The desert world | Arrakis | **Aridun** |
+| The precious substance | Spice / water | **Aurun** — the glowing bloom |
+| The deep monsters | Sandworms | **the Sleepers** |
+| Desert nomads | Fremen | **the Shamen** |
+| Their refuges | Sietch | **Hollows / Warrens** |
+| The protagonist's house | House Atreides | **House Calder** |
+| The rival power | House Harkonnen | **House Vorrin** |
+| The protagonist | Paul | **Eren**, called **the Seer** by the Shamen |
+
+**Working title shortlist:** ⭐**Arradius** (front-runner) · _Aridun_ · _Erg_ ·
+_The Greening_ · _Dunesong_ · _Aurun_
 
 ---
 
