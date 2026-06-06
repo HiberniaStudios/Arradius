@@ -10,6 +10,13 @@ export default class BootScene extends Phaser.Scene {
     super('BootScene');
   }
 
+  preload() {
+    // Optional painted-hall backdrop. If absent, scenes fall back to procedural
+    // art — the loaderror is swallowed so a missing file never blocks boot.
+    this.load.image('hallBg', 'hall.png');
+    this.load.on('loaderror', () => {});
+  }
+
   create() {
     this.makeSky();
     this.makeGlow();

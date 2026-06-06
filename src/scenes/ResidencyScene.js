@@ -11,13 +11,17 @@ const GOLD = 0xc9a24a;
 const GOLD_S = '#c9a24a';
 const CREAM = '#e8d8c0';
 
+// Experiment: use the painted PNG backdrop for the hall instead of the
+// procedural art. Set false to fall back to the fully procedural hall (which
+// is left completely intact). Auto-falls back if the texture failed to load.
+const USE_HALL_BG = true;
+
 const LOCATIONS = {
   hall: {
     name: 'The Residency',
     flavor:
       'The great hall of House Calder at Saltspire. Lamplight and slow dust, and the weight of a world just handed to your house.',
     feature: 'hall',
-    exits: ['court', 'war', 'veil', 'infirmary', 'yard', 'quarters', 'deck'],
   },
   court: {
     name: 'The Court',
@@ -28,6 +32,8 @@ const LOCATIONS = {
       '“Aridun will test us, Eren. Hold to its people and we hold to the world.”',
       '“Korinth did not gift us this fief out of love. Watch the dunes — and watch our own halls.”',
     ],
+    // The throne hall is the deeper hub; its wings branch onward.
+    exits: ['war', 'yard', 'quarters', 'deck'],
   },
   war: {
     name: 'The War Room',
@@ -81,6 +87,21 @@ const LOCATIONS = {
   },
 };
 
+// Spatial adjacency — which door (direction) of each room leads where. The
+// player walks the palace by clicking doors, not picking from a menu. Edit this
+// to re-route the map; `forward` is the central arch, `left`/`right` the side
+// doors, `back` the way you came.
+const EXITS = {
+  hall: { left: 'veil', right: 'infirmary', forward: 'court' },
+  court: { back: 'hall' },
+  veil: { back: 'hall' },
+  infirmary: { back: 'hall' },
+  war: { back: 'court' },
+  yard: { back: 'court' },
+  quarters: { back: 'court' },
+  deck: { back: 'court' },
+};
+
 export default class ResidencyScene extends Phaser.Scene {
   constructor() {
     super('ResidencyScene');
@@ -126,7 +147,11 @@ export default class ResidencyScene extends Phaser.Scene {
 
     this.createAudio();
     this.createFilterToggle();
-    this.input.keyboard.on('keydown-ESC', () => this.showLocation('hall'));
+    // ESC walks back one room (toward the hall).
+    this.input.keyboard.on('keydown-ESC', () => {
+      const back = EXITS[this.current] && EXITS[this.current].back;
+      if (back) this.travelTo(back);
+    });
     this.input.keyboard.on('keydown-K', () => {
       const on = togglePainterly(this);
       if (this.filterCircle) this.filterCircle.setAlpha(on ? 1 : 0.45);
@@ -193,13 +218,6 @@ export default class ResidencyScene extends Phaser.Scene {
 
   // --- Navigation -----------------------------------------------------------
 
-  showLocation(key) {
-    if (this.time.now < this.inputReadyAt) return;
-    this.current = key;
-    this.sayIndex = 0;
-    this.renderLocation();
-  }
-
   goTo(scene) {
     if (this.time.now < this.inputReadyAt) return;
     this.cameras.main.fadeOut(500, 6, 4, 12);
@@ -246,18 +264,43 @@ export default class ResidencyScene extends Phaser.Scene {
   renderLocation() {
     if (!this.bd) return;
     this.clearDynamic();
+    this.doorHotspots = {};            // populated by sceneHall / sceneShell
+    this.captionText = null;           // recreated by renderHallCaption (hall only)
     const { width, height } = this.scale;
     const loc = LOCATIONS[this.current];
 
     const barTop = Math.round(height * 0.72);
     const floorY = Math.round(barTop * 0.80);
 
-    // Painted scene.
+    // Painted scene — full-canvas PNG backdrop for the hall, else procedural.
     this.bd.clear();
-    this.drawScene(loc, width, floorY, barTop);
+    const useBg = USE_HALL_BG && loc.feature === 'hall' && this.textures.exists('hallBg');
+    if (useBg) {
+      this.showHallBackground(width, height);
+    } else {
+      if (this.hallBgImg) this.hallBgImg.setVisible(false);
+      this.drawScene(loc, width, floorY, barTop);
+    }
+
+    this.bar.clear();
+    if (useBg) {
+      // Slim translucent caption strip so the painted foreground stays visible.
+      const bt = Math.round(height * 0.86);
+      this.bar.fillStyle(0x0a0610, 0.0);
+      this.bar.fillRect(0, bt, width, height - bt);
+      const grad = 5;
+      for (let i = 0; i < grad; i++) {
+        this.bar.fillStyle(0x0a0610, 0.52 * ((i + 1) / grad));
+        this.bar.fillRect(0, bt + ((height - bt) * i) / grad, width, (height - bt) / grad + 1);
+      }
+      this.bar.fillStyle(GOLD, 0.3);
+      this.bar.fillRect(0, bt, width, 1);
+      this.createDoorZones();
+      this.renderHallCaption(loc, width, height, bt);
+      return;
+    }
 
     // Bottom UI bar — aged stone character with ornate corner details.
-    this.bar.clear();
     this.bar.fillStyle(0x15101e, 1);
     this.bar.fillRect(0, barTop, width, height - barTop);
     // Warm inner band to break flatness.
@@ -285,42 +328,86 @@ export default class ResidencyScene extends Phaser.Scene {
     this.bar.fillRect(width - cs - 8, barTop, cs + 8, 2);
     this.bar.fillRect(width - 2, barTop, 2, cs + 8);
 
-    if (this.current === 'hall') this.renderHallMenu(loc, width, height, barTop);
+    // Clickable door zones over the painted doorways.
+    this.createDoorZones();
+
+    if (loc.feature === 'hall') this.renderHallCaption(loc, width, height, barTop);
     else this.renderRoomBar(loc, width, height, barTop);
   }
 
-  // --- Hall (hub menu) ------------------------------------------------------
+  // --- Painted backdrop (experimental) --------------------------------------
 
-  renderHallMenu(loc, width, height, barTop) {
-    const title = this.add
-      .text(width / 2, barTop + 14, 'Where to, my lord?', {
-        fontFamily: 'Georgia, serif',
-        fontSize: '18px',
-        color: CREAM,
-      })
-      .setOrigin(0.5, 0)
-      .setDepth(102);
-    this.dynamic.push(title);
+  /** Draw the full-canvas PNG backdrop and place door hotspots over its doorways. */
+  showHallBackground(width, height) {
+    if (!this.hallBgImg) {
+      this.hallBgImg = this.add.image(0, 0, 'hallBg').setOrigin(0, 0).setDepth(-60);
+    }
+    this.hallBgImg.setVisible(true).setDisplaySize(width, height); // 16:9 → 16:9, no stretch
 
-    const items = loc.exits;
-    const cols = width < 560 ? 2 : 4;
-    const rows = Math.ceil(items.length / cols);
-    const areaTop = barTop + 44;
-    const areaH = height - areaTop - 14;
-    const bw = Math.min((width - 40) / cols - 12, 180);
-    const bh = Math.min(areaH / rows - 8, 42);
+    // Hotspots as fractions of the full canvas (tweak to match the art).
+    const L = EXITS.hall.left, R = EXITS.hall.right, F = EXITS.hall.forward;
+    this.doorHotspots = {
+      forward: { x: width * 0.43, y: height * 0.22, w: width * 0.14, h: height * 0.38, key: F, label: LOCATIONS[F].name },
+      left:    { x: width * 0.18, y: height * 0.40, w: width * 0.075, h: height * 0.28, key: L, label: LOCATIONS[L].name },
+      right:   { x: width * 0.745, y: height * 0.40, w: width * 0.075, h: height * 0.28, key: R, label: LOCATIONS[R].name },
+    };
+  }
 
-    items.forEach((key, i) => {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-      const totalW = cols * (bw + 12) - 12;
-      const x = (width - totalW) / 2 + col * (bw + 12) + bw / 2;
-      const y = areaTop + row * (bh + 8) + bh / 2;
-      this.makeButton(x, y, bw, bh, LOCATIONS[key].name, () =>
-        this.showLocation(key)
-      );
+  // --- Spatial navigation (doors) -------------------------------------------
+
+  /** Invisible interactive zones over each painted doorway. */
+  createDoorZones() {
+    Object.values(this.doorHotspots || {}).forEach((hs) => {
+      const z = this.add
+        .zone(hs.x + hs.w / 2, hs.y + hs.h / 2, hs.w, hs.h)
+        .setInteractive({ useHandCursor: true })
+        .setDepth(60);
+      z.on('pointerover', () => this.setCaption(`${hs.label}  ›`));
+      z.on('pointerout', () => this.setCaption(this.defaultCaption));
+      z.on('pointerdown', (p, x, y, e) => {
+        e?.stopPropagation();
+        this.travelTo(hs.key);
+      });
+      this.dynamic.push(z);
     });
   }
+
+  setCaption(text) {
+    if (this.captionText) this.captionText.setText(text);
+  }
+
+  /** Walk through a door — a brief fade for a sense of moving rooms. */
+  travelTo(key) {
+    if (this.time.now < this.inputReadyAt || this.travelling) return;
+    this.travelling = true;
+    this.cameras.main.fadeOut(200, 6, 4, 12);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.current = key;
+      this.sayIndex = 0;
+      this.renderLocation();
+      this.cameras.main.fadeIn(220, 6, 4, 12);
+      this.travelling = false;
+      this.inputReadyAt = this.time.now + 250;
+    });
+  }
+
+  // --- Hall caption ---------------------------------------------------------
+
+  renderHallCaption(loc, width, height, barTop) {
+    this.defaultCaption = 'Three doors lead on — the side halls, and the throne beyond the arch.';
+    this.captionText = this.add
+      .text(width / 2, barTop + (height - barTop) / 2, this.defaultCaption, {
+        fontFamily: 'Georgia, serif',
+        fontSize: '17px',
+        color: CREAM,
+        align: 'center',
+        wordWrap: { width: width * 0.7 },
+      })
+      .setOrigin(0.5)
+      .setDepth(102);
+    this.dynamic.push(this.captionText);
+  }
+
 
   // --- Room bar (portrait + dialogue + actions) -----------------------------
 
@@ -346,23 +433,10 @@ export default class ResidencyScene extends Phaser.Scene {
       .setDepth(102);
     this.dynamic.push(nameText);
 
-    // Line / flavour.
-    const line = loc.who ? (loc.say ? loc.say[this.sayIndex] : '') : loc.flavor || '';
-    const actionsW = 210;
-    const lineText = this.add
-      .text(textLeft, padY + 30, line, {
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '15px',
-        color: '#d8c8e0',
-        wordWrap: { width: width - textLeft - actionsW - 24 },
-      })
-      .setDepth(102);
-    this.dynamic.push(lineText);
-
-    // Actions (right-aligned stack).
-    const actions = [];
+    // Choices: speak, scene-actions (World Map / Expedition), onward doors, back.
+    const choices = [];
     if (loc.who && loc.say && loc.say.length > 1) {
-      actions.push({
+      choices.push({
         label: `Speak with ${loc.who}`,
         onClick: () => {
           this.sayIndex = (this.sayIndex + 1) % loc.say.length;
@@ -371,18 +445,44 @@ export default class ResidencyScene extends Phaser.Scene {
       });
     }
     (loc.actions || []).forEach((a) =>
-      actions.push({ label: a.label, onClick: () => this.goTo(a.scene) })
+      choices.push({ label: a.label, onClick: () => this.goTo(a.scene) })
     );
-    actions.push({ label: '‹ The Residency', onClick: () => this.showLocation('hall') });
+    (loc.exits || []).forEach((key) =>
+      choices.push({ label: `${LOCATIONS[key].name}  ›`, onClick: () => this.travelTo(key) })
+    );
+    const back = (EXITS[this.current] && EXITS[this.current].back) || 'hall';
+    choices.push({ label: `‹ ${LOCATIONS[back].name}`, onClick: () => this.travelTo(back) });
 
-    const bw = Math.min(actionsW, width * 0.5);
-    const bh = 38;
-    const totalH = actions.length * (bh + 8) - 8;
-    let by = barTop + (height - barTop - totalH) / 2 + bh / 2;
-    const bx = width - 16 - bw / 2;
-    actions.forEach((a) => {
-      this.makeButton(bx, by, bw, bh, a.label, a.onClick);
-      by += bh + 8;
+    // Lay the choices out in a 1- or 2-column grid in the bar's right area.
+    const ncols = choices.length > 3 ? 2 : 1;
+    const bh = 34;
+    const gapX = 10;
+    const gapY = 7;
+    const bw = Math.min(168, (width * 0.5) / ncols - gapX);
+    const nrows = Math.ceil(choices.length / ncols);
+    const gridW = ncols * bw + (ncols - 1) * gapX;
+    const gridH = nrows * bh + (nrows - 1) * gapY;
+    const gridLeft = width - 16 - gridW;
+    const gridTop = barTop + (height - barTop - gridH) / 2;
+
+    // Line / flavour — wrap up to where the choice grid begins.
+    const line = loc.who ? (loc.say ? loc.say[this.sayIndex] : '') : loc.flavor || '';
+    const lineText = this.add
+      .text(textLeft, padY + 30, line, {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '15px',
+        color: '#d8c8e0',
+        wordWrap: { width: gridLeft - textLeft - 16 },
+      })
+      .setDepth(102);
+    this.dynamic.push(lineText);
+
+    choices.forEach((c, i) => {
+      const col = i % ncols;
+      const row = Math.floor(i / ncols);
+      const x = gridLeft + col * (bw + gapX) + bw / 2;
+      const y = gridTop + row * (bh + gapY) + bh / 2;
+      this.makeButton(x, y, bw, bh, c.label, c.onClick);
     });
   }
 
@@ -648,6 +748,17 @@ export default class ResidencyScene extends Phaser.Scene {
     const bwBot = Math.round(floorY * 0.66);     // far floor meets back wall here
     const bwTop = Math.round(floorY * 0.10);     // top of the back wall
 
+    // Map a point onto a side wall — shared by panels, banding, sconces, doors.
+    // sign<0 = left wall, >0 = right. d: depth 0(near)→1(back wall). v: 0 top→1 floor.
+    const wallMap = (sign, d, v) => {
+      const fx = sign < 0 ? 0 : width;
+      const bx = sign < 0 ? bwL : bwR;
+      const x = fx + (bx - fx) * d;
+      const ty = bwTop * d;                          // ceiling line at depth d
+      const by = sceneBot + (bwBot - sceneBot) * d;  // floor line at depth d
+      return { x, y: ty + (by - ty) * v };
+    };
+
     // CEILING trapezoid — full-width top edge → back-wall top edge.
     g.fillStyle(0x2e1608, 1);
     g.fillPoints([
@@ -681,14 +792,72 @@ export default class ResidencyScene extends Phaser.Scene {
     g.fillTriangle(0, 0, 0, sceneBot, Math.round(width * 0.05), Math.round(sceneBot * 0.5));
     g.fillTriangle(width, 0, width, sceneBot, Math.round(width * 0.95), Math.round(sceneBot * 0.5));
 
-    // FLOOR trapezoid — front bottom edge → back-wall bottom edge.
-    g.fillStyle(0x3e2010, 1);
-    g.fillPoints([
-      { x: 0, y: sceneBot }, { x: width, y: sceneBot },
-      { x: bwR, y: bwBot }, { x: bwL, y: bwBot },
-    ], true);
+    // ── Wall detailing: stone banding, recessed panels, sconces ──────────────
+    // Drawn on the wall face before the columns, so columns stand in front.
+    [-1, 1].forEach((sign) => {
+      // Faint horizontal stone-course lines, full wall, in perspective.
+      g.lineStyle(1, 0x0e0804, 0.2);
+      [0.16, 0.34, 0.52, 0.70, 0.86].forEach((v) => {
+        const a = wallMap(sign, 0.02, v);
+        const b = wallMap(sign, 0.98, v);
+        g.lineBetween(a.x, a.y, b.x, b.y);
+      });
+
+      // Shallow recessed panel in the front bay (the deeper bay holds the door).
+      [[0.16, 0.40]].forEach(([d0, d1]) => {
+        const quad = [
+          wallMap(sign, d0, 0.22), wallMap(sign, d1, 0.22),
+          wallMap(sign, d1, 0.74), wallMap(sign, d0, 0.74),
+        ];
+        g.fillStyle(0x1a1008, 0.4);                 // recessed depth
+        g.fillPoints(quad, true);
+        g.lineStyle(1.5, GOLD, 0.3);                // outer border
+        g.strokePoints(quad, true, true);
+        g.lineStyle(1, 0xc8822a, 0.2);              // top + near-edge rim highlight
+        g.lineBetween(quad[0].x, quad[0].y, quad[1].x, quad[1].y);
+        g.lineBetween(quad[0].x, quad[0].y, quad[3].x, quad[3].y);
+      });
+
+      // Wall torches — iron bracket, layered flame, warm glow + cast light.
+      [0.10, 0.42].forEach((d) => {
+        const p = wallMap(sign, d, 0.34);
+        const s = 1 - d * 0.55;                     // shrink with depth
+        // Warm light washing down the wall below the torch.
+        const cl = wallMap(sign, d - 0.05, 0.74), cr = wallMap(sign, d + 0.05, 0.74);
+        g.fillStyle(0xffcc66, 0.07);
+        g.fillTriangle(p.x, p.y + 4 * s, cl.x, cl.y, cr.x, cr.y);
+        // Iron bracket + cup.
+        g.fillStyle(0x241e18, 1);
+        g.fillRect(p.x - 1.5 * s, p.y - 2 * s, 3 * s, 14 * s);
+        g.fillStyle(0x3a3028, 1);
+        g.fillEllipse(p.x, p.y - 2 * s, 11 * s, 5 * s);
+        // Flame, outer → core.
+        const fy = p.y - 5 * s;
+        g.fillStyle(0xe2541a, 0.95); g.fillEllipse(p.x, fy - 9 * s, 11 * s, 24 * s);
+        g.fillStyle(0xff9a2a, 1);    g.fillEllipse(p.x, fy - 10 * s, 7 * s, 17 * s);
+        g.fillStyle(0xffd24a, 1);    g.fillEllipse(p.x, fy - 10 * s, 4 * s, 11 * s);
+        g.fillStyle(0xfff0c0, 1);    g.fillEllipse(p.x, fy - 8 * s, 2 * s, 6 * s);
+        this.addGlow(p.x, fy - 8 * s, 82 * s, 0xffaa44, 0.5);
+      });
+    });
+
+    // FLOOR — three depth-graded brightness zones (dark near → warm by the arch).
+    const floorHW = (t) => width / 2 + (bwW / 2 - width / 2) * t;   // half-width at depth t
+    const floorYt = (t) => sceneBot + (bwBot - sceneBot) * t;       // t: 0 front → 1 back
+    const floorBand = (t0, t1, col) => {
+      g.fillStyle(col, 1);
+      g.fillPoints([
+        { x: cx - floorHW(t0), y: floorYt(t0) }, { x: cx + floorHW(t0), y: floorYt(t0) },
+        { x: cx + floorHW(t1), y: floorYt(t1) }, { x: cx - floorHW(t1), y: floorYt(t1) },
+      ], true);
+    };
+    floorBand(0.0, 0.20, 0x3d2510);   // far: warmest, lit by the arch
+    floorBand(0.20, 0.55, 0x2a1a0c);  // mid: neutral warm stone
+    floorBand(0.55, 1.0, 0x1a1008);   // near: darkest, in shadow
     g.fillStyle(0x5a3020, 1);
     g.fillRect(0, sceneBot - 2, width, 2);
+    // Arch light pooling on the floor (radial, at the back-wall threshold).
+    this.addGlow(cx, bwBot + 18, width * 0.55, 0xc8822a, 0.16);
     // Receding floor courses (parallel to the front edge, narrowing with depth).
     for (let r = 1; r <= 6; r++) {
       const t  = r / 7;
@@ -706,6 +875,49 @@ export default class ResidencyScene extends Phaser.Scene {
       g.lineTo(cx + k * (bwW / 7), bwBot);
       g.strokePath();
     }
+
+    // ── Carpet runner — crimson, bottom-centre to the arch threshold ──────────
+    const runBotHW = width * 0.11;   // ~22% wide at the viewer
+    const runTopHW = width * 0.025;  // ~5% near the arch
+    const runTopY = bwBot;
+    const runPts = (sh) => [
+      { x: cx - runBotHW - sh, y: sceneBot }, { x: cx + runBotHW + sh, y: sceneBot },
+      { x: cx + runTopHW + sh * 0.25, y: runTopY }, { x: cx - runTopHW - sh * 0.25, y: runTopY },
+    ];
+    g.fillStyle(0x2a0810, 1);                       // worn-edge underlay (offset, darker)
+    g.fillPoints(runPts(2), true);
+    g.fillStyle(0x5a1020, 1);                       // deep crimson base
+    g.fillPoints(runPts(0), true);
+    g.fillStyle(0x3a0a14, 0.55);                    // shadowed near end
+    g.fillPoints([
+      { x: cx - runBotHW, y: sceneBot }, { x: cx + runBotHW, y: sceneBot },
+      { x: cx + (runBotHW * 0.55 + runTopHW * 0.45), y: floorYt(0.45) },
+      { x: cx - (runBotHW * 0.55 + runTopHW * 0.45), y: floorYt(0.45) },
+    ], true);
+    g.fillStyle(GOLD, 0.5);                         // gold border trim, both edges
+    const trim = 4;
+    g.fillPoints([
+      { x: cx - runBotHW, y: sceneBot }, { x: cx - runBotHW + trim, y: sceneBot },
+      { x: cx - runTopHW + trim * 0.3, y: runTopY }, { x: cx - runTopHW, y: runTopY },
+    ], true);
+    g.fillPoints([
+      { x: cx + runBotHW - trim, y: sceneBot }, { x: cx + runBotHW, y: sceneBot },
+      { x: cx + runTopHW, y: runTopY }, { x: cx + runTopHW - trim * 0.3, y: runTopY },
+    ], true);
+    this.addGlow(cx, runTopY + 6, width * 0.16, 0xc8822a, 0.15); // brighter at the arch end
+    // Woven House sigil — gold diamond, foreshortened on the floor.
+    const emY = floorYt(0.62);
+    const emW = (runBotHW * 0.34) * 0.85;
+    const emH = emW * 0.62;                          // squashed for floor perspective
+    g.fillStyle(GOLD, 0.92);
+    g.fillTriangle(cx, emY - emH, cx + emW, emY, cx, emY + emH);
+    g.fillTriangle(cx, emY - emH, cx - emW, emY, cx, emY + emH);
+    g.fillStyle(0x5a1020, 1);                        // crimson cut-out
+    g.fillTriangle(cx, emY - emH * 0.6, cx + emW * 0.62, emY, cx, emY + emH * 0.6);
+    g.fillTriangle(cx, emY - emH * 0.6, cx - emW * 0.62, emY, cx, emY + emH * 0.6);
+    g.fillStyle(GOLD, 1);                            // cross-bar + centre jewel
+    g.fillRect(cx - emW * 0.78, emY - emH * 0.12, emW * 1.56, emH * 0.24);
+    g.fillCircle(cx, emY, emH * 0.34);
 
     // BACK WALL face.
     g.fillStyle(0x46260f, 1);
@@ -742,22 +954,100 @@ export default class ResidencyScene extends Phaser.Scene {
     g.fillTriangle(archL, archBot, archR, archBot, cx + width * 0.22, sceneBot);
     g.fillTriangle(archL, archBot, archR, archBot, cx - width * 0.22, sceneBot);
 
+    // ── Side doors — modest arched openings cut FLUSH into each wall ──────────
+    // Built in (depth, height) wall coordinates and mapped onto the wall plane,
+    // so they lie in the wall rather than sitting out from it. Set deeper, in the
+    // bay by the second pair of columns. Drawn before the columns so a column can
+    // stand in front of a doorway (as in a real colonnade).
+    const sideDoor = (sign) => {
+      const map = (d, v) => wallMap(sign, d, v);        // share the wall mapping
+      const dA = 0.68, dB = 0.80;                       // deeper bay, clear of columns
+      const vFloor = 0.99, vSpring = 0.60, vPeak = 0.46; // a modest, shallow arch
+      // Closed door outline: floor edge then arched top; ed/ev expand for frames.
+      const outline = (ed, ev) => {
+        const a = dA - ed, b = dB + ed;
+        const sp = vSpring - ev, pk = vPeak - ev;
+        const pts = [map(a, vFloor), map(b, vFloor)];
+        const N = 9;
+        for (let i = 0; i <= N; i++) {
+          const t = i / N;                              // far spring → crown → near spring
+          pts.push(map(b + (a - b) * t, sp - (sp - pk) * Math.sin(Math.PI * t)));
+        }
+        return pts;
+      };
+      g.fillStyle(0x6a4626, 1);                         // sandstone frame
+      g.fillPoints(outline(0.018, 0.035), true);
+      g.fillStyle(0x3a2614, 1);                         // inner reveal (wall thickness)
+      g.fillPoints(outline(0.006, 0.012), true);
+      g.fillStyle(0x130d08, 1);                         // dark opening
+      g.fillPoints(outline(-0.004, -0.004), true);
+      // Faint warm spill from within (modest, not grand).
+      const c = map((dA + dB) / 2, (vFloor + vPeak) / 2);
+      const wpx = Math.abs(map(dA, vFloor).x - map(dB, vFloor).x);
+      this.addGlow(c.x, c.y, wpx * 3.0, 0xffce86, 0.16);
+      // Hotspot bounding box (sampled corners + crown).
+      const corners = [
+        map(dA, vFloor), map(dB, vFloor),
+        map(dA, vSpring), map(dB, vSpring), map((dA + dB) / 2, vPeak),
+      ];
+      const xs = corners.map((p) => p.x), ys = corners.map((p) => p.y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+      return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+    };
+
+    this.doorHotspots = {
+      left:    { ...sideDoor(-1), key: EXITS.hall.left,  label: LOCATIONS[EXITS.hall.left].name },
+      right:   { ...sideDoor(+1), key: EXITS.hall.right, label: LOCATIONS[EXITS.hall.right].name },
+      forward: { x: archL, y: archTop, w: archW, h: archH, key: EXITS.hall.forward, label: LOCATIONS[EXITS.hall.forward].name },
+    };
+
     // ── Columns — colonnade receding with the SAME box mapping as the walls ───
     // Each column spans floor→ceiling AT ITS DEPTH: the floor line is
     // sceneBot→bwBot, the ceiling line is 0→bwTop. Horizontal offset + width
     // shrink by the wall's horizontal scale, so the row converges with the room.
     const hBack = bwW / width;                    // horizontal scale at back wall
     const FRONT_OFF = width * 0.42;
-    [0.04, 0.50, 0.78].forEach((d) => {
+    const colData = [0.04, 0.50, 0.78].map((d) => {
       const wScale = 1 - d * (1 - hBack);
       const offX   = Math.round(FRONT_OFF * wScale);
-      const baseY  = Math.round(sceneBot + (bwBot - sceneBot) * d); // floor at depth d
-      const ceilY  = Math.round(bwTop * d);                          // ceiling at depth d
-      const capH   = Math.round(26 * wScale);                        // matches column()
-      const topY   = ceilY + capH;                                   // capital meets ceiling
-      this.column(g, cx - offX, topY, baseY, d, wScale, +1); // left cols lit toward centre
-      this.column(g, cx + offX, topY, baseY, d, wScale, -1); // right cols lit toward centre
+      const baseY  = Math.round(sceneBot + (bwBot - sceneBot) * d);  // floor at depth d
+      const topY   = Math.round(bwTop * d) + Math.round(26 * wScale); // capital meets ceiling
+      return { d, wScale, offX, baseY, topY };
     });
+    // Floor reflections — faint, fading mirror of each column on the polished floor.
+    colData.forEach(({ offX, baseY, wScale, d }) => {
+      const hw = Math.round(46 * wScale * 0.55);
+      const reflLen = Math.round((sceneBot - baseY) * 0.85 + 8);
+      [cx - offX, cx + offX].forEach((x) => {
+        for (let i = 0; i < 5; i++) {
+          g.fillStyle(0xc8884a, 0.12 * (1 - i / 5) * (1 - d * 0.4));
+          g.fillRect(x - hw, Math.round(baseY + (reflLen * i) / 5), hw * 2, Math.ceil(reflLen / 5) + 1);
+        }
+      });
+    });
+    // Columns (drawn over their reflections).
+    colData.forEach(({ d, wScale, offX, baseY, topY }) => {
+      this.column(g, cx - offX, topY, baseY, d, wScale, +1); // left lit toward centre
+      this.column(g, cx + offX, topY, baseY, d, wScale, -1); // right lit toward centre
+    });
+
+    // ── Foreground urns — dark glazed vases flanking the entrance ─────────────
+    const urn = (ux, uy, us) => {
+      // Floor reflection (faint, flipped sheen below).
+      g.fillStyle(0x000000, 0.22);
+      g.fillEllipse(ux, uy + 4 * us, 56 * us, 10 * us);
+      // Body, foot, neck, rim.
+      g.fillStyle(0x171210, 1); g.fillEllipse(ux, uy - 30 * us, 42 * us, 52 * us);
+      g.fillStyle(0x241c16, 1); g.fillEllipse(ux - 9 * us, uy - 36 * us, 16 * us, 28 * us); // sheen
+      g.fillStyle(0x100c0a, 1); g.fillEllipse(ux, uy - 2 * us, 30 * us, 9 * us);            // foot shadow
+      g.fillStyle(0x1b1512, 1); g.fillRect(ux - 13 * us, uy - 62 * us, 26 * us, 18 * us);   // neck
+      g.fillStyle(0x342820, 1); g.fillEllipse(ux, uy - 62 * us, 32 * us, 9 * us);           // rim
+      g.fillStyle(0x5a4632, 0.8); g.fillEllipse(ux, uy - 63 * us, 30 * us, 5 * us);         // rim light
+      g.fillStyle(0xc8884a, 0.25); g.fillEllipse(ux - 11 * us, uy - 40 * us, 5 * us, 16 * us); // torch glint
+    };
+    urn(cx - width * 0.32, sceneBot - 2, 1.15);
+    urn(cx + width * 0.32, sceneBot - 2, 1.15);
 
     // ── Banners — mounted on the back wall, neatly flanking the door ──────────
     const bScale = 0.7;

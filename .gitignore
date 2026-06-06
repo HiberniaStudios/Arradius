@@ -16,3 +16,6 @@ npm-debug.log*
 .DS_Store
 .vscode/
 .idea/
+
+# Working-source art drops (the served copy lives in public/)
+src/*.png
