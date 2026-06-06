@@ -34,4 +34,14 @@ const config = {
 };
 
 // eslint-disable-next-line no-new
-window.__game = new Phaser.Game(config);
+const game = new Phaser.Game(config);
+window.__game = game;
+
+// Only the focused tab plays audio — prevents stacked soundtracks when the game
+// is open in several tabs.
+document.addEventListener('visibilitychange', () => {
+  const audio = game.audio;
+  if (!audio) return;
+  if (document.hidden) audio.suspendForHidden();
+  else audio.resumeIfVisible();
+});
