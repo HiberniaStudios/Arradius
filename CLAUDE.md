@@ -134,9 +134,12 @@ helpers no-op on the canvas renderer.
 - **Audio needs a user gesture** — sound starts on the first click/keypress by
   design (browser autoplay policy), not on load.
 - **The soundscape is deliberately quiet, dark, and "breathing"** — low master
-  level, low filter cutoffs, a ~36s swell on the music bus. This is a tuned
-  aesthetic ("atmosphere, not a score on top"); tuning knobs are commented
+  level, low filter cutoffs, long co-prime swells on the music bus. This is a
+  tuned aesthetic ("atmosphere, not a score on top"); tuning knobs are commented
   inline in `AudioManager.js`. Don't brighten/loudness-maximize without intent.
+- **Standing preference: keep audio loudness conservative (err quiet).** It has
+  repeatedly come back as "too loud"; default to lower levels (master `this.level`
+  is the global knob, currently `0.14`) and only raise on explicit request.
 - **No tests / no lint config** — `npm run build` is the available check.
 - **Scaffold leftovers:** `package.json` name and the `index.html` `<title>`
   still say "2D Platformer".
