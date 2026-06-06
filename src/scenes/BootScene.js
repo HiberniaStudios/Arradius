@@ -12,9 +12,9 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create() {
+    // Player and coin use generated sprites; ground/ledges are drawn as
+    // resizable rectangles directly in GameScene so they adapt to any screen.
     this.makeRectTexture('player', 28, 40, 0x4fc3f7, 0x29b6f6);
-    this.makeRectTexture('ground', 64, 64, 0x37474f, 0x263238);
-    this.makeRectTexture('platform', 96, 24, 0x6d4c41, 0x4e342e);
     this.makeCoinTexture('coin', 18, 0xffd54f, 0xffb300);
 
     this.scene.start('GameScene');

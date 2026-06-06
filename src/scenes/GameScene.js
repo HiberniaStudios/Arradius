@@ -1,12 +1,32 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT } from '../main.js';
 
-const PLAYER_SPEED = 220;
-const JUMP_VELOCITY = 520;
+// Movement feel is derived from the live screen size in layout(), so the game
+// plays consistently whether the canvas is a short landscape phone or a tall
+// portrait one. These constants tune that derivation.
+const JUMP_HEIGHT_RATIO = 0.32; // peak jump height as a fraction of screen height
+const GRAVITY = 900;
+
+// Level geometry expressed as fractions of the screen (0..1), so it scales to
+// any resolution or aspect ratio. fx/fy are centre positions; fw is width.
+const GROUND_HEIGHT = 44;
+const PLATFORM_HEIGHT = 18;
+const LEDGES = [
+  { fx: 0.2, fy: 0.72, fw: 0.22 },
+  { fx: 0.52, fy: 0.56, fw: 0.22 },
+  { fx: 0.82, fy: 0.42, fw: 0.2 },
+  { fx: 0.34, fy: 0.3, fw: 0.2 },
+];
+const COINS = [
+  { fx: 0.2, fy: 0.6 },
+  { fx: 0.52, fy: 0.44 },
+  { fx: 0.82, fy: 0.3 },
+  { fx: 0.34, fy: 0.18 },
+  { fx: 0.66, fy: 0.86 },
+];
 
 /**
- * The main playable scene: a static-platform level with a controllable player,
- * collectible coins, and a score readout. This is the place to grow the game.
+ * Responsive platformer scene. Everything is positioned from the live canvas
+ * size and re-laid-out on resize, so the game fills the device screen.
  */
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -16,15 +36,20 @@ export default class GameScene extends Phaser.Scene {
 
   create() {
     this.score = 0;
+    this.solids = [];
+    this.touchButtons = [];
 
-    this.buildLevel();
-    this.createPlayer();
-    this.createCoins();
+    const { width, height } = this.scale;
+    this.physics.world.setBounds(0, 0, width, height);
+
+    this.buildLevel(width, height);
+    this.createPlayer(width, height);
+    this.createCoins(width, height);
     this.createHud();
     this.setupInput();
     this.createTouchControls();
 
-    this.physics.add.collider(this.player, this.platforms);
+    this.physics.add.collider(this.player, this.solids);
     this.physics.add.overlap(
       this.player,
       this.coins,
@@ -32,55 +57,47 @@ export default class GameScene extends Phaser.Scene {
       null,
       this
     );
+
+    this.layout(width, height);
+
+    // Re-layout whenever the canvas changes (orientation, window resize).
+    this.scale.on('resize', this.onResize, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off('resize', this.onResize, this);
+    });
+  }
+
+  /** Create a static, resizable rectangle solid and register it for collisions. */
+  makeSolid(color) {
+    const rect = this.add.rectangle(0, 0, 10, 10, color);
+    this.physics.add.existing(rect, true);
+    this.solids.push(rect);
+    return rect;
   }
 
   buildLevel() {
-    this.platforms = this.physics.add.staticGroup();
-
-    // Solid ground across the bottom, tiled from the 64px ground texture.
-    const groundY = GAME_HEIGHT - 32;
-    for (let x = 32; x < GAME_WIDTH + 32; x += 64) {
-      this.platforms.create(x, groundY, 'ground');
-    }
-
-    // Floating platforms — tweak these to design your level.
-    const ledges = [
-      { x: 140, y: 320 },
-      { x: 400, y: 250 },
-      { x: 640, y: 180 },
-      { x: 250, y: 130 },
-    ];
-    ledges.forEach(({ x, y }) => this.platforms.create(x, y, 'platform'));
+    this.ground = this.makeSolid(0x37474f);
+    this.ledges = LEDGES.map((def) => {
+      const rect = this.makeSolid(0x6d4c41);
+      rect.setData('def', def);
+      return rect;
+    });
   }
 
-  createPlayer() {
-    this.player = this.physics.add.sprite(80, GAME_HEIGHT - 120, 'player');
+  createPlayer(width, height) {
+    this.player = this.physics.add.sprite(width * 0.1, height * 0.4, 'player');
     this.player.setCollideWorldBounds(true);
     this.player.setBounce(0.05);
   }
 
-  createCoins() {
+  createCoins(width, height) {
     this.coins = this.physics.add.group();
-    const spots = [
-      { x: 140, y: 280 },
-      { x: 400, y: 210 },
-      { x: 640, y: 140 },
-      { x: 250, y: 90 },
-      { x: 500, y: 400 },
-    ];
-    spots.forEach(({ x, y }) => {
-      const coin = this.coins.create(x, y, 'coin');
+    COINS.forEach((def, i) => {
+      const coin = this.coins.create(def.fx * width, def.fy * height, 'coin');
       coin.body.setAllowGravity(false);
-      coin.setData('baseY', y);
-      // Gentle bob animation so coins feel alive.
-      this.tweens.add({
-        targets: coin,
-        y: y - 8,
-        duration: 700,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.inOut',
-      });
+      coin.setData('def', def);
+      coin.setData('baseY', def.fy * height);
+      coin.setData('phase', i * 1.3); // stagger the bob so they're not in sync
     });
   }
 
@@ -91,16 +108,8 @@ export default class GameScene extends Phaser.Scene {
         fontSize: '20px',
         color: '#ffffff',
       })
-      .setScrollFactor(0);
-
-    this.add
-      .text(GAME_WIDTH - 16, 12, 'move + jump — keys or on-screen buttons', {
-        fontFamily: 'monospace',
-        fontSize: '14px',
-        color: '#9aa0b5',
-      })
-      .setOrigin(1, 0)
-      .setScrollFactor(0);
+      .setScrollFactor(0)
+      .setDepth(1000);
   }
 
   setupInput() {
@@ -110,35 +119,31 @@ export default class GameScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.D,
       jump: Phaser.Input.Keyboard.KeyCodes.SPACE,
     });
-
-    // Touch input state, driven by the on-screen buttons below.
     this.touch = { left: false, right: false, jump: false };
   }
 
   /**
-   * On-screen buttons for touch devices: a left/right pad on the bottom-left
-   * and a jump button on the bottom-right. They stay fixed to the camera and
-   * are hidden on desktops that have no touch support.
+   * On-screen buttons for touch devices. Each button stores an `anchor`
+   * callback so layout() can reposition it for the current screen size.
    */
   createTouchControls() {
     const hasTouch =
       this.sys.game.device.input.touch ||
-      ('ontouchstart' in window) ||
+      'ontouchstart' in window ||
       navigator.maxTouchPoints > 0;
     if (!hasTouch) return;
 
-    const y = GAME_HEIGHT - 56;
-    const makeButton = (x, label, onDown, onUp) => {
+    const makeButton = (anchor, label, onDown, onUp) => {
       const circle = this.add
-        .circle(x, y, 36, 0xffffff, 0.18)
+        .circle(0, 0, 38, 0xffffff, 0.18)
         .setStrokeStyle(2, 0xffffff, 0.4)
         .setScrollFactor(0)
         .setDepth(1000)
         .setInteractive({ useHandCursor: true });
-      this.add
-        .text(x, y, label, {
+      const text = this.add
+        .text(0, 0, label, {
           fontFamily: 'monospace',
-          fontSize: '28px',
+          fontSize: '30px',
           color: '#ffffff',
         })
         .setOrigin(0.5)
@@ -148,30 +153,75 @@ export default class GameScene extends Phaser.Scene {
       circle.on('pointerdown', onDown);
       circle.on('pointerup', onUp);
       circle.on('pointerout', onUp);
-      return circle;
+      this.touchButtons.push({ circle, text, anchor });
     };
 
+    const pad = 70;
     makeButton(
-      60,
+      (w, h) => ({ x: pad, y: h - pad }),
       '◀',
       () => (this.touch.left = true),
       () => (this.touch.left = false)
     );
     makeButton(
-      150,
+      (w, h) => ({ x: pad + 92, y: h - pad }),
       '▶',
       () => (this.touch.right = true),
       () => (this.touch.right = false)
     );
     makeButton(
-      GAME_WIDTH - 60,
+      (w, h) => ({ x: w - pad, y: h - pad }),
       '▲',
       () => (this.touch.jump = true),
       () => (this.touch.jump = false)
     );
 
-    // Allow more than one button to be held at once (move + jump).
-    this.input.addPointer(2);
+    this.input.addPointer(2); // allow move + jump simultaneously
+  }
+
+  /** Position and size everything for the given canvas dimensions. */
+  layout(width, height) {
+    this.physics.world.setBounds(0, 0, width, height);
+
+    // Derive movement feel from screen size so jumps clear the (proportional)
+    // platform gaps on any device.
+    this.moveSpeed = Phaser.Math.Clamp(width * 0.3, 180, 460);
+    this.jumpVel = Math.sqrt(2 * GRAVITY * (height * JUMP_HEIGHT_RATIO));
+
+    // Ground spans the full width along the bottom.
+    this.ground.setSize(width, GROUND_HEIGHT);
+    this.ground.setPosition(width / 2, height - GROUND_HEIGHT / 2);
+    this.ground.body.updateFromGameObject();
+
+    // Floating ledges.
+    this.ledges.forEach((rect) => {
+      const def = rect.getData('def');
+      rect.setSize(def.fw * width, PLATFORM_HEIGHT);
+      rect.setPosition(def.fx * width, def.fy * height);
+      rect.body.updateFromGameObject();
+    });
+
+    // Coin positions (their bob baseline updates too).
+    this.coins.getChildren().forEach((coin) => {
+      const def = coin.getData('def');
+      coin.x = def.fx * width;
+      coin.setData('baseY', def.fy * height);
+    });
+
+    // Keep the player inside the new bounds.
+    this.player.x = Phaser.Math.Clamp(this.player.x, 20, width - 20);
+    if (this.player.y > height) this.player.y = height * 0.4;
+
+    // Touch buttons.
+    this.touchButtons.forEach(({ circle, text, anchor }) => {
+      const { x, y } = anchor(width, height);
+      circle.setPosition(x, y);
+      text.setPosition(x, y);
+    });
+  }
+
+  onResize(gameSize) {
+    this.layout(gameSize.width, gameSize.height);
   }
 
   collectCoin(player, coin) {
@@ -180,7 +230,15 @@ export default class GameScene extends Phaser.Scene {
     this.scoreText.setText(`Score: ${this.score}`);
   }
 
-  update() {
+  update(time) {
+    // Bob the coins using a time-based sine so it survives re-layout.
+    this.coins.getChildren().forEach((coin) => {
+      if (!coin.active) return;
+      const baseY = coin.getData('baseY');
+      const phase = coin.getData('phase');
+      coin.y = baseY + Math.sin(time / 350 + phase) * 6;
+    });
+
     const left =
       this.cursors.left.isDown || this.keys.left.isDown || this.touch.left;
     const right =
@@ -192,18 +250,17 @@ export default class GameScene extends Phaser.Scene {
       this.touch.jump;
 
     if (left) {
-      this.player.setVelocityX(-PLAYER_SPEED);
+      this.player.setVelocityX(-this.moveSpeed);
       this.player.setFlipX(true);
     } else if (right) {
-      this.player.setVelocityX(PLAYER_SPEED);
+      this.player.setVelocityX(this.moveSpeed);
       this.player.setFlipX(false);
     } else {
       this.player.setVelocityX(0);
     }
 
-    const onGround = this.player.body.blocked.down;
-    if (jump && onGround) {
-      this.player.setVelocityY(-JUMP_VELOCITY);
+    if (jump && this.player.body.blocked.down) {
+      this.player.setVelocityY(-this.jumpVel);
     }
   }
 }
