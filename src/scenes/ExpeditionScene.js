@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import Ambient from '../audio/Ambient.js';
+import AudioManager from '../audio/AudioManager.js';
 import { enablePainterly, togglePainterly } from '../shaders/KuwaharaPostFX.js';
 
 // The first painterly slice of Arradius — a hooded walk across the dunes toward
@@ -437,9 +437,12 @@ export default class ExpeditionScene extends Phaser.Scene {
   }
 
   createAudio() {
-    // One ambient bed for the whole game, persisting across scene changes.
-    if (!this.game.ambient) this.game.ambient = new Ambient();
-    this.ambient = this.game.ambient;
+    // One audio engine for the whole game, persisting across scene changes.
+    if (!this.game.audio) this.game.audio = new AudioManager();
+    this.ambient = this.game.audio;
+    // Out in the dunes the score opens up and the desert bed takes over.
+    this.ambient.setMusicState('expedition');
+    this.ambient.setAmbience('expedition');
     const startOnce = () => this.ambient.start();
     this.input.once('pointerdown', startOnce);
     this.input.keyboard.once('keydown', startOnce);
