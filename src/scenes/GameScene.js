@@ -22,6 +22,7 @@ export default class GameScene extends Phaser.Scene {
     this.createCoins();
     this.createHud();
     this.setupInput();
+    this.createTouchControls();
 
     this.physics.add.collider(this.player, this.platforms);
     this.physics.add.overlap(
@@ -93,7 +94,7 @@ export default class GameScene extends Phaser.Scene {
       .setScrollFactor(0);
 
     this.add
-      .text(GAME_WIDTH - 16, 12, '← → move   ↑ / space jump', {
+      .text(GAME_WIDTH - 16, 12, 'move + jump — keys or on-screen buttons', {
         fontFamily: 'monospace',
         fontSize: '14px',
         color: '#9aa0b5',
@@ -109,6 +110,68 @@ export default class GameScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.D,
       jump: Phaser.Input.Keyboard.KeyCodes.SPACE,
     });
+
+    // Touch input state, driven by the on-screen buttons below.
+    this.touch = { left: false, right: false, jump: false };
+  }
+
+  /**
+   * On-screen buttons for touch devices: a left/right pad on the bottom-left
+   * and a jump button on the bottom-right. They stay fixed to the camera and
+   * are hidden on desktops that have no touch support.
+   */
+  createTouchControls() {
+    const hasTouch =
+      this.sys.game.device.input.touch ||
+      ('ontouchstart' in window) ||
+      navigator.maxTouchPoints > 0;
+    if (!hasTouch) return;
+
+    const y = GAME_HEIGHT - 56;
+    const makeButton = (x, label, onDown, onUp) => {
+      const circle = this.add
+        .circle(x, y, 36, 0xffffff, 0.18)
+        .setStrokeStyle(2, 0xffffff, 0.4)
+        .setScrollFactor(0)
+        .setDepth(1000)
+        .setInteractive({ useHandCursor: true });
+      this.add
+        .text(x, y, label, {
+          fontFamily: 'monospace',
+          fontSize: '28px',
+          color: '#ffffff',
+        })
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(1001);
+
+      circle.on('pointerdown', onDown);
+      circle.on('pointerup', onUp);
+      circle.on('pointerout', onUp);
+      return circle;
+    };
+
+    makeButton(
+      60,
+      '◀',
+      () => (this.touch.left = true),
+      () => (this.touch.left = false)
+    );
+    makeButton(
+      150,
+      '▶',
+      () => (this.touch.right = true),
+      () => (this.touch.right = false)
+    );
+    makeButton(
+      GAME_WIDTH - 60,
+      '▲',
+      () => (this.touch.jump = true),
+      () => (this.touch.jump = false)
+    );
+
+    // Allow more than one button to be held at once (move + jump).
+    this.input.addPointer(2);
   }
 
   collectCoin(player, coin) {
@@ -118,12 +181,15 @@ export default class GameScene extends Phaser.Scene {
   }
 
   update() {
-    const left = this.cursors.left.isDown || this.keys.left.isDown;
-    const right = this.cursors.right.isDown || this.keys.right.isDown;
+    const left =
+      this.cursors.left.isDown || this.keys.left.isDown || this.touch.left;
+    const right =
+      this.cursors.right.isDown || this.keys.right.isDown || this.touch.right;
     const jump =
       this.cursors.up.isDown ||
       this.cursors.space.isDown ||
-      this.keys.jump.isDown;
+      this.keys.jump.isDown ||
+      this.touch.jump;
 
     if (left) {
       this.player.setVelocityX(-PLAYER_SPEED);

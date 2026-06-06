@@ -2,7 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>2D Platformer</title>
     <style>
       html,
@@ -13,12 +18,20 @@
         color: #e6e6f0;
         font-family: system-ui, sans-serif;
         height: 100%;
+        overflow: hidden;
+        /* Stop the browser from hijacking touches for scroll/zoom/select. */
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior: none;
       }
       #game {
         display: flex;
         align-items: center;
         justify-content: center;
         min-height: 100vh;
+        min-height: 100dvh;
       }
       canvas {
         image-rendering: pixelated;
