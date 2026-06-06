@@ -118,7 +118,7 @@ The shared vocabulary. Still editable, but these are our canon.
 | Their refuges | Sietch | **Hollows / Warrens** |
 | The protagonist's house | House Atreides | **House Calder** |
 | The rival power | House Harkonnen | **House Vorrin** |
-| The galactic ruler | House Corrino / the Emperor | **the Imperium** _(TBD)_ |
+| The galactic ruler | House Corrino / the Emperor | **House Corinthians** — the Imperial throne |
 | The protagonist | Paul | **Eren**, called **the Seir** by the Shamen |
 
 ### Naming as politics
@@ -129,6 +129,17 @@ holding, a source of Aurun. The **Shamen** who were born to its dunes call it
 **Aridun**. The game leans on this everywhere: signage, dialogue, and faction
 framing use the name that fits the speaker. Our **title is _Arradius_** — the
 official name — while the world beneath it is always _Aridun_.
+
+### The houses
+
+A three-house triangle, in Herbert's tradition:
+
+- **House Corinthians** — the Imperial throne. Distant, decadent, and addicted
+  to Aurun. Owns the registry name _Arradius_.
+- **House Vorrin** — the cruel, industrial house working Aridun for Aurun.
+  Quietly favoured by the throne.
+- **House Calder** — Eren's house, newly handed Aridun and walking into a trap.
+  The hero's house, caught between the throne and the Vorrin.
 
 ---
 
