@@ -26,6 +26,7 @@ export default class BootScene extends Phaser.Scene {
     this.makeInteriorWall();
     this.makeVignette();
     this.makeNoise();
+    this.makePlanetSurface();
 
     this.scene.start('ResidencyScene');
   }
@@ -168,6 +169,48 @@ export default class BootScene extends Phaser.Scene {
       img.data[i + 3] = Math.floor(Math.random() * 52 + 8);
     }
     ctx.putImageData(img, 0, 0);
+    tex.refresh();
+  }
+
+  /** Tileable desert-world surface for the comms-screen planet (scrolls to rotate). */
+  makePlanetSurface() {
+    const w = 256;
+    const h = 128;
+    const tex = this.textures.createCanvas('planetSurface', w, h);
+    const ctx = tex.getContext();
+    const R = Math.random;
+    // Base sand.
+    ctx.fillStyle = '#b9824a';
+    ctx.fillRect(0, 0, w, h);
+    // Latitude shading bands (lighter/darker ochre) — full width, seamless.
+    for (let i = 0; i < 11; i += 1) {
+      const y = R() * h;
+      const bh = 3 + R() * 16;
+      ctx.fillStyle = R() > 0.5
+        ? `rgba(122,78,34,${(0.15 + R() * 0.3).toFixed(2)})`
+        : `rgba(214,168,102,${(0.12 + R() * 0.25).toFixed(2)})`;
+      ctx.fillRect(0, y, w, bh);
+    }
+    // Blotch helper, drawn with horizontal wrap so the texture tiles seamlessly.
+    const blob = (bx, by, br, ry, col) => {
+      ctx.fillStyle = col;
+      [bx, bx - w, bx + w].forEach((px) => {
+        ctx.beginPath();
+        ctx.ellipse(px, by, br, ry, R() * Math.PI, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    };
+    // Rock / canyon regions.
+    for (let i = 0; i < 16; i += 1) {
+      const br = 5 + R() * 18;
+      blob(R() * w, R() * h, br, br * (0.5 + R() * 0.4),
+        R() > 0.5 ? 'rgba(106,66,30,0.5)' : 'rgba(150,106,54,0.4)');
+    }
+    // Faint high cloud wisps.
+    for (let i = 0; i < 6; i += 1) {
+      const br = 14 + R() * 26;
+      blob(R() * w, R() * h, br, br * 0.45, 'rgba(232,216,184,0.10)');
+    }
     tex.refresh();
   }
 }

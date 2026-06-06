@@ -341,7 +341,7 @@ export default class ExpeditionScene extends Phaser.Scene {
   createTitle() {
     const { width, height } = this.scale;
     const title = this.add
-      .text(width / 2, height * 0.4, 'ARIDUN', {
+      .text(width / 2, height * 0.4, 'ARRADIUS', {
         fontFamily: 'Georgia, serif',
         fontSize: '44px',
         color: '#f0e3d0',

@@ -29,18 +29,18 @@ const LOCATIONS = {
     accent: 0xffd27a,
     feature: 'court',
     say: [
-      '“Aridun will test us, Eren. Hold to its people and we hold to the world.”',
+      '“Arradius will test us, Eren. Hold to its people and we hold to the world.”',
       '“Korinth did not gift us this fief out of love. Watch the dunes — and watch our own halls.”',
     ],
     // The throne hall is the deeper hub; the private/sacred rooms lie past it.
     exits: ['veil', 'quarters'],
   },
-  war: {
-    name: 'The War Room',
-    accent: 0xff8a5a,
-    feature: 'war',
-    flavor: 'The map of Aridun waits, House Vorrin’s forts marked in red.',
-    actions: [{ label: 'Study the map', scene: 'WorldMapScene' }],
+  comms: {
+    name: 'The Communications Room',
+    accent: 0x6aa0ff,
+    feature: 'comms',
+    flavor: 'The long-range array hums — a window onto all of Arradius, and the houses beyond.',
+    actions: [{ label: 'Open the channel', scene: 'WorldMapScene' }],
   },
   veil: {
     name: "The Veil's Sanctum",
@@ -68,7 +68,7 @@ const LOCATIONS = {
     accent: 0xd0a070,
     feature: 'yard',
     say: [
-      '“Steel won’t win Aridun alone — but it’ll keep you breathing till the Shamen do.”',
+      '“Steel won’t win Arradius alone — but it’ll keep you breathing till the Shamen do.”',
       '“Say the word and the Saltguard musters. We are yours.”',
     ],
   },
@@ -83,7 +83,7 @@ const LOCATIONS = {
     accent: 0xffce86,
     feature: 'deck',
     flavor: 'A corsair waits, wings folded against the dusk.',
-    actions: [{ label: 'Ride out into Aridun', scene: 'ExpeditionScene' }],
+    actions: [{ label: 'Ride out into Arradius', scene: 'ExpeditionScene' }],
   },
 };
 
@@ -97,7 +97,7 @@ const EXITS = {
   court: { back: 'hall' },
   yard: { back: 'hall' },
   infirmary: { back: 'hall' },
-  war: { back: 'hall' },
+  comms: { back: 'hall' },
   deck: { back: 'hall' },
   veil: { back: 'court' },       // the sacred sanctum — past the throne
   quarters: { back: 'court' },   // private apartments — past the throne
@@ -164,9 +164,10 @@ export default class ResidencyScene extends Phaser.Scene {
     this.showEntryTitle();
 
     this.scale.on('resize', this.onResize, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
-      this.scale.off('resize', this.onResize, this)
-    );
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off('resize', this.onResize, this);
+      this.destroyCommsAnim();
+    });
   }
 
   createAudio() {
@@ -265,75 +266,58 @@ export default class ResidencyScene extends Phaser.Scene {
   renderLocation() {
     if (!this.bd) return;
     this.clearDynamic();
+    this.destroyCommsAnim();           // live comms objects are rebuilt below if needed
     this.doorHotspots = {};            // populated by sceneHall / sceneShell
     this.captionText = null;           // recreated by renderHallCaption (hall only)
     const { width, height } = this.scale;
     const loc = LOCATIONS[this.current];
+    const floorY = Math.round(height * 0.60); // full-canvas floor line (procedural rooms)
 
-    const barTop = Math.round(height * 0.72);
-    const floorY = Math.round(barTop * 0.80);
-
-    // Painted scene — full-canvas PNG backdrop for the hall, else procedural.
+    // Painted scene — EVERY room fills the full canvas, for one consistent frame.
     this.bd.clear();
     const useBg = USE_HALL_BG && loc.feature === 'hall' && this.textures.exists('hallBg');
     if (useBg) {
       this.showHallBackground(width, height);
+    } else if (loc.feature === 'comms') {
+      if (this.hallBgImg) this.hallBgImg.setVisible(false);
+      this.sceneComms(this.bd, width, height);
+      this.createCommsAnim();
     } else {
       if (this.hallBgImg) this.hallBgImg.setVisible(false);
-      this.drawScene(loc, width, floorY, barTop);
+      this.drawScene(loc, width, floorY);
     }
 
-    this.bar.clear();
-    if (useBg) {
-      // Slim translucent caption strip so the painted foreground stays visible.
-      const bt = Math.round(height * 0.86);
-      this.bar.fillStyle(0x0a0610, 0.0);
-      this.bar.fillRect(0, bt, width, height - bt);
-      const grad = 5;
-      for (let i = 0; i < grad; i++) {
-        this.bar.fillStyle(0x0a0610, 0.52 * ((i + 1) / grad));
-        this.bar.fillRect(0, bt + ((height - bt) * i) / grad, width, (height - bt) / grad + 1);
-      }
-      this.bar.fillStyle(GOLD, 0.3);
-      this.bar.fillRect(0, bt, width, 1);
-      this.createDoorZones();
-      this.renderHallCaption(loc, width, height, bt);
-      return;
-    }
-
-    // Bottom UI bar — aged stone character with ornate corner details.
-    this.bar.fillStyle(0x15101e, 1);
-    this.bar.fillRect(0, barTop, width, height - barTop);
-    // Warm inner band to break flatness.
-    this.bar.fillStyle(0x1e162e, 0.65);
-    this.bar.fillRect(0, barTop + 4, width, height - barTop - 8);
-    // Sandstone warm tint strip at top.
-    this.bar.fillStyle(0xb07d4a, 0.16);
-    this.bar.fillRect(0, barTop, width, 22);
-    // Top divider: sandstone line + gold hairline.
-    this.bar.fillStyle(0xb07d4a, 0.78);
-    this.bar.fillRect(0, barTop, width, 2);
-    this.bar.fillStyle(GOLD, 0.5);
-    this.bar.fillRect(0, barTop + 2, width, 1);
-    // Corner ornaments — top-left.
-    const cs = 28;
-    this.bar.fillStyle(0xc4956a, 0.45);
-    this.bar.fillTriangle(0, barTop, cs, barTop, 0, barTop + cs);
-    this.bar.fillStyle(GOLD, 0.75);
-    this.bar.fillRect(0, barTop, cs + 8, 2);
-    this.bar.fillRect(0, barTop, 2, cs + 8);
-    // Corner ornaments — top-right.
-    this.bar.fillStyle(0xc4956a, 0.45);
-    this.bar.fillTriangle(width, barTop, width - cs, barTop, width, barTop + cs);
-    this.bar.fillStyle(GOLD, 0.75);
-    this.bar.fillRect(width - cs - 8, barTop, cs + 8, 2);
-    this.bar.fillRect(width - 2, barTop, 2, cs + 8);
-
-    // Clickable door zones over the painted doorways.
+    // One shared translucent panel everywhere: a slim caption strip for the hall
+    // (door navigation), a taller panel elsewhere for portrait/dialogue/actions.
+    const slim = loc.feature === 'hall';
+    const bt = Math.round(height * (slim ? 0.86 : 0.74));
+    this.drawPanel(width, height, bt);
     this.createDoorZones();
+    if (slim) this.renderHallCaption(loc, width, height, bt);
+    else this.renderRoomBar(loc, width, height, bt);
+  }
 
-    if (loc.feature === 'hall') this.renderHallCaption(loc, width, height, barTop);
-    else this.renderRoomBar(loc, width, height, barTop);
+  /** The shared translucent UI panel — identical style on every screen. */
+  drawPanel(width, height, bt) {
+    const b = this.bar;
+    b.clear();
+    const grad = 6;
+    for (let i = 0; i < grad; i += 1) {
+      b.fillStyle(0x0a0610, 0.58 * ((i + 1) / grad));
+      b.fillRect(0, bt + ((height - bt) * i) / grad, width, (height - bt) / grad + 1);
+    }
+    // Sandstone + gold top trim.
+    b.fillStyle(0xb07d4a, 0.5);
+    b.fillRect(0, bt, width, 2);
+    b.fillStyle(GOLD, 0.35);
+    b.fillRect(0, bt + 2, width, 1);
+    // Subtle gold corner brackets (echo of the old ornate bar, kept light).
+    const cs = 22;
+    b.fillStyle(GOLD, 0.55);
+    b.fillRect(0, bt, cs, 2);
+    b.fillRect(0, bt, 2, cs);
+    b.fillRect(width - cs, bt, cs, 2);
+    b.fillRect(width - 2, bt, 2, cs);
   }
 
   // --- Painted backdrop (experimental) --------------------------------------
@@ -353,7 +337,7 @@ export default class ResidencyScene extends Phaser.Scene {
     });
     this.doorHotspots = {
       forward:    door(0.43, 0.28, 0.14, 0.34, 'court'),
-      leftInner:  door(0.275, 0.42, 0.085, 0.26, 'war'),
+      leftInner:  door(0.275, 0.42, 0.085, 0.26, 'comms'),
       leftOuter:  door(0.135, 0.42, 0.075, 0.24, 'yard'),
       rightInner: door(0.64, 0.42, 0.085, 0.26, 'deck'),
       rightOuter: door(0.79, 0.42, 0.075, 0.24, 'infirmary'),
@@ -656,6 +640,199 @@ export default class ResidencyScene extends Phaser.Scene {
     // Frieze.
     g.fillStyle(GOLD, 0.7);
     g.fillRect(0, at - 8, width, 3);
+  }
+
+  // --- Communications Room (bespoke) ----------------------------------------
+
+  /** Comms chamber: sandstone walls, a power-crystal + Calder banner at left,
+   *  and a great circular star-map screen with a control console at right.
+   *  Procedural shape reference for the painted art to come. */
+  sceneComms(g, width, height) {
+    const floorY = Math.round(height * 0.60);
+    const cx = width / 2;
+
+    // Back wall — warm sandstone, washed warmer toward the crystal (left).
+    g.fillStyle(0x4a3826, 1);
+    g.fillRect(0, 0, width, floorY);
+    g.fillStyle(0x6a4e2c, 0.5);
+    g.fillRect(0, 0, Math.round(width * 0.44), floorY);
+    // Ceiling beam band + beams.
+    g.fillStyle(0x2a1e12, 1);
+    g.fillRect(0, 0, width, Math.round(floorY * 0.11));
+    g.fillStyle(0x36281a, 1);
+    [0.2, 0.5, 0.8].forEach((f) =>
+      g.fillRect(Math.round(width * f) - 12, 0, 24, Math.round(floorY * 0.11)));
+    // Faint stone-course banding.
+    g.lineStyle(1, 0x2a1e12, 0.25);
+    for (let i = 1; i < 6; i++) {
+      const y = Math.round((floorY * i) / 6);
+      g.lineBetween(0, y, width, y);
+    }
+
+    // Floor — stone tiles with light perspective, to the bottom of the canvas.
+    g.fillStyle(0x33271a, 1);
+    g.fillRect(0, floorY, width, height - floorY);
+    g.fillStyle(0x4a3826, 1);
+    g.fillRect(0, floorY, width, 3);
+    g.lineStyle(1, 0x8a6a3a, 0.12);
+    for (let r = 1; r <= 4; r++) {
+      const y = floorY + (height - floorY) * (r / 5);
+      g.lineBetween(0, y, width, y);
+    }
+    for (let k = -5; k <= 5; k++) {
+      g.lineBetween(cx + k * width * 0.10, floorY, cx + k * width * 0.20, height);
+    }
+
+    // LEFT — pilasters framing the banner, with the power-crystal.
+    this.commsPilaster(g, width * 0.05, floorY);
+    this.commsPilaster(g, width * 0.28, floorY);
+    this.banner(g, Math.round(width * 0.165), Math.round(height * 0.10), Math.round(height * 0.34), 1.05);
+    this.commsCrystal(g, width * 0.05, height * 0.36, height * 0.36);
+
+    // RIGHT — the great circular star-map screen + console.
+    const sx = Math.round(width * 0.70);
+    const sy = Math.round(height * 0.34);
+    const R = Math.round(height * 0.27);
+    this.commsConsole(g, sx, floorY, R);
+    this.commsScreen(g, sx, sy, R);
+  }
+
+  commsPilaster(g, x, floorY) {
+    const w = Math.round(floorY * 0.11);
+    g.fillStyle(0x5a4632, 1);
+    g.fillRect(x - w / 2, 0, w, floorY);
+    g.fillStyle(0x6e573a, 1);                              // lit edge
+    g.fillRect(x - w / 2, 0, Math.round(w * 0.28), floorY);
+    g.fillStyle(0x2a1e12, 1);                              // shadow edge
+    g.fillRect(x + w / 2 - Math.round(w * 0.2), 0, Math.round(w * 0.2), floorY);
+    g.fillStyle(0x4a3826, 1);                              // base + capital
+    g.fillRect(x - w * 0.7, floorY - w * 0.55, w * 1.4, w * 0.55);
+    g.fillRect(x - w * 0.7, 0, w * 1.4, w * 0.4);
+    g.fillStyle(0x6e573a, 0.6);
+    g.fillRect(x - w * 0.7, 0, w * 1.4, 2);
+  }
+
+  commsCrystal(g, x, cy, h) {
+    const w = h * 0.26;
+    this.addGlow(x, cy, w * 7, 0xffaa33, 0.6);
+    g.fillStyle(0x2a1e12, 1);                              // brackets
+    g.fillRect(x - w * 0.6, cy - h / 2 - 4, w * 1.2, 5);
+    g.fillRect(x - w * 0.6, cy + h / 2 - 1, w * 1.2, 5);
+    const hex = (ww, hh) => [
+      { x, y: cy - hh / 2 }, { x: x + ww / 2, y: cy - hh * 0.26 },
+      { x: x + ww / 2, y: cy + hh * 0.26 }, { x, y: cy + hh / 2 },
+      { x: x - ww / 2, y: cy + hh * 0.26 }, { x: x - ww / 2, y: cy - hh * 0.26 },
+    ];
+    g.fillStyle(0xc8821a, 1); g.fillPoints(hex(w, h), true);
+    g.fillStyle(0xffc24a, 1); g.fillPoints(hex(w * 0.62, h * 0.86), true);
+    g.fillStyle(0xfff0c0, 0.95); g.fillPoints(hex(w * 0.22, h * 0.7), true);
+  }
+
+  commsScreen(g, x, y, R) {
+    const fr = Math.round(R * 0.14);
+    g.fillStyle(0x3a2c1c, 1); g.fillCircle(x, y, R + fr + 3);   // frame ring
+    g.fillStyle(0x5a4632, 1); g.fillCircle(x, y, R + fr);
+    g.fillStyle(0x6e573a, 0.5); g.fillCircle(x - fr * 0.4, y - fr * 0.4, R + fr * 0.5);
+    const bf = Math.round(R * 0.16);                            // cardinal bolts
+    [[0, -1], [1, 0], [0, 1], [-1, 0]].forEach(([dx, dy]) => {
+      const bx = x + dx * (R + fr * 0.5), by = y + dy * (R + fr * 0.5);
+      g.fillStyle(0x2a1e12, 1); g.fillRect(bx - bf / 2, by - bf / 2, bf, bf);
+      g.fillStyle(0xc8a24a, 0.9); g.fillCircle(bx, by, bf * 0.22);
+    });
+    g.fillStyle(0x0e1230, 1); g.fillCircle(x, y, R);            // screen
+    g.fillStyle(0x1c2450, 0.55); g.fillCircle(x, y, R * 0.66);
+    if (!this.commsStars) {
+      this.commsStars = Array.from({ length: 90 }, () => ({
+        a: Math.random() * Math.PI * 2,
+        r: Math.sqrt(Math.random()) * 0.9,
+        sz: Math.random() * 1.3 + 0.4,
+        b: Math.random() * 0.6 + 0.3,
+      }));
+    }
+    this.commsStars.forEach((s) => {
+      g.fillStyle(0xdfe6ff, s.b);
+      g.fillCircle(x + Math.cos(s.a) * s.r * R, y + Math.sin(s.a) * s.r * R, s.sz);
+    });
+    g.lineStyle(1.5, 0xc8922a, 0.4);                           // radar rings + crosshair
+    [0.28, 0.52, 0.76, 0.97].forEach((f) => g.strokeCircle(x, y, R * f));
+    g.lineBetween(x - R * 0.97, y, x + R * 0.97, y);
+    g.lineBetween(x, y - R * 0.97, x, y + R * 0.97);
+    this.addGlow(x, y, R * 2.4, 0x3a5fae, 0.16);            // screen ambiance
+    // The planet (Arradius) + radar sweep are live objects, built in renderLocation.
+    this.commsScreenInfo = { x, y, R };
+  }
+
+  /** Build the animated comms planet (scrolling desert sphere) + radar sweep. */
+  createCommsAnim() {
+    const info = this.commsScreenInfo;
+    if (!info || !this.textures.exists('planetSurface')) return;
+    const { x, y, R } = info;
+    const pr = Math.round(R * 0.26);
+
+    // Scrolling surface, masked to a circle → a rotating sphere.
+    const mask = this.add.graphics().setVisible(false);
+    mask.fillStyle(0xffffff, 1).fillCircle(x, y, pr);
+    const planet = this.add
+      .tileSprite(x, y, pr * 2, pr * 2, 'planetSurface')
+      .setDepth(-86);
+    planet.tilePositionY = 14;
+    planet.setMask(mask.createGeometryMask());
+
+    // Fixed lighting/relief overlay (poles, terminator, lit limb) over the surface.
+    const ov = this.add.graphics().setDepth(-85);
+    ov.fillStyle(0xd9ab68, 0.36); ov.fillCircle(x - pr * 0.28, y - pr * 0.26, pr * 0.5);  // lit side
+    ov.fillStyle(0x241606, 0.34); ov.fillCircle(x + pr * 0.36, y + pr * 0.30, pr * 0.62); // terminator
+    ov.fillStyle(0xe8d8b0, 0.32); ov.fillEllipse(x, y - pr * 0.8, pr * 0.62, pr * 0.2);   // N polar cap
+    ov.fillStyle(0xe8d8b0, 0.2); ov.fillEllipse(x, y + pr * 0.82, pr * 0.5, pr * 0.16);   // S polar cap
+    ov.lineStyle(2, 0xe6bc7e, 0.5); ov.strokeCircle(x, y, pr * 0.95);                     // lit limb
+    ov.lineStyle(2.5, 0x2e1d0c, 0.55); ov.strokeCircle(x, y, pr - 1);                     // dark rim
+    this.addGlow(x, y, pr * 3.2, 0xffb24a, 0.22);                                         // atmosphere
+
+    const sweep = this.add.graphics().setDepth(-84);
+    this.commsAnim = { planet, mask, ov, sweep, x, y, R, pr, angle: -Math.PI / 2 };
+  }
+
+  destroyCommsAnim() {
+    const a = this.commsAnim;
+    if (!a) return;
+    [a.planet, a.mask, a.ov, a.sweep].forEach((o) => o && o.destroy());
+    this.commsAnim = null;
+  }
+
+  update(time, delta) {
+    const a = this.commsAnim;
+    if (!a) return;
+    a.planet.tilePositionX += delta * 0.01;                 // rotate the surface
+    a.angle = (a.angle + delta * 0.0009) % (Math.PI * 2);   // sweep the radar
+    const r = a.R * 0.96;
+    const g = a.sweep;
+    g.clear();
+    g.fillStyle(0x7ad0ff, 0.08);                            // trailing wedge
+    g.slice(a.x, a.y, r, a.angle - 0.5, a.angle, false);
+    g.fillPath();
+    g.lineStyle(2, 0xaee4ff, 0.5);                          // leading line
+    g.lineBetween(a.x, a.y, a.x + Math.cos(a.angle) * r, a.y + Math.sin(a.angle) * r);
+  }
+
+  commsConsole(g, x, floorY, R) {
+    const pw = R * 1.5;
+    const ch = Math.round(R * 0.42);
+    const top = floorY - ch;
+    g.fillStyle(0x3a2c1c, 1);                                  // angled console body
+    g.fillPoints([
+      { x: x - pw * 0.36, y: top }, { x: x + pw * 0.36, y: top },
+      { x: x + pw * 0.5, y: floorY }, { x: x - pw * 0.5, y: floorY },
+    ], true);
+    g.fillStyle(0x5a4632, 1);                                  // lit top lip
+    g.fillRect(x - pw * 0.36, top, pw * 0.72, 4);
+    [-1, 0, 1].forEach((i) => {                                // three amber panels
+      const px = x + i * pw * 0.24;
+      const w = pw * 0.2, hh = ch * 0.5;
+      g.fillStyle(0x14100a, 1); g.fillRect(px - w / 2, top + 6, w, hh);
+      g.fillStyle(0xc8922a, 0.8);
+      for (let r = 0; r < 3; r++) g.fillRect(px - w / 2 + 3, top + 9 + r * (hh / 3), w - 6, 1.5);
+      g.fillStyle(0xffd24a, 0.9); g.fillCircle(px + w / 2 - 4, top + 9, 1.6);
+    });
   }
 
   column(g, x, top, floorY, depth = 0, scale = 1, litDir = 1) {

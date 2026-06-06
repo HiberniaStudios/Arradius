@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import Ambient from '../audio/Ambient.js';
 import { enablePainterly, togglePainterly } from '../shaders/KuwaharaPostFX.js';
 
-// The War Map — Aridun seen from above. The first strategic screen: your seat,
+// The War Map — Arradius seen from above. The first strategic screen: your seat,
 // a Shamen Hollow where First Contact awaits, and a House Vorrin watchpost.
 // Select a site and act: ride out, assault (later), or return home.
 
@@ -19,7 +19,7 @@ const NODES = [
     faction: 'calder',
     fx: 0.27,
     fy: 0.4,
-    desc: 'The capital of Aridun and the seat of House Calder — your Residency.',
+    desc: 'The capital of Arradius and the seat of House Calder — your Residency.',
     action: 'home',
     label: 'Return to the Residency',
   },
@@ -133,7 +133,7 @@ export default class WorldMapScene extends Phaser.Scene {
   buildChrome() {
     // Title.
     this.title = this.add
-      .text(0, 0, 'ARIDUN', {
+      .text(0, 0, 'ARRADIUS', {
         fontFamily: 'Georgia, serif',
         fontSize: '26px',
         color: '#f0e3d0',
