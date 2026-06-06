@@ -135,7 +135,6 @@ export default class ResidencyScene extends Phaser.Scene {
     this.layout(this.scale.width, this.scale.height);
     this.cameras.main.fadeIn(600, 6, 4, 12);
     this.inputReadyAt = this.time.now + 350;
-    enablePainterly(this);
     this.showEntryTitle();
 
     this.scale.on('resize', this.onResize, this);
@@ -250,8 +249,8 @@ export default class ResidencyScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const loc = LOCATIONS[this.current];
 
-    const barTop = Math.round(height * 0.66);
-    const floorY = barTop - 12;
+    const barTop = Math.round(height * 0.72);
+    const floorY = Math.round(barTop * 0.80);
 
     // Painted scene.
     this.bd.clear();
@@ -502,12 +501,12 @@ export default class ResidencyScene extends Phaser.Scene {
 
   /** A generic painted room: floor, flanking columns, a central arch, banners. */
   sceneShell(g, width, floorY) {
-    // Floor.
-    g.fillStyle(0x140d20, 1);
+    // Floor — warm copper/terracotta.
+    g.fillStyle(0x2a1408, 1);
     g.fillRect(0, floorY, width, this.scale.height - floorY);
-    g.fillStyle(0x2a1d3a, 1);
+    g.fillStyle(0x4a2810, 1);
     g.fillRect(0, floorY, width, 4);
-    g.fillStyle(0x243a64, 0.9); // runner
+    g.fillStyle(0x7a3818, 0.8); // runner
     g.fillRect(width * 0.18, floorY + 10, width * 0.64, 14);
     g.fillStyle(GOLD, 0.6);
     g.fillRect(width * 0.18, floorY + 10, width * 0.64, 2);
@@ -552,138 +551,263 @@ export default class ResidencyScene extends Phaser.Scene {
     g.fillRect(0, at - 8, width, 3);
   }
 
-  column(g, x, top, floorY, depth = 0) {
-    const sw = 26;
-    // depth: 0 = nearest (warm, fully opaque), 1 = furthest (cool, hazy)
-    const a     = 1 - depth * 0.38;
-    const body  = depth < 0.5 ? 0x3a2a50 : 0x25203c;
-    const light = depth < 0.5 ? 0x5a4488 : 0x382e58;
-    const shade = depth < 0.5 ? 0x180f28 : 0x120c20;
-    const cap   = depth < 0.5 ? 0x4a3870 : 0x322855;
-    g.fillStyle(body, a);
-    g.fillRect(x - sw / 2, top, sw, floorY - top);
-    g.fillStyle(light, a * 0.9);
-    g.fillRect(x - sw / 2, top, 5, floorY - top);
-    g.fillStyle(shade, a);
-    g.fillRect(x + sw / 2 - 4, top, 4, floorY - top);
-    g.fillStyle(cap, a);
-    g.fillRect(x - sw / 2 - 7, top - 14, sw + 14, 14);
-    g.fillStyle(GOLD, (0.8 - depth * 0.55) * a);
-    g.fillRect(x - sw / 2 - 7, top - 14, sw + 14, 3);
-    g.fillStyle(0x241640, a);
-    g.fillRect(x - sw / 2 - 7, floorY - 10, sw + 14, 10);
-    if (depth < 0.35) {
-      // Near columns: faint central groove for extra detail.
-      g.fillStyle(0x180f28, 0.4);
-      g.fillRect(x - 1, top + 4, 2, floorY - top - 8);
+  column(g, x, top, floorY, depth = 0, scale = 1, litDir = 1) {
+    const botHW  = Math.round(46 * scale);
+    const topHW  = Math.round(botHW * 0.84);
+    const plinthH = Math.round(22 * scale);
+    const capH   = Math.round(26 * scale);
+    const capHW  = Math.round(botHW * 1.32);
+    const colBot = floorY - plinthH;
+    const dim    = 1 - depth * 0.30;               // distance haze
+
+    // RGB lerp helper.
+    const lerpC = (c1, c2, t) => {
+      const r = ((c1 >> 16) & 255) + (((c2 >> 16) & 255) - ((c1 >> 16) & 255)) * t;
+      const gg = ((c1 >> 8) & 255) + (((c2 >> 8) & 255) - ((c1 >> 8) & 255)) * t;
+      const b = (c1 & 255) + ((c2 & 255) - (c1 & 255)) * t;
+      return (Math.round(r) << 16) | (Math.round(gg) << 8) | Math.round(b);
+    };
+    const SHADOW = 0x140a04;
+    const MID    = 0x6e3414;
+    const LIGHT  = 0xd0883c;
+
+    // Barrel shading — vertical bands across the tapered shaft. Bright toward the
+    // lit side (the central doorway), falling to near-black at the far edge.
+    const pPeak = litDir > 0 ? 0.74 : 0.26;        // brightest band position [0..1]
+    const nb = 14;
+    for (let i = 0; i < nb; i++) {
+      const p0 = i / nb, p1 = (i + 1) / nb, pm = (p0 + p1) / 2;
+      // Brightness: peak at pPeak, fall off to each edge (rounded cylinder).
+      let f = 1 - Math.abs(pm - pPeak) / 0.78;
+      f = Math.max(0, Math.min(1, f));
+      f = f * f;                                   // tighten the highlight
+      const col = f < 0.5
+        ? lerpC(SHADOW, MID, f * 2)
+        : lerpC(MID, LIGHT, (f - 0.5) * 2);
+      g.fillStyle(col, dim);
+      g.fillPoints([
+        { x: x + topHW * (2 * p0 - 1), y: top },
+        { x: x + topHW * (2 * p1 - 1), y: top },
+        { x: x + botHW * (2 * p1 - 1), y: colBot },
+        { x: x + botHW * (2 * p0 - 1), y: colBot },
+      ], true);
     }
+    // Subtle fluting grooves.
+    g.fillStyle(0x100804, 0.22 * dim);
+    [0.30, 0.5, 0.70].forEach((p) => {
+      g.fillRect(Math.round(x + botHW * (2 * p - 1)) - 1, top + 2, 2, colBot - top - 4);
+    });
+
+    // Capital — abacus slab + tapered echinus bell, shaded lit-side-up.
+    const abacusH = Math.round(capH * 0.42);
+    const echinHW = Math.round(capHW * 0.78);
+    g.fillStyle(lerpC(MID, LIGHT, 0.35), dim);
+    g.fillRect(x - capHW, top - capH, capHW * 2, abacusH);
+    g.fillStyle(lerpC(SHADOW, LIGHT, 0.7), dim);
+    g.fillRect(x - capHW, top - capH, capHW * 2, Math.max(2, Math.round(3 * scale)));
+    g.fillStyle(lerpC(SHADOW, MID, 0.8), dim);
+    g.fillPoints([
+      { x: x - echinHW, y: top - capH + abacusH },
+      { x: x + echinHW, y: top - capH + abacusH },
+      { x: x + topHW,   y: top },
+      { x: x - topHW,   y: top },
+    ], true);
+
+    // Plinth — wide base block.
+    const plinthHW = Math.round(capHW * 0.92);
+    g.fillStyle(lerpC(SHADOW, MID, 0.55), dim);
+    g.fillRect(x - plinthHW, colBot, plinthHW * 2, plinthH);
+    g.fillStyle(lerpC(MID, LIGHT, 0.4), dim);
+    g.fillRect(x - plinthHW, colBot, plinthHW * 2, Math.max(1, Math.round(2 * scale)));
+    g.fillStyle(0x0a0502, 0.5 * dim);
+    g.fillRect(x - plinthHW, colBot + plinthH - Math.max(2, Math.round(3 * scale)), plinthHW * 2, Math.max(2, Math.round(3 * scale)));
+
+    // Ground contact shadow.
+    g.fillStyle(0x0a0602, 0.32 * dim);
+    g.fillEllipse(x, floorY + 2, botHW * 2.6, Math.max(4, Math.round(botHW * 0.36)));
   }
 
   sceneHall(g, width, floorY) {
     const cx = width / 2;
     const height = this.scale.height;
-    // Floor.
-    g.fillStyle(0x140d20, 1);
-    g.fillRect(0, floorY, width, height - floorY);
-    g.fillStyle(0x2a1d3a, 1);
-    g.fillRect(0, floorY, width, 4);
-    // Light cone — warm amber, soft feathered edges (no hard triangle).
-    const vp = floorY * 0.42;
-    const coneW = width * 0.17;
-    [
-      { w: coneW * 1.5, a: 0.05 },
-      { w: coneW * 1.2, a: 0.08 },
-      { w: coneW,       a: 0.13 },
-      { w: coneW * 0.7, a: 0.09 },
-    ].forEach(({ w, a }) => {
-      g.fillStyle(0xc8922a, a);
-      g.fillTriangle(cx - w, floorY, cx + w, floorY, cx, vp);
-    });
-    g.fillStyle(0xe8b84a, 0.06);
-    g.fillTriangle(cx - coneW * 0.35, floorY, cx + coneW * 0.35, floorY, cx, vp);
-    g.fillStyle(GOLD, 0.42);
-    g.fillTriangle(cx - 3, floorY, cx + 3, floorY, cx, vp);
-    // Radial grain on the cone.
-    this.addStoneNoise(cx, (floorY + vp) / 2, coneW * 2.4, floorY - vp, 0xc8922a, 0.055);
-    // Far arch — sandstone/ochre palette with stone joints.
-    const archW = 92;
+    g._cx = cx;
+
+    // ── Single vanishing point — cathedral nave geometry ───────────────────────
+    // Everything derived from one point: near columns tower, arch is small+distant.
+    // ── One-point perspective BOX (not a tunnel to a single point) ────────────
+    // A small back-wall rectangle sits at the far end. Floor, ceiling and side
+    // walls are TRAPEZOIDS connecting the full-size front frame to that back
+    // wall — they stop AT the wall, they don't collapse to a point. The door
+    // sits flat on the back wall. Mental model: a cathedral nave from the door.
+    const sceneBot = Math.round(height * 0.72);  // bottom of painted area (nearest)
+
+    // Back wall (far end of the hall).
+    const bwW   = Math.round(width * 0.20);
+    const bwL   = cx - bwW / 2;
+    const bwR   = cx + bwW / 2;
+    const bwBot = Math.round(floorY * 0.66);     // far floor meets back wall here
+    const bwTop = Math.round(floorY * 0.10);     // top of the back wall
+
+    // CEILING trapezoid — full-width top edge → back-wall top edge.
+    g.fillStyle(0x2e1608, 1);
+    g.fillPoints([
+      { x: 0, y: 0 }, { x: width, y: 0 },
+      { x: bwR, y: bwTop }, { x: bwL, y: bwTop },
+    ], true);
+    // Coffer ribs converging toward the back wall.
+    g.fillStyle(0x140a04, 0.6);
+    for (let k = 1; k <= 5; k++) {
+      const fx = k * width / 6;
+      const bx = bwL + (bwR - bwL) * (k / 6);
+      g.fillPoints([
+        { x: fx - 2, y: 0 }, { x: fx + 2, y: 0 },
+        { x: bx + 1, y: bwTop }, { x: bx - 1, y: bwTop },
+      ], true);
+    }
+
+    // SIDE WALLS — front side edges → back-wall side edges.
+    g.fillStyle(0x6e3416, 1);
+    g.fillPoints([
+      { x: 0, y: 0 }, { x: 0, y: sceneBot },
+      { x: bwL, y: bwBot }, { x: bwL, y: bwTop },
+    ], true);
+    g.fillStyle(0x5a2a12, 1);
+    g.fillPoints([
+      { x: width, y: 0 }, { x: width, y: sceneBot },
+      { x: bwR, y: bwBot }, { x: bwR, y: bwTop },
+    ], true);
+    // Near-corner shadow vignette.
+    g.fillStyle(0x0e0804, 0.4);
+    g.fillTriangle(0, 0, 0, sceneBot, Math.round(width * 0.05), Math.round(sceneBot * 0.5));
+    g.fillTriangle(width, 0, width, sceneBot, Math.round(width * 0.95), Math.round(sceneBot * 0.5));
+
+    // FLOOR trapezoid — front bottom edge → back-wall bottom edge.
+    g.fillStyle(0x3e2010, 1);
+    g.fillPoints([
+      { x: 0, y: sceneBot }, { x: width, y: sceneBot },
+      { x: bwR, y: bwBot }, { x: bwL, y: bwBot },
+    ], true);
+    g.fillStyle(0x5a3020, 1);
+    g.fillRect(0, sceneBot - 2, width, 2);
+    // Receding floor courses (parallel to the front edge, narrowing with depth).
+    for (let r = 1; r <= 6; r++) {
+      const t  = r / 7;
+      const y  = Math.round(sceneBot + (bwBot - sceneBot) * t);
+      const hw = Math.round((width / 2) + (bwW / 2 - width / 2) * t);
+      g.fillStyle(0xc8922a, 0.24 * (1 - t * 0.4));
+      g.fillRect(cx - hw, y, hw * 2, Math.max(1, Math.round((1 - t) * 3 + 1)));
+    }
+    // Floorboards converging toward the back wall.
+    g.lineStyle(1, 0xc8922a, 0.1);
+    for (let k = -3; k <= 3; k++) {
+      if (k === 0) continue;
+      g.beginPath();
+      g.moveTo(cx + k * (width / 7), sceneBot);
+      g.lineTo(cx + k * (bwW / 7), bwBot);
+      g.strokePath();
+    }
+
+    // BACK WALL face.
+    g.fillStyle(0x46260f, 1);
+    g.fillRect(bwL, bwTop, bwW, bwBot - bwTop);
+    g.fillStyle(0xb07d4a, 0.7);   // cornice
+    g.fillRect(bwL, bwTop, bwW, 2);
+
+    // ── Door — tall arch sitting flat on the back wall, on the floor ──────────
+    const archW   = Math.round(bwW * 0.52);
     const archRad = archW / 2;
-    const archTop = floorY * 0.34;
-    const archH = floorY * 0.5;
-    // Shadow surround (slightly irregular by offset).
-    g.fillStyle(0x7a4e28, 1);
-    g.fillRoundedRect(cx - archRad - 5, archTop - 4, archW + 10, archH + 5, {
+    const archBot = bwBot - 2;                                   // stands on floor
+    const archTop = Math.round(bwTop + (bwBot - bwTop) * 0.12);
+    const archH   = archBot - archTop;
+    const archL   = cx - archRad;
+    const archR   = cx + archRad;
+
+    g.fillStyle(0x5a3a18, 1);                                    // stone surround
+    g.fillRoundedRect(archL - 4, archTop - 3, archW + 8, archH + 3, {
       tl: archRad + 3, tr: archRad + 3, bl: 0, br: 0,
     });
-    // Sandstone face.
-    g.fillStyle(0xb07d4a, 1);
-    g.fillRoundedRect(cx - archRad, archTop, archW, archH, {
+    g.fillStyle(0x2a1a08, 1);                                    // soffit
+    g.fillRoundedRect(archL, archTop, archW, archH, {
       tl: archRad, tr: archRad, bl: 0, br: 0,
     });
-    // Ochre highlight on the lit side.
-    g.fillStyle(0xc4956a, 0.5);
-    g.fillRoundedRect(cx - archRad, archTop, archW * 0.44, archH, {
-      tl: archRad, tr: 0, bl: 0, br: 0,
+    const inset = Math.max(2, Math.round(archW * 0.13));
+    g.fillStyle(0x100c08, 1);                                    // dark opening
+    g.fillRoundedRect(archL + inset, archTop + inset, archW - inset * 2, archH - inset, {
+      tl: archRad - inset, tr: archRad - inset, bl: 0, br: 0,
     });
-    // Stone joint lines in the straight section below the semicircle.
-    g.fillStyle(0x6a3e1a, 0.55);
-    for (let jy = archTop + archRad + 6; jy < archTop + archH; jy += 13) {
-      g.fillRect(cx - archRad + 2, jy, archW - 4, 1.5);
-    }
-    // Dark inner opening.
-    g.fillStyle(0x130c08, 1);
-    g.fillRoundedRect(cx - archRad + 9, archTop + 9, archW - 18, archH - 9, {
-      tl: archRad - 9, tr: archRad - 9, bl: 0, br: 0,
+    this.addGlow(cx, archBot - archH * 0.4, archW * 2.6, 0xffce86, 0.5);
+
+    // Warm light spilling from the doorway across the near floor.
+    g.fillStyle(0xc8922a, 0.06);
+    g.fillTriangle(archL, archBot, archR, archBot, cx + width * 0.22, sceneBot);
+    g.fillTriangle(archL, archBot, archR, archBot, cx - width * 0.22, sceneBot);
+
+    // ── Columns — colonnade receding with the SAME box mapping as the walls ───
+    // Each column spans floor→ceiling AT ITS DEPTH: the floor line is
+    // sceneBot→bwBot, the ceiling line is 0→bwTop. Horizontal offset + width
+    // shrink by the wall's horizontal scale, so the row converges with the room.
+    const hBack = bwW / width;                    // horizontal scale at back wall
+    const FRONT_OFF = width * 0.42;
+    [0.04, 0.50, 0.78].forEach((d) => {
+      const wScale = 1 - d * (1 - hBack);
+      const offX   = Math.round(FRONT_OFF * wScale);
+      const baseY  = Math.round(sceneBot + (bwBot - sceneBot) * d); // floor at depth d
+      const ceilY  = Math.round(bwTop * d);                          // ceiling at depth d
+      const capH   = Math.round(26 * wScale);                        // matches column()
+      const topY   = ceilY + capH;                                   // capital meets ceiling
+      this.column(g, cx - offX, topY, baseY, d, wScale, +1); // left cols lit toward centre
+      this.column(g, cx + offX, topY, baseY, d, wScale, -1); // right cols lit toward centre
     });
-    // Stone noise overlay on the arch face.
-    this.addStoneNoise(cx, archTop + archH * 0.55, archW + 14, archH + 6);
-    this.addGlow(cx, archTop + archH * 0.55, width * 0.38, 0xffce86, 0.52);
-    // Receding columns — i=0 nearest/warmest, i=2 furthest/haziest.
-    const pairs = [0.12, 0.24, 0.36];
-    pairs.forEach((f, i) => {
-      const top = floorY * (0.2 + i * 0.05);
-      const colDepth = i / 2;
-      this.column(g, cx - width * (0.46 - f * 0.6), top, floorY, colDepth);
-      this.column(g, cx + width * (0.46 - f * 0.6), top, floorY, colDepth);
-    });
-    // Banners.
-    [cx - width * 0.22, cx + width * 0.22].forEach((x) =>
-      this.banner(g, x, floorY * 0.18, floorY * 0.28)
-    );
+
+    // ── Banners — mounted on the back wall, neatly flanking the door ──────────
+    const bScale = 0.7;
+    const bGapL  = Math.round((bwL + archL) / 2);
+    const bGapR  = Math.round((bwR + archR) / 2);
+    const bTopY  = bwTop + Math.round(10 * bScale);
+    const bLen   = Math.round((bwBot - bwTop) * 0.46);
+    this.banner(g, bGapL, bTopY, bLen, bScale);
+    this.banner(g, bGapR, bTopY, bLen, bScale);
   }
 
-  banner(g, x, topY, len) {
-    const w = 38;
-    // House Calder — rich deep blue.
-    g.fillStyle(0x1e5090, 1);
+  banner(g, x, topY, len, s = 1) {
+    const w = 40 * s;
+    // Hanging rod with finial ends.
+    g.fillStyle(0xc8922a, 1);
+    g.fillRect(x - w / 2 - 10 * s, topY - 7 * s, w + 20 * s, 5 * s);
+    g.fillCircle(x - w / 2 - 10 * s, topY - 5 * s, 5 * s);
+    g.fillCircle(x + w / 2 + 10 * s, topY - 5 * s, 5 * s);
+    g.fillStyle(0x8a5a18, 0.8);
+    g.fillRect(x - w / 2 - 2 * s, topY - 7 * s, w + 4 * s, 2 * s);
+    // House Calder — deep crimson/wine (warm, sits in the palette).
+    g.fillStyle(0x6e0c1a, 1);
     g.fillRect(x - w / 2, topY, w, len);
-    g.fillTriangle(x - w / 2, topY + len, x + w / 2, topY + len, x, topY + len + 18);
+    g.fillTriangle(x - w / 2, topY + len, x + w / 2, topY + len, x, topY + len + 18 * s);
     // Edge highlights.
-    g.fillStyle(0x4888c8, 0.85);
-    g.fillRect(x - w / 2, topY, 3, len + 18);
-    g.fillRect(x + w / 2 - 3, topY, 3, len);
+    g.fillStyle(0xa03050, 0.9);
+    g.fillRect(x - w / 2, topY, 3 * s, len + 18 * s);
+    g.fillRect(x + w / 2 - 3 * s, topY, 3 * s, len);
     // Gold top bar.
     g.fillStyle(GOLD, 1);
-    g.fillRect(x - w / 2 - 5, topY - 3, w + 10, 5);
+    g.fillRect(x - w / 2 - 5 * s, topY - 3 * s, w + 10 * s, 5 * s);
     // Sigil — diamond with cross and centre jewel.
     const sy = topY + len * 0.38;
     g.fillStyle(GOLD, 0.95);
-    g.fillTriangle(x, sy - 14, x + 11, sy, x, sy + 14);
-    g.fillTriangle(x, sy - 14, x - 11, sy, x, sy + 14);
-    g.fillStyle(0x1e5090, 1);
-    g.fillTriangle(x, sy - 8, x + 6, sy, x, sy + 8);
-    g.fillTriangle(x, sy - 8, x - 6, sy, x, sy + 8);
+    g.fillTriangle(x, sy - 14 * s, x + 11 * s, sy, x, sy + 14 * s);
+    g.fillTriangle(x, sy - 14 * s, x - 11 * s, sy, x, sy + 14 * s);
+    g.fillStyle(0x6e0c1a, 1);
+    g.fillTriangle(x, sy - 8 * s, x + 6 * s, sy, x, sy + 8 * s);
+    g.fillTriangle(x, sy - 8 * s, x - 6 * s, sy, x, sy + 8 * s);
     g.fillStyle(GOLD, 1);
-    g.fillCircle(x, sy, 3);
-    g.fillRect(x - 10, sy - 1.5, 20, 3);
+    g.fillCircle(x, sy, 3 * s);
+    g.fillRect(x - 10 * s, sy - 1.5 * s, 20 * s, 3 * s);
     // Wave marks — salt-and-sea for House Calder.
     const wy = topY + len * 0.7;
-    g.fillStyle(0x6aaad8, 0.8);
-    g.fillRect(x - 9, wy, 18, 2);
-    g.fillStyle(0x6aaad8, 0.6);
-    g.fillRect(x - 7, wy + 5, 14, 2);
-    g.fillStyle(0x6aaad8, 0.4);
-    g.fillRect(x - 5, wy + 10, 10, 2);
+    g.fillStyle(0xd04060, 0.8);
+    g.fillRect(x - 9 * s, wy, 18 * s, 2 * s);
+    g.fillStyle(0xd04060, 0.55);
+    g.fillRect(x - 7 * s, wy + 5 * s, 14 * s, 2 * s);
+    g.fillStyle(0xd04060, 0.35);
+    g.fillRect(x - 5 * s, wy + 10 * s, 10 * s, 2 * s);
   }
 
   // Feature props (centred on the floor) ------------------------------------

@@ -76,7 +76,6 @@ export default class WorldMapScene extends Phaser.Scene {
     // Ignore input briefly so a ghost click from the War Room tap can't act here.
     this.inputReadyAt = this.time.now + 450;
 
-    enablePainterly(this);
     this.input.keyboard.on('keydown-K', () => togglePainterly(this));
 
     this.scale.on('resize', this.onResize, this);

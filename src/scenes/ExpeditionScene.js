@@ -87,7 +87,6 @@ export default class ExpeditionScene extends Phaser.Scene {
 
     this.layout(width, height);
 
-    enablePainterly(this);
     this.input.keyboard.on('keydown-K', () => togglePainterly(this));
 
     this.scale.on('resize', this.onResize, this);

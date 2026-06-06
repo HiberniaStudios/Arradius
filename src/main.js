@@ -11,13 +11,16 @@ const config = {
   backgroundColor: '#0b0a1f',
   pixelArt: true,
   scale: {
-    // RESIZE makes the canvas match the parent (screen) size exactly, so the
-    // game fills any aspect ratio with no letterboxing. The scene lays itself
-    // out proportionally and listens for resize/orientation changes.
-    mode: Phaser.Scale.RESIZE,
+    // FIT locks the design aspect ratio (16:9) and letterboxes the spare space
+    // rather than squashing the scene when the window is a different shape. The
+    // scene always lays out against this fixed logical size (1280x720); Phaser
+    // scales the rendered canvas to fit the screen and centres it.
+    // To retarget, change width/height: 16:10 → 1280x800, 4:3 → 1024x768,
+    // 21:9 → 1280x548. Keep them in proportion to the aspect you want.
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: '100%',
-    height: '100%',
+    width: 1280,
+    height: 720,
   },
   physics: {
     default: 'arcade',
@@ -31,4 +34,4 @@ const config = {
 };
 
 // eslint-disable-next-line no-new
-new Phaser.Game(config);
+window.__game = new Phaser.Game(config);

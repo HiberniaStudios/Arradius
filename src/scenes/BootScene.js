@@ -30,11 +30,11 @@ export default class BootScene extends Phaser.Scene {
     const tex = this.textures.createCanvas('interiorWall', w, h);
     const ctx = tex.getContext();
     const grad = ctx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0.0, '#0f0a1c');
-    grad.addColorStop(0.35, '#241640');
-    grad.addColorStop(0.62, '#3a2350');
-    grad.addColorStop(0.85, '#5a3548');
-    grad.addColorStop(1.0, '#7a4a3a');
+    grad.addColorStop(0.0, '#180d08');
+    grad.addColorStop(0.22, '#2e1508');
+    grad.addColorStop(0.48, '#5a2812');
+    grad.addColorStop(0.74, '#8c3e1c');
+    grad.addColorStop(1.0, '#c06028');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
     tex.refresh();
