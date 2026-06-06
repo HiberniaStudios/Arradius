@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import Ambient from '../audio/Ambient.js';
+import AudioManager from '../audio/AudioManager.js';
 import { enablePainterly, togglePainterly } from '../shaders/KuwaharaPostFX.js';
 
 // The Residency — House Calder's seat, presented as static painted screens in
@@ -171,8 +171,11 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
   createAudio() {
-    if (!this.game.ambient) this.game.ambient = new Ambient();
-    this.ambient = this.game.ambient;
+    if (!this.game.audio) this.game.audio = new AudioManager();
+    this.ambient = this.game.audio;
+    // Inside the Residency the score is contained and courtly.
+    this.ambient.setMusicState('residency');
+    this.ambient.setAmbience(this.current);
     const startOnce = () => this.ambient.start();
     this.input.once('pointerdown', startOnce);
     this.input.keyboard.once('keydown', startOnce);
@@ -265,6 +268,8 @@ export default class ResidencyScene extends Phaser.Scene {
 
   renderLocation() {
     if (!this.bd) return;
+    // Crossfade the room's atmosphere as you move through the Residency.
+    this.ambient?.setAmbience(this.current);
     this.clearDynamic();
     this.destroyCommsAnim();           // live comms objects are rebuilt below if needed
     this.doorHotspots = {};            // populated by sceneHall / sceneShell
