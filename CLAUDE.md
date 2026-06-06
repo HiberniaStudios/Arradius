@@ -83,8 +83,10 @@ master ─┬─ musicGain    (continuous score — drone chord + pad + sub, "br
   scenes. Each scene's `createAudio()` grabs it (creating it if absent).
 - **Two noise seeds:** `noiseBuffer` (white, 2 s) and `pinkBuffer` (pink/1·f,
   6 s — calmer; used for air/room-tone/flute breath).
-- **The bed "breathes"** via three co-prime LFOs (19/29/41 s) summed over a low
-  floor on `musicGain.gain` — never a single audible cycle; dips through silence.
+- **The bed "breathes"** via three co-prime LFOs (≈67/97/139 s — long so swells
+  feel like fabric, not sudden) summed over a low floor on `musicGain.gain`.
+- **`master` → safety `DynamicsCompressor` (limiter) → destination** catches
+  peak spikes (bright events into the long reverb) so they don't clip to crackle.
 - **Lifecycle:** `prepare()` pre-builds the context + buffers at scene-create
   (avoids first-gesture lag); `start()` (bound to the first `pointerdown`/
   `keydown`, because browsers block audio until a gesture) builds music and
@@ -98,8 +100,9 @@ master ─┬─ musicGain    (continuous score — drone chord + pad + sub, "br
 - **Spice Opera voices (HERAD-style FM):** `cryingFlute`/`flutePhrase` (the
   signature breathy lead, used in `hall`) and `fmBell` (inharmonic chimes, used
   in `comms`), drawn from the `FLUTE_POOL`/`BELL_POOL` (F Phrygian-dominant /
-  Hijaz desert modes). **First pass so far covers `hall` + `comms` only** — the
-  other rooms still use the older generic recipes.
+  Hijaz desert modes). `radarSweep` gives `comms` a rotating-dish throb + sweep.
+  **First pass so far covers `hall` + `comms` only** — the other rooms still use
+  the older generic recipes.
 
 ### Painterly filter (`src/shaders/KuwaharaPostFX.js`)
 A Kuwahara edge-preserving smoothing PostFX pipeline (oil-painted look),
