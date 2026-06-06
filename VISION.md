@@ -96,21 +96,94 @@ modes, each feeding the others:
 > Palace decisions → map travel → side-scrolling expedition → Hollow encounters
 > → tribes/resources change → back to the Palace with the board reshaped.
 
+## Cast, forces & places
+
+_Locked, but editable as we progress._
+
 ### Places
 
-- **The Palace / the capital** — House Calder's seat _(name TBD)_.
+- **Saltspire** — the capital city of Aridun, seat of House Calder's rule.
+- **the Residency** — the Palace within Saltspire; your hub.
 - **Hollows** — the Shamen's settlements (our "sietch"); sacred deep refuges.
 - **Warrens** — the tunnel networks within and between Hollows; the underground
   side-scrolling levels.
 
-### Court & army — _(names pending)_
+### The court of House Calder
 
-Roles to be cast and named: the Lord of House Calder and his mystic-order
-consort, a cold strategist (the **Reckoner**), a loyal weapons-master (the
-**Bladewarden**), a physician of divided loyalties (the **Mender**), a palace
-steward, and a truthsayer of the mystic order (**the Sibyl**). Four military
-bodies: House Calder's guard, House Korinth's Imperial elite, the Shamen
-war-elite, and House Vorrin's forces.
+| Role | Dune analogue | Name |
+| --- | --- | --- |
+| The Lord (Eren's father) | Duke Leto | **Lord Aldric Calder** |
+| The Lady (his consort, of the Veil) | Lady Jessica | **Sela** |
+| The Reckoner (cold strategist) | Mentat | **Halix** |
+| The Bladewarden (weapons-master, mentor) | Gurney / Duncan | **Brannic** |
+| The Mender (physician, divided loyalty) | Dr Yueh | **Master Orlin** |
+| The Steward (runs the Residency) | household | **Pell** |
+| The Sibyl (truthsayer of the Veil) | Bene Gesserit | Mother **Ysolde** |
+
+- **the Veil** — the mystic sisterhood (our Bene Gesserit); Sela and Ysolde are
+  of it.
+
+### The four forces
+
+| Force | Dune analogue | Name |
+| --- | --- | --- |
+| House Calder's guard | Atreides troops | **the Saltguard** |
+| House Korinth's Imperial elite | Sardaukar | **the Pale Legion** |
+| The Shamen war-elite | Fedaykin | **the Veiled Knives** |
+| House Vorrin's forces | Harkonnen levies | **the Vorrin Hounds** |
+
+## Mechanics — after Dune '92 (CD-ROM)
+
+The systems are modelled on Cryo's _Dune_, refit to Aridun:
+
+- **Map travel & discovery** — range out from the Residency; discover Hollows;
+  the map of Aridun fills in as you go.
+- **Recruit the Shamen** — find tribes, earn their trust, bring them to House
+  Calder's cause.
+- **Assign tribes to tasks** — **Aurun harvesting**, **military** training, or
+  **ecology** (greening). Tribes have aptitudes and loyalties.
+- **Resource economy** — **Aurun** (wealth, tribute, power), **water** (life and
+  the truest currency), troops, and equipment.
+- **Territorial war** — push **House Vorrin** out of Aridun region by region;
+  take their holds.
+- **Ecology** — green the desert over time; a visible, consequential, slow
+  transformation of the world.
+- **Prescience & abilities** — Aurun-visions awaken Eren as the **Seir**;
+  foresight and powers grow with exposure.
+- **Side-scrolling expeditions** — _our addition_: the travel and Warren-delving
+  between all of the above, played on foot, where the world is felt.
+
+## Story spine
+
+_Creative licence: the **mechanics** follow Dune '92, but the **story** is our
+own. This is the working spine — bend it freely._
+
+**Premise.** The throne of **House Korinth** strips the Aurun fief of Aridun
+from **House Vorrin** and grants it to **House Calder** — a poisoned gift, meant
+to set two houses to ruin each other while the Imperium profits. **Eren**, heir
+of House Calder, comes to a world that calls itself **Aridun**, and finds the
+Shamen waiting on a prophecy he does not yet believe.
+
+**Act I — The Poisoned Gift.** Establish the Residency at Saltspire and the
+court. First expeditions: first contact with a Hollow, the first Aurun harvest.
+Then Vorrin strikes, and the **Mender's** divided loyalty turns the knife from
+within — House Calder is gutted, **Lord Aldric** with it. Eren flees into the
+deep desert and the Warrens with his mother **Sela** of the Veil.
+
+**Act II — The Seir Awakens.** Among the Hollows, Eren earns the Shamen,
+recruits tribes, and raises a resistance — the **Veiled Knives**. Aurun-visions
+deepen until the prophecy fits him: he is the **Seir**. The realm game opens
+fully — harvest, ecology, war — and the greening of Aridun begins as he turns
+the desert and its **Sleepers** against Vorrin.
+
+**Act III — The Reckoning.** Eren confronts House Vorrin and the hand of House
+Korinth behind it. The cost of prophecy comes due: to become what the Shamen
+need is to lose something — free will, or the world's future to a vision he
+cannot unsee. The end forks — a **greened** Aridun or a **scorched** one; a seat
+at the throne, or its overthrow.
+
+**Themes in play:** the poisoned inheritance, betrayal from within, prophecy vs.
+free will, and water as the price of everything.
 
 ## Aesthetic direction
 
