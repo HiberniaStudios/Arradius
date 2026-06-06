@@ -5,7 +5,7 @@ import GameScene from './scenes/GameScene.js';
 const config = {
   type: Phaser.AUTO,
   parent: 'game',
-  backgroundColor: '#1d1d2b',
+  backgroundColor: '#0b0a1f',
   pixelArt: true,
   scale: {
     // RESIZE makes the canvas match the parent (screen) size exactly, so the
