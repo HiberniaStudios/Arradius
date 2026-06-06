@@ -36,11 +36,13 @@ Tap once to start the music; **♪** (top-right) toggles it.
 └── src/
     ├── main.js             # Phaser.Game config + entry point
     ├── audio/
-    │   └── Ambient.js          # procedural ambient desert soundbed (Web Audio)
+    │   └── AudioManager.js     # two-bus Web Audio engine: spice-opera score + per-room ambience
+    ├── shaders/
+    │   └── KuwaharaPostFX.js   # painterly oil-paint post-process filter
     └── scenes/
         ├── BootScene.js        # generates painterly textures, then starts the hub
         ├── ResidencyScene.js   # the Palace hub: painted room screens, point-and-click + portraits
-        ├── WorldMapScene.js    # the strategic War Map of Aridun
+        ├── WorldMapScene.js    # the strategic War Map of Arradius
         └── ExpeditionScene.js  # the desert slice: parallax dunes, Eren, Aurun, Hollow
 ```
 
