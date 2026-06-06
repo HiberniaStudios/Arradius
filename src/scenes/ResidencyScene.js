@@ -173,6 +173,8 @@ export default class ResidencyScene extends Phaser.Scene {
   createAudio() {
     if (!this.game.audio) this.game.audio = new AudioManager();
     this.ambient = this.game.audio;
+    // Pre-build the graph now so the first gesture starts sound without a hitch.
+    this.ambient.prepare();
     // Inside the Residency the score is contained and courtly.
     this.ambient.setMusicState('residency');
     this.ambient.setAmbience(this.current);

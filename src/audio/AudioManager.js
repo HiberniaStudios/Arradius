@@ -105,6 +105,20 @@ export default class AudioManager {
     return buf;
   }
 
+  /**
+   * Pre-build the audio graph so the first gesture starts sound instantly.
+   *
+   * Generating the convolution impulse and the noise buffer is a burst of
+   * synchronous DSP. If it runs inside start() — on the user's first click —
+   * sound is audibly late. A browser lets us create the context (suspended)
+   * and fill these buffers without a gesture; only resuming needs one. So we
+   * do the heavy work at load time and leave start() to merely resume + ramp.
+   * Idempotent and safe to call before any user interaction.
+   */
+  prepare() {
+    this.ensureContext();
+  }
+
   /** Begin the score. Idempotent. Defaults to the Residency state + hall. */
   start() {
     this.ensureContext();
@@ -244,7 +258,9 @@ export default class AudioManager {
   setAmbience(key, force = false) {
     if (!RECIPES[key]) return;
     if (this.ambienceKey === key && this.ambienceInstance && !force) return;
-    if (!this.ctx) {
+    // Before the score is running the context may already exist (pre-warmed),
+    // but the bed is built by start(); just record the room it should open in.
+    if (!this.ctx || !this.isPlaying) {
       this.ambienceKey = key; // honoured by start()
       return;
     }

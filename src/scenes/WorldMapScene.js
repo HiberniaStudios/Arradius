@@ -212,6 +212,8 @@ export default class WorldMapScene extends Phaser.Scene {
   createAudio() {
     if (!this.game.audio) this.game.audio = new AudioManager();
     this.ambient = this.game.audio;
+    // Pre-build the graph now so the first gesture starts sound without a hitch.
+    this.ambient.prepare();
     // The war map shares the Communications Room's relay atmosphere.
     this.ambient.setMusicState('residency');
     this.ambient.setAmbience('map');

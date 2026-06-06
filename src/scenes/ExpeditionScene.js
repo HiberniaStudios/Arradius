@@ -440,6 +440,8 @@ export default class ExpeditionScene extends Phaser.Scene {
     // One audio engine for the whole game, persisting across scene changes.
     if (!this.game.audio) this.game.audio = new AudioManager();
     this.ambient = this.game.audio;
+    // Pre-build the graph now so the first gesture starts sound without a hitch.
+    this.ambient.prepare();
     // Out in the dunes the score opens up and the desert bed takes over.
     this.ambient.setMusicState('expedition');
     this.ambient.setAmbience('expedition');
