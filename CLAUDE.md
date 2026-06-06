@@ -69,8 +69,11 @@ BootScene → ResidencyScene ──(War Room / "Study the map")──→ WorldMa
   player, collectible Aurun, touch controls. Returns to the Residency.
 
 ### Audio engine (`src/audio/AudioManager.js`)
-The single most documented module — read its header comment first. Fully
-synthesized, **two-bus** design:
+The single most documented module — read its header comment first. **Before
+changing the soundscape, read `docs/audio-soundscape-research.md`** — a
+researched plan for making the fully-synthesized ambience subtle and
+non-repetitive (co-prime modulation, sparseness, pink/brown noise, soft events,
+adaptive layering). Fully synthesized, **two-bus** design:
 ```
 master ─┬─ musicGain    (continuous score — drone chord + pad + sub, "breathes")
         ├─ ambienceGain (per-room atmosphere — crossfades on room change)
