@@ -165,6 +165,93 @@ Ordered by impact. Each maps to the principles above.
 
 ---
 
+## Part 6 — The Spice Opera (Dune '92): the *specific* target
+
+Generic ambient principles (Parts 1–4) make the bed *recede*; the Spice Opera is
+what makes it *Arradius*. This is the identity to synthesize.
+
+### What it actually was (three different things — don't conflate them)
+- **In-game PC audio:** Stéphane Picq's sequences realised live on the **AdLib/
+  Sound Blaster OPL2 (YM3812) FM chip** by **HERAD** ("Herbulot AdLib"), a custom
+  driver by Cryo's Rémi Herbulot. Also MT-32 / AdLib Gold.
+- **Amiga audio:** sample-based **tracker modules** (Paula playback), *not* FM.
+- **"Dune: Spice Opera" CD (Exxos, 1992):** a **separate studio re-recording**
+  (Picq + Ulrich) — lush synths/samplers. This polished version is the *aesthetic*
+  north star; HERAD is the *expressivity* lesson. **For our pure-synth engine we
+  fuse both:** album-style lush subtractive pads + HERAD-style per-note-expressive
+  FM voices.
+
+### The HERAD lesson — expressive FM (the thing that made it sound alive)
+HERAD's standout trick (confirmed from the reverse-engineered driver source):
+it modulated **individual FM patch parameters per note in real time** —
+*carrier output level* (← velocity = loudness), *modulator output level* (←
+velocity = brightness/index), and *feedback* (← aftertouch = harmonic grit) —
+instead of playing static presets. That per-note movement is *why* a primitive
+2-operator chip sounded expressive. **The transferable rule: every note should
+move — brightness/amplitude/pitch shaped per-note, not fixed.**
+
+**2-operator FM in Web Audio** (the universal idiom — modulator's output is
+*added* to the carrier's frequency AudioParam):
+```js
+// modulator → modGain(index, in Hz) → carrier.frequency ; carrier → out
+modulator.connect(modGain); modGain.connect(carrier.frequency);
+// HERAD character = automate the index, don't leave it static:
+modGain.gain.setValueAtTime(index * velocity, now);          // bright on attack
+modGain.gain.exponentialRampToValueAtTime(index * 0.25, now + 0.6); // mellow tail
+```
+- **FM ratio cheat-sheet:** integer ratios (1:1, 2:1) → harmonic (pads, reedy
+  leads); inharmonic (3.5:1, 1:3.5) → metallic **bells/chimes** (very Dune). The
+  **index envelope** (bright attack → mellow sustain) is the single most
+  important HERAD move. Up to **9 voices** mirrors the OPL2's 9 channels.
+- Approximate OPL2 feedback/“grit” with a small `WaveShaper`/`AudioWorklet`
+  self-feedback term; emulate its half/abs/quarter-sine waves via `PeriodicWave`.
+
+### The aesthetic signatures (rank-ordered, with synthesis recipes)
+1. **Drone-anchored modal harmony, no functional cadences** — hold a tonic+fifth
+   pedal; draw melody from **Phrygian / Phrygian-dominant (Hijaz)** for the desert
+   color (the b2 and the 2↔3 augmented-2nd gap). *(mode-feel: medium conf; exact
+   per-track mode: unverified — treat as artistic choice.)*
+2. **The "crying flute" lead** (the defining foreground voice) — sine/triangle +
+   a low-mixed **bandpass-noise "breath"** layer (~1.5–3 kHz) louder on attack +
+   ~5 Hz vibrato + **portamento** glides between notes. Used sparingly, solo.
+3. **Warm, yearning detuned-saw pads** — 2–3 saws ±5–12 cents → gentle resonant
+   lowpass, slow attack, big reverb; **open/suspended voicings** (4ths/2nds,
+   avoid bright major 3rds).
+4. **Tangerine-Dream sequencer bass** — steady 16th-note arpeggio (saw → resonant
+   LP, short decay) over a sine sub-drone. The engine of the "rhythmic" state.
+5. **Inharmonic FM bells/chimes** — sparse single notes, long decay, the FM-ratio
+   trick above. The "chiming fragments" sparkle.
+6. **Loose ritual hand percussion** — bandpass-noise bursts (varied centers) +
+   pitch-drop sine "membrane"; swung, sparse, never a rock kit.
+7. **An "organic" non-pitched layer under everything** — breaths, sighs, water
+   (filtered noise + slow random AM/envelopes), per Picq's own "organic" descriptor.
+8. **"Sandy/crispy/grainy" grit** — a little noise/detune/bitcrush in pad attacks
+   so nothing sounds clean or GM-generic.
+9. **Per-note expressivity (the HERAD lesson)** — modulate filter/index/amp/pitch
+   per note from "velocity"; attack pitch-bends; drum pitch-drops.
+10. **Two states, crossfaded by location, tonic held constant** — *Ambient*
+    (drone + lonely flute + tiny ostinato → desert/sietch) vs *Rhythmic* (bass
+    sequence + percussion + lead → palace/flight). The score was **location-tied**,
+    built/broken by **layer accretion**.
+
+### How this maps onto Arradius
+- **Residency (palace):** fuller yearning pads + the lonely crying-flute lead +
+  sparse FM bells. **Expedition (desert):** sparse ambient drone + sub + a tiny
+  4-note Phrygian-dominant ostinato; flute only rarely. Per-room recipes gain a
+  **modal melodic layer** instead of just wind/gongs.
+- The Part 1–4 engine (co-prime modulation, sparseness, pink noise, soft events,
+  smoothed room crossfades) becomes the *delivery system*; these signatures are
+  the *content* it delivers — keeping the tonic constant across rooms for one
+  continuous world.
+
+> **Honesty:** exact scales/tempos per track and the precise in-game switching
+> mechanism are **not verified** (inferred from influences + the location-cue
+> structure). "Floppy Dune" could not be confirmed as a real track. HERAD itself
+> was FM/OPL2; the album's lushness came from studio synths/samplers — our
+> pure-synth engine deliberately blends both characters.
+
+---
+
 ## Sources (primary)
 
 **Psychoacoustics:** ncbi.nlm.nih.gov/pmc/articles/PMC10637696, PMC4731741,
@@ -198,3 +285,13 @@ edu/9780262014410 (Designing Sound); thinkingsound.wordpress.com … pure-data-
 wind-generator; lac.linuxaudio.org/2018/pdf/14-paper.pdf (Perlin noise in
 synthesis); soundonsound.com … synth-secrets; soundbridge.io … deep-drone
 (detune); splice.com/blog/procedural-audio-video-games (limits).
+
+**Spice Opera (Dune '92):** gameloadedmuseum.wordpress.com … stephane-picq-
+interview (primary, 2025); greatestgamemusic.com/soundtracks/dune-soundtrack;
+filfre.net … cryos-dune (Digital Antiquarian); en.wikipedia.org/wiki/
+St%C3%A9phane_Picq; dune.fandom.com/wiki/Dune:_Spice_Opera; fr.wikipedia.org/
+wiki/Dune:_Spice_Opera (version breakdown). **HERAD/FM tech:** github.com/
+synamaxmusic/herad (reverse-engineered driver source); vgmpf.com/Wiki/index.php/
+HERAD; github.com/adplug/adplug/issues/39; en.wikipedia.org/wiki/Yamaha_YM3812;
+moddingwiki.shikadi.net/wiki/OPL_chip; greweb.me/2013/08/FM-audio-api +
+tonejs.github.io (FMOscillator) + MDN AudioParam (Web Audio FM idiom).
