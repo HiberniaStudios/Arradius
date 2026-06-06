@@ -102,12 +102,35 @@ export default class GameScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(-100);
 
-    // Sun: a hazy glow low in the sky.
+    // A faint scatter of stars across the night half of the sky.
+    this.starField = Array.from({ length: 70 }, () => ({
+      fx: Math.random(),
+      fy: Math.random() * 0.45,
+      r: Math.random() * 1.4 + 0.4,
+      a: Math.random() * 0.5 + 0.3,
+    }));
+    this.stars = this.add.graphics().setScrollFactor(0).setDepth(-99);
+    this.tweens.add({
+      targets: this.stars,
+      alpha: { from: 0.7, to: 1 },
+      duration: 3000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.inOut',
+    });
+
+    // Sun: a hazy glow low in the sky, with a brighter core.
     this.sun = this.add
       .image(0, 0, 'glow')
       .setScrollFactor(0)
       .setDepth(-90)
       .setBlendMode(Phaser.BlendModes.ADD);
+    this.sunCore = this.add
+      .image(0, 0, 'glow')
+      .setScrollFactor(0)
+      .setDepth(-89)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setTint(0xffe9c0);
 
     // God-rays fanning from the sun (redrawn on resize).
     this.rays = this.add
@@ -123,6 +146,17 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(-82)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setTint(0x9a5fb0);
+
+    // Distant rock spires — hazy landmarks far behind the dunes.
+    this.spireDefs = [
+      { fx: 0.12, h: 0.16, w: 34 },
+      { fx: 0.28, h: 0.1, w: 26 },
+      { fx: 0.44, h: 0.21, w: 42 },
+      { fx: 0.58, h: 0.13, w: 30 },
+      { fx: 0.73, h: 0.23, w: 46 },
+      { fx: 0.88, h: 0.12, w: 28 },
+    ];
+    this.spires = this.add.graphics().setScrollFactor(0.15).setDepth(-86);
 
     // Parallax dune silhouettes.
     this.duneLayers = DUNES.map((def) =>
@@ -150,26 +184,56 @@ export default class GameScene extends Phaser.Scene {
   redrawAtmosphere(width, height) {
     this.sky.setDisplaySize(width, height);
 
+    // Stars.
+    this.stars.clear();
+    this.starField.forEach((s) => {
+      this.stars.fillStyle(0xfff4e0, s.a);
+      this.stars.fillCircle(s.fx * width, s.fy * height, s.r);
+    });
+
     const sunX = width * 0.72;
     const sunY = height * 0.26;
-    const sunSize = Math.max(width, height) * 0.9;
+    const sunSize = Math.max(width, height) * 1.0;
     this.sun.setPosition(sunX, sunY).setDisplaySize(sunSize, sunSize);
+    this.sunCore
+      .setPosition(sunX, sunY)
+      .setDisplaySize(sunSize * 0.42, sunSize * 0.42);
 
     this.haze
       .setPosition(width * 0.5, height * 0.72)
-      .setDisplaySize(width * 1.6, height * 0.5);
+      .setDisplaySize(width * 1.7, height * 0.55);
 
-    // God-rays: faint translucent wedges from the sun toward the ground.
+    // Distant spires (drawn across the world; hazy atmospheric colour).
+    this.spires.clear();
+    const spireBase = height * 0.64;
+    this.spireDefs.forEach((s) => {
+      const x = s.fx * WORLD_WIDTH;
+      const peak = s.h * height;
+      this.spires.fillStyle(0x4a3360, 1);
+      this.spires.fillTriangle(
+        x - s.w,
+        spireBase,
+        x + s.w,
+        spireBase,
+        x,
+        spireBase - peak
+      );
+    });
+
+    // God-rays: a soft fan of translucent wedges from the sun toward the ground.
     this.rays.clear();
-    for (let i = -3; i <= 3; i += 1) {
-      const spread = i * width * 0.06;
-      this.rays.fillStyle(0xffd9a0, 0.05);
+    const rayTopY = sunY + sunSize * 0.04;
+    for (let i = -7; i <= 7; i += 1) {
+      const t = Math.abs(i) / 7;
+      const spread = i * width * 0.05;
+      const halfW = 16 + (1 - t) * 26;
+      this.rays.fillStyle(0xffe2b0, 0.06 * (1 - t * 0.7));
       this.rays.fillTriangle(
         sunX,
-        sunY,
-        sunX + spread - 30,
+        rayTopY,
+        sunX + spread - halfW,
         height,
-        sunX + spread + 30,
+        sunX + spread + halfW,
         height
       );
     }

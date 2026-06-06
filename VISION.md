@@ -176,3 +176,41 @@ How the current scaffold supports this:
 - **To add:** Tiled/handcrafted region maps, a parallax background system, a
   dialogue/portrait system, the world-map meta-scene, a save system for
   strategic state, and a real audio pipeline (streamed music + SFX).
+
+---
+
+## Engine, porting & release strategy
+
+**Target platforms:** **itch.io first, then Steam.**
+
+- **Prototype in Phaser.** Instant web deploy, a live URL playable on any phone —
+  the fastest way to find the game and iterate on feel.
+- **Ship to itch.io in Phaser.** HTML5 builds play directly in the browser, zero
+  friction. itch is the natural first home and audience-builder.
+- **Steam later.** Steam players expect a native app, so two routes:
+  - **Wrap** the web build in Electron for a quick native desktop release, or
+  - **Port to Godot** (free, excellent modern 2D, multi-platform export) for a
+    polished native build. Godot is the recommended long-term home if the game
+    proves out; Unity is the alternative if console/commercial muscle is needed.
+
+**Keep it portable from now on:**
+
+- Prefer **real asset files** (PNG/spritesheets, `.ogg` audio) over procedural
+  generation once past prototyping — assets port; generator code does not.
+- Keep content **data-driven** — levels (ideally [Tiled](https://www.mapeditor.org/)
+  `.tmx`), Aurun placements, dialogue, and naming in JSON/data files rather than
+  hardcoded in scenes.
+- Treat this document and the art/story as the source of truth — engine-agnostic.
+
+**What survives a port:** vision, story, world, naming, art, audio assets, level
+data, mechanics, and game feel. **What gets rewritten:** the engine plumbing
+(input, physics wiring, scene code). The creative work is safe.
+
+### Iteration workflow
+
+- **On the web (now):** Claude builds and pushes; you playtest on the live
+  Cloudflare Pages URL and send screenshots to steer the look.
+- **On a local PC:** Claude Code can drive a headless browser (Playwright MCP)
+  to screenshot the running game and iterate on composition, colour, lighting,
+  and layout directly — a tight visual loop. You remain the judge of motion,
+  timing, and audio (Claude sees frames, not feel).
