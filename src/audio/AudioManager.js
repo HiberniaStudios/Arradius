@@ -31,6 +31,12 @@ const MUSIC = {
   expedition: { transpose: -5, sub: 0.22, droneCut: 260, padCut: 480 },
 };
 
+// Melodic pools over the F drone (residency state), in the Spice Opera's desert
+// colour: F Phrygian dominant / Hijaz — degrees 0,1,4,5,7,8,10. The b2 (Gb) and
+// the augmented 2nd between it and the major 3rd (A) are *the* desert sound.
+const FLUTE_POOL = [65, 66, 69, 70, 72, 73, 75]; // F4 Gb4 A4 Bb4 C5 Db5 Eb5
+const BELL_POOL = [77, 81, 84, 89]; // sparse chimes, an octave up (F5 A5 C6 F6)
+
 export default class AudioManager {
   constructor() {
     this.ctx = null;
@@ -93,11 +99,31 @@ export default class AudioManager {
     this.ambienceGain.gain.value = 0.8;
     this.ambienceGain.connect(this.master);
 
-    // ~2s white-noise buffer — the seed for all air, wind, murmur and static.
+    // ~2s white-noise buffer — the seed for wind, murmur and static.
     const len = Math.floor(ctx.sampleRate * 2);
     this.noiseBuffer = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = this.noiseBuffer.getChannelData(0);
     for (let i = 0; i < len; i += 1) d[i] = Math.random() * 2 - 1;
+
+    // ~6s PINK (1/f) noise — calmer and warmer than white (energy falls with
+    // frequency, matching the ear), so air/room-tone/breath don't hiss. Longer
+    // than the white buffer so its loop point is harder to hear. Paul Kellet's
+    // refined filter (firstpr.com.au/dsp/pink-noise).
+    const plen = Math.floor(ctx.sampleRate * 6);
+    this.pinkBuffer = ctx.createBuffer(1, plen, ctx.sampleRate);
+    const pd = this.pinkBuffer.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+    for (let i = 0; i < plen; i += 1) {
+      const w = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + w * 0.0555179;
+      b1 = 0.99332 * b1 + w * 0.0750759;
+      b2 = 0.969 * b2 + w * 0.153852;
+      b3 = 0.8665 * b3 + w * 0.3104856;
+      b4 = 0.55 * b4 + w * 0.5329522;
+      b5 = -0.7616 * b5 - w * 0.016898;
+      pd[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+      b6 = w * 0.115926;
+    }
   }
 
   /** A decaying-noise impulse response → a large stone-hall reverb. */
@@ -241,24 +267,30 @@ export default class AudioManager {
     this.subGain = subG;
     this.subBase = 0.12;
 
-    // Breath: the whole harmonic bed slowly swells in and recedes toward
-    // near-silence on a ~36s tide, so the score reads as presence coming and
-    // going rather than a constant drone. The bus gain is driven entirely by
-    // these two sources — its intrinsic value is held at 0 and they sum on top,
-    // swinging it between ~0.02 (almost gone) and ~0.38 (full). setMusicState
-    // and the master fade are untouched by this; they live on other nodes.
+    // Breath: the whole harmonic bed swells and recedes — but driven by THREE
+    // slow LFOs at CO-PRIME periods (19 / 29 / 41 s) summed over a low floor,
+    // not one tidy 36s sine. A single LFO *is* a loop the ear locks onto; three
+    // incommensurate ones never realign (their cycle is their LCM ≈ 6.3 hours),
+    // so the loudness never settles into an audible "whoosh-whoosh". The floor
+    // sits below the swing depth, so the troughs cross through zero — real
+    // stretches of near-silence, the space the atmosphere lives in. (A briefly
+    // negative bus gain is an inaudible polarity flip at near-zero magnitude.)
+    // The bus param is held at 0; these sources sum on top. setMusicState and
+    // the master fade live on other nodes and are untouched.
     this.musicGain.gain.value = 0;
-    const breath = ctx.createConstantSource();
-    breath.offset.value = 0.2; // midpoint of the swell
-    const breathLfo = ctx.createOscillator();
-    breathLfo.type = 'sine';
-    breathLfo.frequency.value = 1 / 36; // ~36s in-and-out cycle
-    const breathDepth = ctx.createGain();
-    breathDepth.gain.value = 0.18; // swing depth around the midpoint
-    breath.connect(this.musicGain.gain);
-    breathLfo.connect(breathDepth).connect(this.musicGain.gain);
-    breath.start(now);
-    breathLfo.start(now);
+    const floor = ctx.createConstantSource();
+    floor.offset.value = 0.13; // low resting level
+    floor.connect(this.musicGain.gain);
+    floor.start(now);
+    [[0.13, 19], [0.1, 29], [0.07, 41]].forEach(([depth, period]) => {
+      const lfo = ctx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.value = 1 / period;
+      const dg = ctx.createGain();
+      dg.gain.value = depth;
+      lfo.connect(dg).connect(this.musicGain.gain);
+      lfo.start(now);
+    });
   }
 
   /** Ramp the score between its Residency and Expedition states. */
@@ -413,7 +445,7 @@ export default class AudioManager {
   roomTone(inst, { cut = 200, level = 0.04, swellRate = 0.025 }) {
     const now = this.ctx.currentTime;
     const src = this.ctx.createBufferSource();
-    src.buffer = this.noiseBuffer;
+    src.buffer = this.pinkBuffer; // pink, not white — warm air, no hiss
     src.loop = true;
     const filt = this.ctx.createBiquadFilter();
     filt.type = 'lowpass';
@@ -569,6 +601,152 @@ export default class AudioManager {
     osc.stop(now + decay + 0.1);
   }
 
+  // --- Spice Opera voices (HERAD-style expressive FM) -----------------------
+
+  /**
+   * The "crying flute" — the Spice Opera's signature foreground voice. A
+   * 2-operator FM tone (modulator → index gain → carrier.frequency) blended
+   * with a low breath layer of bandpass pink noise. The HERAD lesson: the note
+   * must *move* — the modulation index is brightest on the attack and mellows
+   * as it sustains, vibrato fades in, and the pitch glides (portamento) from
+   * the previous note for the vocal "cry". Routed dry (quiet) + wet (mostly)
+   * straight to master/reverb so it floats distant in the hall, unaffected by
+   * the bed's breathing. One-shot; stops itself.
+   */
+  cryingFlute({ note, prev = null, level = 0.09, dur = 2.6, pan = 0 }) {
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const f = freq(note);
+
+    // Carrier (the tone). Glide in from the previous note if there was one.
+    const carrier = ctx.createOscillator();
+    carrier.type = 'sine';
+    if (prev) {
+      carrier.frequency.setValueAtTime(freq(prev), now);
+      carrier.frequency.exponentialRampToValueAtTime(f, now + 0.18);
+    } else {
+      carrier.frequency.setValueAtTime(f, now);
+    }
+
+    // 2-op FM: modulator at a 2:1 ratio → reedy, harmonic. Index = depth in Hz.
+    const modulator = ctx.createOscillator();
+    modulator.type = 'sine';
+    modulator.frequency.value = f * 2;
+    const index = ctx.createGain();
+    index.gain.setValueAtTime(f * 1.1, now); // bright on attack
+    index.gain.exponentialRampToValueAtTime(f * 0.3, now + dur * 0.5); // mellow
+    modulator.connect(index).connect(carrier.frequency);
+
+    // Vibrato (~5 Hz), faded in so the note blooms before it wavers.
+    const vib = ctx.createOscillator();
+    vib.frequency.value = 5;
+    const vibG = ctx.createGain();
+    vibG.gain.setValueAtTime(0, now);
+    vibG.gain.linearRampToValueAtTime(f * 0.006, now + 0.5);
+    vib.connect(vibG).connect(carrier.frequency);
+
+    // Breath layer — bandpass pink noise, loudest on the attack.
+    const breath = ctx.createBufferSource();
+    breath.buffer = this.pinkBuffer;
+    breath.loop = true;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = f * 3;
+    bp.Q.value = 1.2;
+    const breathG = ctx.createGain();
+    breathG.gain.setValueAtTime(0, now);
+    breathG.gain.linearRampToValueAtTime(level * 0.45, now + 0.08);
+    breathG.gain.exponentialRampToValueAtTime(0.0001, now + dur * 0.7);
+    breath.connect(bp).connect(breathG);
+
+    // Amplitude envelope — emerges (soft attack), lingers, releases.
+    const amp = ctx.createGain();
+    amp.gain.setValueAtTime(0, now);
+    amp.gain.linearRampToValueAtTime(level, now + 0.25);
+    amp.gain.setTargetAtTime(0, now + dur * 0.6, dur * 0.25);
+    carrier.connect(amp);
+    breathG.connect(amp);
+
+    let tail = amp;
+    if (ctx.createStereoPanner && pan) {
+      const p = ctx.createStereoPanner();
+      p.pan.value = pan;
+      amp.connect(p);
+      tail = p;
+    }
+    tail.connect(this.master); // dry, quiet
+    const wet = ctx.createGain();
+    wet.gain.value = 0.85;
+    tail.connect(wet).connect(this.revSend); // mostly wet → distant
+
+    const stop = now + dur + 0.8;
+    [carrier, modulator, vib, breath].forEach((n) => {
+      n.start(now);
+      n.stop(stop);
+    });
+  }
+
+  /** Schedule a short, sparse flute phrase (1–3 notes, with portamento). */
+  flutePhrase(inst, { pool = FLUTE_POOL, level = 0.09, pan = 0 } = {}) {
+    if (!this.ctx || inst.stopped()) return;
+    const n = 1 + Math.floor(Math.random() * 3);
+    let prev = null;
+    let t = 0;
+    for (let k = 0; k < n; k += 1) {
+      const note = pool[Math.floor(Math.random() * pool.length)];
+      const p = prev;
+      const at = t;
+      const timer = setTimeout(() => {
+        if (!inst.stopped()) {
+          this.cryingFlute({ note, prev: p, level, pan, dur: 2.2 + Math.random() });
+        }
+      }, at * 1000);
+      inst.timers.push(timer);
+      prev = note;
+      t += 1.5 + Math.random() * 1.4; // gap before the next note
+    }
+  }
+
+  /**
+   * A small inharmonic FM chime — the Spice Opera's "chiming fragments". A
+   * non-integer carrier:modulator ratio makes it metallic/bell-like; the index
+   * rings bright on the attack then decays to a pure sine tail.
+   */
+  fmBell(inst, { note, level = 0.04, decay = 3, ratio = 3.5, pan = 0 }) {
+    if (!this.ctx || inst.stopped()) return;
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const f = freq(note);
+    const carrier = ctx.createOscillator();
+    carrier.type = 'sine';
+    carrier.frequency.value = f;
+    const modulator = ctx.createOscillator();
+    modulator.type = 'sine';
+    modulator.frequency.value = f * ratio; // inharmonic → metallic
+    const index = ctx.createGain();
+    index.gain.setValueAtTime(f * 2.2, now); // bright clang
+    index.gain.exponentialRampToValueAtTime(f * 0.08, now + decay); // → pure tail
+    modulator.connect(index).connect(carrier.frequency);
+    const amp = ctx.createGain();
+    amp.gain.setValueAtTime(0, now);
+    amp.gain.linearRampToValueAtTime(level, now + 0.008);
+    amp.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+    carrier.connect(amp);
+    let tail = amp;
+    if (ctx.createStereoPanner && pan) {
+      const p = ctx.createStereoPanner();
+      p.pan.value = pan;
+      amp.connect(p);
+      tail = p;
+    }
+    tail.connect(inst.bus);
+    const stop = now + decay + 0.2;
+    carrier.start(now);
+    modulator.start(now);
+    carrier.stop(stop);
+    modulator.stop(stop);
+  }
+
   // --- Master controls ------------------------------------------------------
 
   setEnabled(on) {
@@ -596,12 +774,16 @@ export default class AudioManager {
 // The music bed carries the harmony; recipes only colour the air of a place.
 // Levels are deliberately low — the bus and master gains set final loudness.
 const RECIPES = {
-  // Great Hall — the low pressure of a vast stone space, mostly silence, with
-  // a rare deep gong ringing out long into the hall. No wind; just air.
+  // Great Hall — the low pressure of a vast stone space, mostly silence, over
+  // which a lonely "crying flute" sings the occasional desert phrase (the Spice
+  // Opera's signature) and a rare deep gong rings out long into the hall.
   hall(am, inst) {
     am.reverbAmount(inst, 0.7);
     am.roomTone(inst, { cut: 200, level: 0.04, swellRate: 0.025 });
-    am.every(inst, 18000, 40000, () => am.gong(inst, { level: 0.1, decay: 8 }));
+    am.every(inst, 14000, 30000, () =>
+      am.flutePhrase(inst, { level: 0.085, pan: (Math.random() - 0.5) * 1.0 })
+    );
+    am.every(inst, 26000, 52000, () => am.gong(inst, { level: 0.08, decay: 9 }));
   },
 
   // The Court — formal hush over a low murmur of courtiers.
@@ -611,14 +793,23 @@ const RECIPES = {
     am.murmur(inst, { center: 280, Q: 1.0, level: 0.03, gustRate: 0.13 });
   },
 
-  // The Communications Room — relay hum, transmission pulses, faint static.
+  // The Communications Room — relay hum and faint static, with sparse, distant
+  // transmission pulses and the Spice Opera's inharmonic FM "chiming fragments"
+  // drifting in from the modal pool. Quieter and rarer than before so the room
+  // reads as a tech hush, not a busy switchboard.
   comms(am, inst) {
-    am.reverbAmount(inst, 0.2);
-    am.hum(inst, { f: 120, level: 0.04, wobble: 2, wobbleRate: 0.2 });
-    am.wind(inst, { band: 1600, Q: 2.0, level: 0.012, sweep: 200, sweepRate: 0.4 }); // thin static
-    am.every(inst, 2200, 4200, () => am.pulse(inst, { f: 64, level: 0.09, decay: 0.45 }));
-    am.every(inst, 5000, 12000, () =>
-      am.ping(inst, { notes: [84, 86, 88], type: 'sine', level: 0.03, decay: 0.35, pan: (Math.random() - 0.5) * 1.6 })
+    am.reverbAmount(inst, 0.25);
+    am.hum(inst, { f: 120, level: 0.035, wobble: 2, wobbleRate: 0.2 });
+    am.wind(inst, { band: 1600, Q: 2.0, level: 0.007, sweep: 200, sweepRate: 0.4 }); // thin static
+    am.every(inst, 5000, 11000, () => am.pulse(inst, { f: 64, level: 0.06, decay: 0.5 }));
+    am.every(inst, 7000, 16000, () =>
+      am.fmBell(inst, {
+        note: BELL_POOL[Math.floor(Math.random() * BELL_POOL.length)],
+        level: 0.03,
+        decay: 3.2,
+        ratio: Math.random() < 0.5 ? 3.5 : 1.41,
+        pan: (Math.random() - 0.5) * 1.6,
+      })
     );
   },
 

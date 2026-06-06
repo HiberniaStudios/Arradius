@@ -81,6 +81,10 @@ master ─┬─ musicGain    (continuous score — drone chord + pad + sub, "br
 ```
 - One instance for the whole game, stored on `game.audio`, persists across
   scenes. Each scene's `createAudio()` grabs it (creating it if absent).
+- **Two noise seeds:** `noiseBuffer` (white, 2 s) and `pinkBuffer` (pink/1·f,
+  6 s — calmer; used for air/room-tone/flute breath).
+- **The bed "breathes"** via three co-prime LFOs (19/29/41 s) summed over a low
+  floor on `musicGain.gain` — never a single audible cycle; dips through silence.
 - **Lifecycle:** `prepare()` pre-builds the context + buffers at scene-create
   (avoids first-gesture lag); `start()` (bound to the first `pointerdown`/
   `keydown`, because browsers block audio until a gesture) builds music and
@@ -91,6 +95,11 @@ master ─┬─ musicGain    (continuous score — drone chord + pad + sub, "br
   `comms`, `veil`, `infirmary`, `yard`, `quarters`, `deck`, `map`,
   `expedition`), built from voice helpers (`wind`, `roomTone`, `murmur`,
   `chord`, `hum`, `subRumble`, `gong`, `ping`, `pulse`, scheduled via `every`).
+- **Spice Opera voices (HERAD-style FM):** `cryingFlute`/`flutePhrase` (the
+  signature breathy lead, used in `hall`) and `fmBell` (inharmonic chimes, used
+  in `comms`), drawn from the `FLUTE_POOL`/`BELL_POOL` (F Phrygian-dominant /
+  Hijaz desert modes). **First pass so far covers `hall` + `comms` only** — the
+  other rooms still use the older generic recipes.
 
 ### Painterly filter (`src/shaders/KuwaharaPostFX.js`)
 A Kuwahara edge-preserving smoothing PostFX pipeline (oil-painted look),
