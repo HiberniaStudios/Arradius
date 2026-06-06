@@ -347,9 +347,9 @@ export default class ResidencyScene extends Phaser.Scene {
     // Hotspots as fractions of the full canvas (tweak to match the art).
     const L = EXITS.hall.left, R = EXITS.hall.right, F = EXITS.hall.forward;
     this.doorHotspots = {
-      forward: { x: width * 0.43, y: height * 0.22, w: width * 0.14, h: height * 0.38, key: F, label: LOCATIONS[F].name },
-      left:    { x: width * 0.18, y: height * 0.40, w: width * 0.075, h: height * 0.28, key: L, label: LOCATIONS[L].name },
-      right:   { x: width * 0.745, y: height * 0.40, w: width * 0.075, h: height * 0.28, key: R, label: LOCATIONS[R].name },
+      forward: { x: width * 0.43, y: height * 0.28, w: width * 0.14, h: height * 0.34, key: F, label: LOCATIONS[F].name },
+      left:    { x: width * 0.275, y: height * 0.42, w: width * 0.085, h: height * 0.26, key: L, label: LOCATIONS[L].name },
+      right:   { x: width * 0.64, y: height * 0.42, w: width * 0.085, h: height * 0.26, key: R, label: LOCATIONS[R].name },
     };
   }
 
