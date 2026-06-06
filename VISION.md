@@ -76,6 +76,42 @@ strategic board.
 
 ---
 
+## How it plays — the loop
+
+Side-scrolling is a primary verb, not the only one. The game moves between
+modes, each feeding the others:
+
+1. **The Palace** — your hub, the seat of House Calder. Court intrigue,
+   advisors, decisions. Where the strategic game lives between expeditions.
+2. **The World Map** — travel Aridun. Choose where to go: out to the Hollows,
+   across the dunes, to contested ground. Time and Aurun are spent here.
+3. **Side-scrolling traversal** — the journey itself, played on foot. Crossing
+   the dunes to a Hollow, descending the Warrens. This is where you _feel_ and
+   experience the world — the heart of the mood.
+4. **The Hollows** — the Shamen's refuges. Meet characters, win tribes, learn
+   abilities, uncover story.
+5. **Tribe & realm management** — recruit and keep the Shamen tribes, manage
+   Aurun and water, nudge the ecology, weigh the court and the rival houses.
+
+> Palace decisions → map travel → side-scrolling expedition → Hollow encounters
+> → tribes/resources change → back to the Palace with the board reshaped.
+
+### Places
+
+- **The Palace / the capital** — House Calder's seat _(name TBD)_.
+- **Hollows** — the Shamen's settlements (our "sietch"); sacred deep refuges.
+- **Warrens** — the tunnel networks within and between Hollows; the underground
+  side-scrolling levels.
+
+### Court & army — _(names pending)_
+
+Roles to be cast and named: the Lord of House Calder and his mystic-order
+consort, a cold strategist (the **Reckoner**), a loyal weapons-master (the
+**Bladewarden**), a physician of divided loyalties (the **Mender**), a palace
+steward, and a truthsayer of the mystic order (**the Sibyl**). Four military
+bodies: House Calder's guard, House Korinth's Imperial elite, the Shamen
+war-elite, and House Vorrin's forces.
+
 ## Aesthetic direction
 
 **Painterly / atmospheric.** (Chosen.)
