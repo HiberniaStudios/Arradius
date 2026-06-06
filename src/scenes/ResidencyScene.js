@@ -116,17 +116,50 @@ export default class ResidencyScene extends Phaser.Scene {
   // --- Interior shell -------------------------------------------------------
 
   buildInterior() {
-    // Static back wall (interior dusk), fixed to the camera.
+    // Static, warm back wall fixed to the camera (parallax behind the pillars).
     this.wall = this.add
-      .image(0, 0, 'sky')
+      .image(0, 0, 'interiorWall')
       .setOrigin(0, 0)
       .setScrollFactor(0)
-      .setDepth(-100)
-      .setTint(0x4a3a66);
+      .setDepth(-100);
 
-    // Floor and columns are drawn across the whole palace in layout().
-    this.floor = this.add.graphics().setDepth(-10);
-    this.columns = this.add.graphics().setDepth(-8);
+    // Painterly architecture, all drawn across the palace in layout().
+    this.ceiling = this.add.graphics().setDepth(-82);
+    this.alcoves = this.add.graphics().setDepth(-72);
+    this.banners = this.add.graphics().setDepth(-38);
+    this.frieze = this.add.graphics().setDepth(-54);
+    this.floor = this.add.graphics().setDepth(-50);
+    this.lightpools = this.add
+      .graphics()
+      .setDepth(-44)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.columns = this.add.graphics().setDepth(-40);
+    this.props = this.add.graphics().setDepth(0);
+
+    // Drifting dust caught in the lamplight.
+    this.dust = this.add
+      .particles(0, 0, 'glow', {
+        x: { min: 0, max: RESIDENCY_WIDTH },
+        y: { min: 60, max: this.scale.height * 0.9 },
+        lifespan: 9000,
+        speedX: { min: -5, max: 5 },
+        speedY: { min: -7, max: 4 },
+        scale: { start: 0.05, end: 0 },
+        alpha: { start: 0.22, end: 0 },
+        tint: 0xffe0b0,
+        blendMode: Phaser.BlendModes.ADD,
+        frequency: 260,
+        quantity: 1,
+      })
+      .setDepth(6)
+      .setScrollFactor(0.4);
+
+    // Edge vignette for mood.
+    this.vignette = this.add
+      .image(0, 0, 'vignette')
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(940);
   }
 
   buildRooms() {
@@ -134,21 +167,29 @@ export default class ResidencyScene extends Phaser.Scene {
       const x = START_X + i * ROOM_GAP;
       room.x = x;
 
-      // A coloured wall-glow to code each room.
+      // A coloured glow filling the room's alcove.
       const accent = this.add
         .image(x, 0, 'glow')
         .setBlendMode(Phaser.BlendModes.ADD)
         .setTint(room.accent)
-        .setAlpha(0.35)
-        .setDepth(-9);
+        .setAlpha(0.22)
+        .setDepth(-71);
 
-      // A hanging lamp.
+      // A hanging lamp with a soft flicker.
       const lamp = this.add
         .image(x, 0, 'glow')
         .setBlendMode(Phaser.BlendModes.ADD)
         .setTint(0xffd9a0)
-        .setAlpha(0.6)
-        .setDepth(-7);
+        .setAlpha(0.55)
+        .setDepth(-30);
+      this.tweens.add({
+        targets: lamp,
+        alpha: { from: 0.45, to: 0.62 },
+        duration: 1200 + Math.random() * 800,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.inOut',
+      });
 
       // The interaction marker — a pulsing Aurun mote.
       const marker = this.add
@@ -477,29 +518,12 @@ export default class ResidencyScene extends Phaser.Scene {
     this.moveSpeed = Phaser.Math.Clamp(width * 0.32, 190, 460);
 
     this.wall.setDisplaySize(width, height);
+    this.vignette.setDisplaySize(width, height);
 
     const floorY = height - 70;
-
-    // Floor.
-    this.floor.clear();
-    this.floor.fillStyle(0x0f0a1c, 1);
-    this.floor.fillRect(0, floorY, RESIDENCY_WIDTH, height - floorY + 10);
-    this.floor.fillStyle(0x1d1330, 1);
-    this.floor.fillRect(0, floorY, RESIDENCY_WIDTH, 5);
-
-    // Columns between and around the rooms.
-    this.columns.clear();
     const colTop = height * 0.12;
-    for (let i = 0; i <= ROOMS.length; i += 1) {
-      const x = START_X - ROOM_GAP / 2 + i * ROOM_GAP;
-      this.columns.fillStyle(0x281a40, 1);
-      this.columns.fillRect(x - 10, colTop, 20, floorY - colTop);
-      this.columns.fillStyle(0x3a2858, 1);
-      this.columns.fillRect(x - 10, colTop, 4, floorY - colTop);
-      // Capital.
-      this.columns.fillStyle(0x32224e, 1);
-      this.columns.fillRect(x - 16, colTop - 10, 32, 12);
-    }
+    this.drawArchitecture(width, height, floorY, colTop);
+    this.drawProps(floorY);
 
     // Per-room props.
     this.roomObjs.forEach(({ room, accent, lamp, marker, figure, nameLabel, label }) => {
@@ -527,6 +551,275 @@ export default class ResidencyScene extends Phaser.Scene {
 
   onResize(gameSize) {
     this.layout(gameSize.width, gameSize.height);
+  }
+
+  // --- Painterly architecture ----------------------------------------------
+
+  drawArchitecture(width, height, floorY, colTop) {
+    // Ceiling band.
+    const c = this.ceiling;
+    c.clear();
+    c.fillStyle(0x130c20, 1);
+    c.fillRect(0, 0, RESIDENCY_WIDTH, colTop);
+
+    // Frieze: a gold line under the ceiling with a row of studs.
+    const f = this.frieze;
+    f.clear();
+    f.fillStyle(0xc9a24a, 0.85);
+    f.fillRect(0, colTop - 5, RESIDENCY_WIDTH, 3);
+    f.fillStyle(0x7a5a26, 0.8);
+    f.fillRect(0, colTop - 2, RESIDENCY_WIDTH, 2);
+    f.fillStyle(0xc9a24a, 0.6);
+    for (let x = 16; x < RESIDENCY_WIDTH; x += 30) f.fillCircle(x, colTop - 11, 1.6);
+
+    // Arched alcoves behind each room.
+    const a = this.alcoves;
+    a.clear();
+    ROOMS.forEach((room) => {
+      const w = ROOM_GAP * 0.62;
+      const top = colTop + 16;
+      const r = w / 2;
+      a.fillStyle(0x180f2c, 1);
+      a.fillRoundedRect(room.x - r, top, w, floorY - top, { tl: r, tr: r, bl: 0, br: 0 });
+      a.fillStyle(0x231541, 1);
+      a.fillRoundedRect(room.x - r + 6, top + 6, w - 12, floorY - top - 6, {
+        tl: r - 6,
+        tr: r - 6,
+        bl: 0,
+        br: 0,
+      });
+    });
+
+    // Floor: stone, seams, and a House Calder carpet runner.
+    const fl = this.floor;
+    fl.clear();
+    fl.fillStyle(0x140d20, 1);
+    fl.fillRect(0, floorY, RESIDENCY_WIDTH, height - floorY + 10);
+    fl.fillStyle(0x2a1d3a, 1);
+    fl.fillRect(0, floorY, RESIDENCY_WIDTH, 4);
+    fl.fillStyle(0x1d1330, 0.6);
+    for (let x = 0; x < RESIDENCY_WIDTH; x += 80) fl.fillRect(x, floorY + 6, 2, height - floorY);
+    const ry = floorY + 12;
+    fl.fillStyle(0x243a64, 0.95);
+    fl.fillRect(0, ry, RESIDENCY_WIDTH, 16);
+    fl.fillStyle(0xc9a24a, 0.7);
+    fl.fillRect(0, ry, RESIDENCY_WIDTH, 2);
+    fl.fillRect(0, ry + 14, RESIDENCY_WIDTH, 2);
+
+    // Warm light pools on the floor beneath each lamp.
+    const lp = this.lightpools;
+    lp.clear();
+    ROOMS.forEach((room) => {
+      lp.fillStyle(0xffcaa0, 0.1);
+      lp.fillEllipse(room.x, floorY + 8, ROOM_GAP * 0.72, 30);
+    });
+
+    // Fluted columns with gold capitals and bases.
+    const co = this.columns;
+    co.clear();
+    const sw = 22;
+    for (let i = 0; i <= ROOMS.length; i += 1) {
+      const x = START_X - ROOM_GAP / 2 + i * ROOM_GAP;
+      const colH = floorY - colTop;
+      co.fillStyle(0x2a1c44, 1);
+      co.fillRect(x - sw / 2, colTop, sw, colH);
+      co.fillStyle(0x42306a, 1); // lit edge
+      co.fillRect(x - sw / 2, colTop, 5, colH);
+      co.fillStyle(0x180f28, 1); // shadowed edge
+      co.fillRect(x + sw / 2 - 4, colTop, 4, colH);
+      co.fillStyle(0x1d1334, 0.8); // fluting
+      co.fillRect(x - 4, colTop, 1, colH);
+      co.fillRect(x + 2, colTop, 1, colH);
+      co.fillStyle(0x3a2858, 1); // capital
+      co.fillRect(x - sw / 2 - 6, colTop - 14, sw + 12, 14);
+      co.fillStyle(0xc9a24a, 0.8);
+      co.fillRect(x - sw / 2 - 6, colTop - 14, sw + 12, 3);
+      co.fillStyle(0x241640, 1); // base
+      co.fillRect(x - sw / 2 - 6, floorY - 10, sw + 12, 10);
+      co.fillStyle(0xc9a24a, 0.5);
+      co.fillRect(x - sw / 2 - 6, floorY - 10, sw + 12, 2);
+    }
+
+    // House Calder banners on the interior columns.
+    const b = this.banners;
+    b.clear();
+    const len = (floorY - colTop) * 0.42;
+    for (let i = 1; i < ROOMS.length; i += 1) {
+      const x = START_X - ROOM_GAP / 2 + i * ROOM_GAP;
+      this.drawBanner(b, x, colTop + 6, len);
+    }
+  }
+
+  drawBanner(g, x, topY, len) {
+    const w = 26;
+    g.fillStyle(0x3a2858, 1); // crossbar
+    g.fillRect(x - w / 2 - 4, topY, w + 8, 4);
+    g.fillStyle(0x243a64, 1); // field
+    g.fillRect(x - w / 2, topY + 4, w, len);
+    g.fillTriangle(x - w / 2, topY + 4 + len, x + w / 2, topY + 4 + len, x, topY + 4 + len + 12);
+    g.fillStyle(0xc9a24a, 0.9); // gold borders
+    g.fillRect(x - w / 2, topY + 4, 2, len);
+    g.fillRect(x + w / 2 - 2, topY + 4, 2, len);
+    // Sigil: a gold chevron over a disc.
+    const cy = topY + 4 + len * 0.42;
+    g.fillStyle(0xc9a24a, 1);
+    g.fillTriangle(x - 8, cy, x + 8, cy, x, cy - 10);
+    g.fillCircle(x, cy + 8, 3);
+  }
+
+  drawFlame(g, fx, fy) {
+    g.fillStyle(0xddd0c0, 1);
+    g.fillRect(fx - 2, fy - 14, 4, 14);
+    g.fillStyle(0xff8a3a, 0.9);
+    g.fillEllipse(fx, fy - 18, 6, 12);
+    g.fillStyle(0xffe0a0, 1);
+    g.fillEllipse(fx, fy - 18, 3, 7);
+  }
+
+  drawProps(floorY) {
+    const p = this.props;
+    p.clear();
+    ROOMS.forEach((room) => {
+      const x = room.x;
+      switch (room.key) {
+        case 'quarters':
+          this.propQuarters(p, x, floorY);
+          break;
+        case 'veil':
+          this.propVeil(p, x, floorY);
+          break;
+        case 'infirmary':
+          this.propInfirmary(p, x, floorY);
+          break;
+        case 'court':
+          this.propCourt(p, x, floorY);
+          break;
+        case 'war':
+          this.propWar(p, x, floorY);
+          break;
+        case 'yard':
+          this.propYard(p, x, floorY);
+          break;
+        case 'deck':
+          this.propDeck(p, x, floorY);
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
+  propQuarters(p, x, floorY) {
+    p.fillStyle(0x3a2850, 1);
+    p.fillRect(x - 74, floorY - 22, 60, 22);
+    p.fillStyle(0x5a466e, 1);
+    p.fillRect(x - 74, floorY - 26, 60, 8);
+    p.fillStyle(0xcfc0d8, 1);
+    p.fillRect(x - 70, floorY - 28, 18, 8);
+    // Arched night window.
+    p.fillStyle(0x0c1430, 1);
+    p.fillRoundedRect(x + 20, floorY - 120, 40, 96, { tl: 20, tr: 20, bl: 0, br: 0 });
+    p.fillStyle(0x6fa0d0, 0.5);
+    p.fillCircle(x + 40, floorY - 92, 7);
+    p.fillStyle(0xffffff, 0.85);
+    p.fillCircle(x + 28, floorY - 104, 1);
+    p.fillCircle(x + 52, floorY - 110, 1);
+    p.fillCircle(x + 48, floorY - 86, 1);
+  }
+
+  propVeil(p, x, floorY) {
+    p.fillStyle(0x3a2a6a, 0.8);
+    for (let k = -1; k <= 1; k += 1) p.fillRect(x - 52 + k * 38, floorY - 150, 14, 128);
+    p.fillStyle(0xb98cff, 0.5);
+    p.fillCircle(x, floorY - 110, 16);
+    p.fillStyle(0x231541, 1);
+    p.fillCircle(x, floorY - 110, 12);
+    p.fillStyle(0xb98cff, 0.8);
+    p.fillCircle(x, floorY - 110, 3);
+    this.drawFlame(p, x - 60, floorY - 24);
+    this.drawFlame(p, x + 60, floorY - 24);
+  }
+
+  propInfirmary(p, x, floorY) {
+    const cols = [0x7fd0a0, 0xff8a5a, 0x6fb0ff, 0xffd27a];
+    p.fillStyle(0x3a2850, 1);
+    p.fillRect(x - 74, floorY - 92, 52, 6);
+    p.fillRect(x - 74, floorY - 66, 52, 6);
+    for (let i = 0; i < 4; i += 1) {
+      p.fillStyle(cols[i], 0.9);
+      p.fillRect(x - 72 + i * 12, floorY - 102, 7, 10);
+      p.fillStyle(cols[(i + 1) % 4], 0.9);
+      p.fillRect(x - 72 + i * 12, floorY - 76, 7, 10);
+    }
+    p.fillStyle(0x2e2142, 1);
+    p.fillRect(x + 14, floorY - 14, 56, 14);
+    p.fillStyle(0x4a3a5e, 1);
+    p.fillRect(x + 14, floorY - 18, 56, 6);
+  }
+
+  propCourt(p, x, floorY) {
+    p.fillStyle(0x2a1d40, 1);
+    p.fillRect(x - 62, floorY - 10, 124, 10);
+    p.fillStyle(0x33244e, 1);
+    p.fillRect(x - 44, floorY - 20, 88, 10);
+    p.fillStyle(0x3a2858, 1);
+    p.fillRect(x - 16, floorY - 66, 32, 46);
+    p.fillStyle(0x243a64, 1);
+    p.fillRect(x - 14, floorY - 42, 28, 6);
+    p.fillStyle(0xc9a24a, 1);
+    p.fillCircle(x - 16, floorY - 68, 3);
+    p.fillCircle(x + 16, floorY - 68, 3);
+  }
+
+  propWar(p, x, floorY) {
+    p.fillStyle(0x2e2142, 1);
+    p.fillRect(x - 50, floorY - 30, 100, 8);
+    p.fillStyle(0x241a36, 1);
+    p.fillRect(x - 46, floorY - 22, 8, 22);
+    p.fillRect(x + 38, floorY - 22, 8, 22);
+    p.fillStyle(0xb89a6a, 0.95);
+    p.fillRect(x - 40, floorY - 35, 80, 6);
+    p.fillStyle(0xe0503c, 1);
+    p.fillCircle(x - 20, floorY - 32, 2);
+    p.fillStyle(0x6fb0ff, 1);
+    p.fillCircle(x + 6, floorY - 32, 2);
+    p.fillStyle(0xffce86, 1);
+    p.fillCircle(x + 24, floorY - 32, 2);
+  }
+
+  propYard(p, x, floorY) {
+    p.fillStyle(0x3a2850, 1);
+    p.fillRect(x - 66, floorY - 70, 6, 70);
+    p.fillRect(x - 22, floorY - 70, 6, 70);
+    p.fillRect(x - 66, floorY - 70, 50, 5);
+    p.fillStyle(0xcfd0d8, 1);
+    p.fillRect(x - 58, floorY - 64, 3, 54);
+    p.fillRect(x - 48, floorY - 64, 3, 54);
+    p.fillStyle(0xc9a24a, 1);
+    p.fillRect(x - 59, floorY - 14, 5, 4);
+    p.fillRect(x - 49, floorY - 14, 5, 4);
+    // Training dummy.
+    p.fillStyle(0x5a4632, 1);
+    p.fillRect(x + 34, floorY - 44, 10, 44);
+    p.fillStyle(0x7a5a3a, 1);
+    p.fillCircle(x + 39, floorY - 50, 9);
+    p.fillStyle(0x6a4a2a, 1);
+    p.fillRect(x + 22, floorY - 40, 34, 8);
+  }
+
+  propDeck(p, x, floorY) {
+    // Arched opening to the dusk sky.
+    p.fillStyle(0x4a2858, 1);
+    p.fillRoundedRect(x - 70, floorY - 152, 140, 142, { tl: 70, tr: 70, bl: 0, br: 0 });
+    p.fillStyle(0x7a4a3a, 1);
+    p.fillRoundedRect(x - 62, floorY - 144, 124, 134, { tl: 62, tr: 62, bl: 0, br: 0 });
+    p.fillStyle(0xffce86, 0.5);
+    p.fillCircle(x + 28, floorY - 102, 18);
+    // Docked corsair silhouette.
+    p.fillStyle(0x1a1224, 1);
+    p.fillEllipse(x, floorY - 38, 54, 12);
+    p.fillTriangle(x - 40, floorY - 44, x - 6, floorY - 50, x - 6, floorY - 36);
+    p.fillTriangle(x + 40, floorY - 44, x + 6, floorY - 50, x + 6, floorY - 36);
   }
 
   // --- Loop -----------------------------------------------------------------

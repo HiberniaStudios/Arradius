@@ -16,8 +16,41 @@ export default class BootScene extends Phaser.Scene {
     this.makeAurun();
     this.makeEren();
     this.makeFigure();
+    this.makeInteriorWall();
+    this.makeVignette();
 
     this.scene.start('ResidencyScene');
+  }
+
+  /** Warm interior wall gradient — indigo vault above, sandstone glow at floor. */
+  makeInteriorWall() {
+    const w = 16;
+    const h = 512;
+    const tex = this.textures.createCanvas('interiorWall', w, h);
+    const ctx = tex.getContext();
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0.0, '#0f0a1c');
+    grad.addColorStop(0.35, '#241640');
+    grad.addColorStop(0.62, '#3a2350');
+    grad.addColorStop(0.85, '#5a3548');
+    grad.addColorStop(1.0, '#7a4a3a');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+    tex.refresh();
+  }
+
+  /** A soft vignette to darken the screen edges for a painterly mood. */
+  makeVignette() {
+    const size = 256;
+    const tex = this.textures.createCanvas('vignette', size, size);
+    const ctx = tex.getContext();
+    const r = size / 2;
+    const grad = ctx.createRadialGradient(r, r, r * 0.55, r, r, r);
+    grad.addColorStop(0.0, 'rgba(6,3,10,0)');
+    grad.addColorStop(1.0, 'rgba(6,3,10,0.6)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+    tex.refresh();
   }
 
   /** A neutral standing figure, tintable per character (court NPCs). */
