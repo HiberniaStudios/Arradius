@@ -78,23 +78,28 @@ strategic board.
 
 ## How it plays — the loop
 
-Side-scrolling is a primary verb, not the only one. The game moves between
-modes, each feeding the others:
+The campaign is commanded from the **Residency** — Eren rarely leaves it.
+Side-scrolling is woven in at pivotal moments, not as the only mechanic, but as
+how the world is _felt_. The modes feed each other:
 
-1. **The Palace** — your hub, the seat of House Calder. Court intrigue,
-   advisors, decisions. Where the strategic game lives between expeditions.
-2. **The World Map** — travel Aridun. Choose where to go: out to the Hollows,
-   across the dunes, to contested ground. Time and Aurun are spent here.
-3. **Side-scrolling traversal** — the journey itself, played on foot. Crossing
-   the dunes to a Hollow, descending the Warrens. This is where you _feel_ and
-   experience the world — the heart of the mood.
-4. **The Hollows** — the Shamen's refuges. Meet characters, win tribes, learn
-   abilities, uncover story.
-5. **Tribe & realm management** — recruit and keep the Shamen tribes, manage
-   Aurun and water, nudge the ecology, weigh the court and the rival houses.
+1. **The Residency** — your command hub, the seat of House Calder. Court
+   intrigue, advisors, decisions, and the strategic war board.
+2. **The World Map** — Aridun laid out: your holdings, the Hollows, and House
+   Vorrin's forts. Direct forces, send emissaries, spend Aurun and time.
+3. **Side-scrolling expeditions** — pivotal journeys played on foot: first
+   contact with a Hollow, a Warren-delve, an Aurun-vision. Reserved for the
+   moments that matter, where the world is felt.
+4. **The Hollows** — the Shamen's refuges. Win tribes, learn abilities, uncover
+   story.
+5. **Tribe & realm management** — recruit and keep the Shamen tribes, mine Aurun,
+   manage water, build the army, nudge the ecology, weigh the court.
 
-> Palace decisions → map travel → side-scrolling expedition → Hollow encounters
-> → tribes/resources change → back to the Palace with the board reshaped.
+> Command from the Residency → direct the map → pivotal expedition → tribes,
+> Aurun and ecology grow → take a Vorrin fort → the board reshapes.
+
+The campaign's spine: build the strength — tribes, Aurun, the Veiled Knives,
+ecology, and Eren's prescience — to take House Vorrin's forts one by one, and
+finally **Vorrinhold** itself.
 
 ## Cast, forces & places
 
@@ -107,6 +112,8 @@ _Locked, but editable as we progress._
 - **Hollows** — the Shamen's settlements (our "sietch"); sacred deep refuges.
 - **Warrens** — the tunnel networks within and between Hollows; the underground
   side-scrolling levels.
+- **Vorrinhold** _(working)_ — House Vorrin's stronghold; the campaign's final
+  objective. Take it to end the war.
 
 ### The court of House Calder
 
@@ -165,25 +172,51 @@ of House Calder, comes to a world that calls itself **Aridun**, and finds the
 Shamen waiting on a prophecy he does not yet believe.
 
 **Act I — The Poisoned Gift.** Establish the Residency at Saltspire and the
-court. First expeditions: first contact with a Hollow, the first Aurun harvest.
+court. First expeditions: first contact with a Hollow, the first word of Aurun.
 Then Vorrin strikes, and the **Mender's** divided loyalty turns the knife from
-within — House Calder is gutted, **Lord Aldric** with it. Eren flees into the
-deep desert and the Warrens with his mother **Sela** of the Veil.
+within — **Lord Aldric** falls. But House Calder holds the Residency; **Eren**
+takes command, and turns to the Shamen and the desert for the strength to answer.
 
-**Act II — The Seir Awakens.** Among the Hollows, Eren earns the Shamen,
-recruits tribes, and raises a resistance — the **Veiled Knives**. Aurun-visions
-deepen until the prophecy fits him: he is the **Seir**. The realm game opens
-fully — harvest, ecology, war — and the greening of Aridun begins as he turns
-the desert and its **Sleepers** against Vorrin.
+**Act II — The Seir Awakens.** From the Residency, Eren wins the Shamen Hollow by
+Hollow and raises a resistance — the **Veiled Knives**. His own expeditions into
+the Warrens expose him to raw Aurun; the visions deepen until the prophecy fits
+him: he is the **Seir**. The realm game opens fully — harvest, ecology, war — and
+the greening of Aridun begins as he turns the desert and its **Sleepers** against
+Vorrin, taking their forts one by one.
 
-**Act III — The Reckoning.** Eren confronts House Vorrin and the hand of House
-Korinth behind it. The cost of prophecy comes due: to become what the Shamen
-need is to lose something — free will, or the world's future to a vision he
-cannot unsee. The end forks — a **greened** Aridun or a **scorched** one; a seat
-at the throne, or its overthrow.
+**Act III — The Reckoning.** The fort campaign culminates in the assault on
+**Vorrinhold**, and the hand of House Korinth behind it is revealed. The cost of
+prophecy comes due: to become what the Shamen need is to lose something — free
+will, or the world's future to a vision he cannot unsee. The end forks — a
+**greened** Aridun or a **scorched** one; a seat at the throne, or its overthrow.
 
 **Themes in play:** the poisoned inheritance, betrayal from within, prophecy vs.
 free will, and water as the price of everything.
+
+## Progression & key events
+
+The campaign is commanded from the Residency; the side-scroll expeditions are
+reserved for the pivotal, personal moments below. Each key event advances the
+story **and** unlocks the next layer of the game — our equivalents of the
+original's beats (finding the Fremen, learning of spice, spice exposure, raised
+consciousness, Fremen loyalty, spice mining, army, ecology).
+
+| # | Event | Mode | Unlocks |
+| --- | --- | --- | --- |
+| 1 | **The Poisoned Gift** _(intro)_ — House Calder is granted Aridun | Residency | The Residency hub + the world map |
+| 2 | **First Contact** — Eren rides out and finds the first Hollow and the Shamen | Side-scroll | Tribe recruitment |
+| 3 | **Word of Aurun** — court and Shamen reveal what Aurun is and why the Imperium hungers | Residency | The Aurun economy / harvesting |
+| 4 | **The Knife from Within** — Vorrin strikes; Orlin's betrayal kills Lord Aldric; Eren takes command | Residency | The war footing — the fort campaign begins |
+| 5 | **Aurun Exposure** — deep in the Warrens, raw Aurun marks Eren; his eyes change; the first vision | Side-scroll | Prescience (foresee enemy moves / hidden paths) |
+| 6 | **Winning the Tribes** — earn Shamen loyalty, Hollow by Hollow | Map + visits | The **Veiled Knives** and broader map reach |
+| 7 | **The Harvest & the Greening** — Aurun mining and the ecology project come online | Residency | Economy scaling + slow world transformation |
+| 8 | **The Seir Awakens** _(vision sequence)_ — prescience deepens into command of the desert | Side-scroll | The **Sleepers** as a weapon; late-game power |
+| 9 | **The Fort Campaign** — take Vorrin's holds region by region | Map | Map expansion; the noose tightens |
+| 10 | **The Reckoning** _(finale)_ — assault **Vorrinhold**; Korinth's hand revealed | Map + finale | The ending fork: greened or scorched Aridun |
+
+Each unlock is a gate: you cannot harvest before **Word of Aurun**, cannot raise
+the Veiled Knives before **Winning the Tribes**, cannot turn the Sleepers before
+**The Seir Awakens**. Story drives capability; capability drives the war.
 
 ## Aesthetic direction
 
