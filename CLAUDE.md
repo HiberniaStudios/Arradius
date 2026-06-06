@@ -20,6 +20,9 @@ See `VISION.md` / `PERSPECTIVE.md` for the creative direction and lore.
   per-session `claude/*` branch.
 - **Always land changes on `main` via a pull request — never push directly to
   `main`.** Develop on `Stephen-Dev-branch`, push it, then open a PR into `main`.
+- **Keep this file current as you go.** When a change shifts architecture, adds
+  a scene/module, or changes a convention, update the relevant `CLAUDE.md`
+  section in the same change — don't leave the map stale.
 
 ## Commands
 
