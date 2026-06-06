@@ -32,8 +32,8 @@ const LOCATIONS = {
       '“Aridun will test us, Eren. Hold to its people and we hold to the world.”',
       '“Korinth did not gift us this fief out of love. Watch the dunes — and watch our own halls.”',
     ],
-    // The throne hall is the deeper hub; its wings branch onward.
-    exits: ['war', 'yard', 'quarters', 'deck'],
+    // The throne hall is the deeper hub; the private/sacred rooms lie past it.
+    exits: ['veil', 'quarters'],
   },
   war: {
     name: 'The War Room',
@@ -92,14 +92,15 @@ const LOCATIONS = {
 // to re-route the map; `forward` is the central arch, `left`/`right` the side
 // doors, `back` the way you came.
 const EXITS = {
-  hall: { left: 'veil', right: 'infirmary', forward: 'court' },
+  // Four wings open off the entrance hall; the throne (Court) lies beyond the arch.
+  hall: { left: 'yard', right: 'infirmary', forward: 'court' }, // procedural fallback (2 doors)
   court: { back: 'hall' },
-  veil: { back: 'hall' },
+  yard: { back: 'hall' },
   infirmary: { back: 'hall' },
-  war: { back: 'court' },
-  yard: { back: 'court' },
-  quarters: { back: 'court' },
-  deck: { back: 'court' },
+  war: { back: 'hall' },
+  deck: { back: 'hall' },
+  veil: { back: 'court' },       // the sacred sanctum — past the throne
+  quarters: { back: 'court' },   // private apartments — past the throne
 };
 
 export default class ResidencyScene extends Phaser.Scene {
@@ -344,12 +345,18 @@ export default class ResidencyScene extends Phaser.Scene {
     }
     this.hallBgImg.setVisible(true).setDisplaySize(width, height); // 16:9 → 16:9, no stretch
 
-    // Hotspots as fractions of the full canvas (tweak to match the art).
-    const L = EXITS.hall.left, R = EXITS.hall.right, F = EXITS.hall.forward;
+    // Four side archways + the throne arch, as fractions of the full canvas.
+    // Outer arches → everyday wings; inner arches (by the statues) → action rooms.
+    const door = (x, y, w, h, key) => ({
+      x: width * x, y: height * y, w: width * w, h: height * h,
+      key, label: LOCATIONS[key].name,
+    });
     this.doorHotspots = {
-      forward: { x: width * 0.43, y: height * 0.28, w: width * 0.14, h: height * 0.34, key: F, label: LOCATIONS[F].name },
-      left:    { x: width * 0.275, y: height * 0.42, w: width * 0.085, h: height * 0.26, key: L, label: LOCATIONS[L].name },
-      right:   { x: width * 0.64, y: height * 0.42, w: width * 0.085, h: height * 0.26, key: R, label: LOCATIONS[R].name },
+      forward:    door(0.43, 0.28, 0.14, 0.34, 'court'),
+      leftInner:  door(0.275, 0.42, 0.085, 0.26, 'war'),
+      leftOuter:  door(0.135, 0.42, 0.075, 0.24, 'yard'),
+      rightInner: door(0.64, 0.42, 0.085, 0.26, 'deck'),
+      rightOuter: door(0.79, 0.42, 0.075, 0.24, 'infirmary'),
     };
   }
 
@@ -394,7 +401,7 @@ export default class ResidencyScene extends Phaser.Scene {
   // --- Hall caption ---------------------------------------------------------
 
   renderHallCaption(loc, width, height, barTop) {
-    this.defaultCaption = 'Three doors lead on — the side halls, and the throne beyond the arch.';
+    this.defaultCaption = 'Four halls open off the entrance — and the throne lies beyond the arch.';
     this.captionText = this.add
       .text(width / 2, barTop + (height - barTop) / 2, this.defaultCaption, {
         fontFamily: 'Georgia, serif',
