@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import Music from '../audio/Music.js';
 
 // Movement feel is derived from the live screen size in layout(), so the game
 // plays consistently whether the canvas is a short landscape phone or a tall
@@ -48,6 +49,7 @@ export default class GameScene extends Phaser.Scene {
     this.createHud();
     this.setupInput();
     this.createTouchControls();
+    this.createMusic();
 
     this.physics.add.collider(this.player, this.solids);
     this.physics.add.overlap(
@@ -179,6 +181,50 @@ export default class GameScene extends Phaser.Scene {
     this.input.addPointer(2); // allow move + jump simultaneously
   }
 
+  /**
+   * Start the chiptune track on the first user gesture (browsers block audio
+   * until then) and add a mute toggle in the top-right corner.
+   */
+  createMusic() {
+    this.music = new Music();
+
+    const startOnce = () => this.music.start();
+    this.input.once('pointerdown', startOnce);
+    this.input.keyboard.once('keydown', startOnce);
+
+    const circle = this.add
+      .circle(0, 0, 22, 0xffffff, 0.18)
+      .setStrokeStyle(2, 0xffffff, 0.4)
+      .setScrollFactor(0)
+      .setDepth(1000)
+      .setInteractive({ useHandCursor: true });
+    const label = this.add
+      .text(0, 0, '♪', {
+        fontFamily: 'monospace',
+        fontSize: '22px',
+        color: '#ffffff',
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(1001);
+
+    circle.on('pointerdown', (pointer, x, y, event) => {
+      event?.stopPropagation();
+      this.music.start();
+      const on = this.music.toggle();
+      circle.setAlpha(on ? 1 : 0.5);
+      label.setText(on ? '♪' : '♪̷');
+    });
+
+    this.musicButton = {
+      circle,
+      label,
+      anchor: (w) => ({ x: w - 36, y: 36 }),
+    };
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.music.stop());
+  }
+
   /** Position and size everything for the given canvas dimensions. */
   layout(width, height) {
     this.physics.world.setBounds(0, 0, width, height);
@@ -218,6 +264,13 @@ export default class GameScene extends Phaser.Scene {
       circle.setPosition(x, y);
       text.setPosition(x, y);
     });
+
+    // Music toggle.
+    if (this.musicButton) {
+      const { x, y } = this.musicButton.anchor(width, height);
+      this.musicButton.circle.setPosition(x, y);
+      this.musicButton.label.setPosition(x, y);
+    }
   }
 
   onResize(gameSize) {
