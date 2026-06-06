@@ -78,9 +78,10 @@ strategic board.
 
 ## How it plays — the loop
 
-The campaign is commanded from the **Residency** — Eren rarely leaves it.
-Side-scrolling is woven in at pivotal moments, not as the only mechanic, but as
-how the world is _felt_. The modes feed each other:
+The **Residency** is Eren's base of operations — but he rides out himself, by
+windskiff and, in time, on the back of a Sleeper. Side-scrolling is woven in at
+pivotal moments, not as the only mechanic, but as how the world is _felt_. The
+modes feed each other:
 
 1. **The Residency** — your command hub, the seat of House Calder. Court
    intrigue, advisors, decisions, and the strategic war board.
@@ -130,6 +131,12 @@ _Locked, but editable as we progress._
 - **the Veil** — the mystic sisterhood (our Bene Gesserit); Sela and Ysolde are
   of it.
 
+### The Shamen
+
+- **Tamir** — chief of the first Hollow Eren wins; the Shamen's bridge to House
+  Calder and Eren's key ally (our Stilgar). A closer Shamen companion for Eren —
+  our Chani — remains _(TBD)_.
+
 ### The four forces
 
 | Force | Dune analogue | Name |
@@ -160,7 +167,19 @@ The systems are modelled on Cryo's _Dune_, refit to Aridun:
 - **Side-scrolling expeditions** — _our addition_: the travel and Warren-delving
   between all of the above, played on foot, where the world is felt.
 
-## Story spine
+### Travel & mounts
+
+The Residency is the base; Eren rides out himself. Travel is also spectacle:
+
+- **Windskiffs** _(working)_ — winged craft for crossing Aridun (our
+  ornithopter). The means of map travel and the staging of side-scroll flight
+  set-pieces: threading canyons and spires, outrunning storms and Vorrin
+  patrols.
+- **Sleeper-riding** — the Shamen rite and the Seir's late-game power. A
+  **Caller** _(working)_ drums the sand to summon a Sleeper; ride-hooks hold the
+  ridge of its back. To ride is to cross the deep at speed — and, turned on a
+  fort, to bring the desert itself down on House Vorrin. The first ride is the
+  rite that marks the Seir.
 
 _Creative licence: the **mechanics** follow Dune '92, but the **story** is our
 own. This is the working spine — bend it freely._
@@ -204,13 +223,13 @@ consciousness, Fremen loyalty, spice mining, army, ecology).
 | # | Event | Mode | Unlocks |
 | --- | --- | --- | --- |
 | 1 | **The Poisoned Gift** _(intro)_ — House Calder is granted Aridun | Residency | The Residency hub + the world map |
-| 2 | **First Contact** — Eren rides out and finds the first Hollow and the Shamen | Side-scroll | Tribe recruitment |
+| 2 | **First Contact** — Eren skiffs out to the first Hollow and meets **Tamir** and the Shamen | Side-scroll (skiff + on foot) | Tribe recruitment |
 | 3 | **Word of Aurun** — court and Shamen reveal what Aurun is and why the Imperium hungers | Residency | The Aurun economy / harvesting |
 | 4 | **The Knife from Within** — Vorrin strikes; Orlin's betrayal kills Lord Aldric; Eren takes command | Residency | The war footing — the fort campaign begins |
 | 5 | **Aurun Exposure** — deep in the Warrens, raw Aurun marks Eren; his eyes change; the first vision | Side-scroll | Prescience (foresee enemy moves / hidden paths) |
 | 6 | **Winning the Tribes** — earn Shamen loyalty, Hollow by Hollow | Map + visits | The **Veiled Knives** and broader map reach |
 | 7 | **The Harvest & the Greening** — Aurun mining and the ecology project come online | Residency | Economy scaling + slow world transformation |
-| 8 | **The Seir Awakens** _(vision sequence)_ — prescience deepens into command of the desert | Side-scroll | The **Sleepers** as a weapon; late-game power |
+| 8 | **The Seir Awakens** _(vision + first Sleeper-ride)_ — prescience deepens; Eren rides his first Sleeper | Side-scroll | The **Sleepers** as mount and weapon; late-game power |
 | 9 | **The Fort Campaign** — take Vorrin's holds region by region | Map | Map expansion; the noose tightens |
 | 10 | **The Reckoning** _(finale)_ — assault **Vorrinhold**; Korinth's hand revealed | Map + finale | The ending fork: greened or scorched Aridun |
 
