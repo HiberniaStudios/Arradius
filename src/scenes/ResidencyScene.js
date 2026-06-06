@@ -53,9 +53,9 @@ const ROOMS = [
   },
   {
     key: 'deck',
-    name: 'The Skiff Deck',
+    name: 'The Corsair Deck',
     accent: 0xffce86,
-    body: 'A windskiff waits, wings folded against the dusk. Ride out into Aridun.',
+    body: 'A corsair waits, wings folded against the dusk. Ride out into Aridun.',
     action: 'depart',
   },
 ];

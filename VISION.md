@@ -79,7 +79,7 @@ strategic board.
 ## How it plays — the loop
 
 The **Residency** is Eren's base of operations — but he rides out himself, by
-windskiff and, in time, on the back of a Sleeper. Side-scrolling is woven in at
+Corsair and, in time, on the back of a Sleeper. Side-scrolling is woven in at
 pivotal moments, not as the only mechanic, but as how the world is _felt_. The
 modes feed each other:
 
@@ -171,13 +171,12 @@ The systems are modelled on Cryo's _Dune_, refit to Aridun:
 
 The Residency is the base; Eren rides out himself. Travel is also spectacle:
 
-- **Windskiffs** _(working)_ — winged craft for crossing Aridun (our
-  ornithopter). The means of map travel and the staging of side-scroll flight
-  set-pieces: threading canyons and spires, outrunning storms and Vorrin
-  patrols.
+- **Corsairs** — winged craft for crossing Aridun (our ornithopter). The means
+  of map travel and the staging of side-scroll flight set-pieces: threading
+  canyons and spires, outrunning storms and Vorrin patrols.
 - **Sleeper-riding** — the Shamen rite and the Seir's late-game power. A
-  **Caller** _(working)_ drums the sand to summon a Sleeper; ride-hooks hold the
-  ridge of its back. To ride is to cross the deep at speed — and, turned on a
+  **Caller** drums the sand to summon a Sleeper; ride-hooks hold the ridge of its
+  back. To ride is to cross the deep at speed — and, turned on a
   fort, to bring the desert itself down on House Vorrin. The first ride is the
   rite that marks the Seir.
 
@@ -223,7 +222,7 @@ consciousness, Fremen loyalty, spice mining, army, ecology).
 | # | Event | Mode | Unlocks |
 | --- | --- | --- | --- |
 | 1 | **The Poisoned Gift** _(intro)_ — House Calder is granted Aridun | Residency | The Residency hub + the world map |
-| 2 | **First Contact** — Eren skiffs out to the first Hollow and meets **Tamir** and the Shamen | Side-scroll (skiff + on foot) | Tribe recruitment |
+| 2 | **First Contact** — Eren rides a Corsair out to the first Hollow and meets **Tamir** and the Shamen | Side-scroll (Corsair + on foot) | Tribe recruitment |
 | 3 | **Word of Aurun** — court and Shamen reveal what Aurun is and why the Imperium hungers | Residency | The Aurun economy / harvesting |
 | 4 | **The Knife from Within** — Vorrin strikes; Orlin's betrayal kills Lord Aldric; Eren takes command | Residency | The war footing — the fort campaign begins |
 | 5 | **Aurun Exposure** — deep in the Warrens, raw Aurun marks Eren; his eyes change; the first vision | Side-scroll | Prescience (foresee enemy moves / hidden paths) |
