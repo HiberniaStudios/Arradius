@@ -102,6 +102,9 @@ export default class ResidencyScene extends Phaser.Scene {
 
     this.layout(width, height);
     this.cameras.main.fadeIn(600, 6, 4, 12);
+    // Ignore input briefly so a ghost click from the previous scene's tap can't
+    // immediately trigger a room here.
+    this.inputReadyAt = this.time.now + 400;
     this.showEntryTitle();
 
     this.scale.on('resize', this.onResize, this);
@@ -370,6 +373,7 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
   tryInteract() {
+    if (this.time.now < this.inputReadyAt) return;
     if (this.panelOpen) {
       this.closePanel();
       return;
@@ -398,6 +402,9 @@ export default class ResidencyScene extends Phaser.Scene {
 
   openPanel(title, body) {
     this.panelOpen = true;
+    // Guard against the synthesized "ghost click" mobile browsers fire shortly
+    // after a tap, which would otherwise dismiss the panel the instant it opens.
+    this.panelOpenedAt = this.time.now;
     const { width, height } = this.scale;
     const pw = Math.min(width * 0.8, 460);
     const ph = Math.min(height * 0.6, 260);
@@ -455,6 +462,8 @@ export default class ResidencyScene extends Phaser.Scene {
 
   closePanel() {
     if (!this.panel) return;
+    // Ignore dismiss attempts within the ghost-click window after opening.
+    if (this.time.now - this.panelOpenedAt < 400) return;
     this.panel.forEach((o) => o.destroy());
     this.panel = null;
     this.panelOpen = false;

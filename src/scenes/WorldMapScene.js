@@ -72,6 +72,8 @@ export default class WorldMapScene extends Phaser.Scene {
     this.layout(width, height);
     this.refreshSelection();
     this.cameras.main.fadeIn(500, 6, 4, 12);
+    // Ignore input briefly so a ghost click from the War Room tap can't act here.
+    this.inputReadyAt = this.time.now + 450;
 
     this.scale.on('resize', this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
@@ -277,6 +279,7 @@ export default class WorldMapScene extends Phaser.Scene {
   }
 
   act() {
+    if (this.time.now < this.inputReadyAt) return;
     const { node } = this.nodeObjs[this.selected];
     if (node.action === 'home') this.goHome();
     else if (node.action === 'expedition') this.goTo('ExpeditionScene');
