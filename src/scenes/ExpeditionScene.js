@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import Ambient from '../audio/Ambient.js';
+import { enablePainterly, togglePainterly } from '../shaders/KuwaharaPostFX.js';
 
 // The first painterly slice of Arradius — a hooded walk across the dunes toward
 // a Hollow, gathering Aurun. A scrolling world wider than the screen, with
@@ -85,6 +86,9 @@ export default class ExpeditionScene extends Phaser.Scene {
     this.cameras.main.setDeadzone(width * 0.25, height);
 
     this.layout(width, height);
+
+    enablePainterly(this);
+    this.input.keyboard.on('keydown-K', () => togglePainterly(this));
 
     this.scale.on('resize', this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {

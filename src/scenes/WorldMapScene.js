@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import Ambient from '../audio/Ambient.js';
+import { enablePainterly, togglePainterly } from '../shaders/KuwaharaPostFX.js';
 
 // The War Map — Aridun seen from above. The first strategic screen: your seat,
 // a Shamen Hollow where First Contact awaits, and a House Vorrin watchpost.
@@ -74,6 +75,9 @@ export default class WorldMapScene extends Phaser.Scene {
     this.cameras.main.fadeIn(500, 6, 4, 12);
     // Ignore input briefly so a ghost click from the War Room tap can't act here.
     this.inputReadyAt = this.time.now + 450;
+
+    enablePainterly(this);
+    this.input.keyboard.on('keydown-K', () => togglePainterly(this));
 
     this.scale.on('resize', this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>

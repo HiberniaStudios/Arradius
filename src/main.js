@@ -3,6 +3,7 @@ import BootScene from './scenes/BootScene.js';
 import ResidencyScene from './scenes/ResidencyScene.js';
 import WorldMapScene from './scenes/WorldMapScene.js';
 import ExpeditionScene from './scenes/ExpeditionScene.js';
+import KuwaharaPostFX from './shaders/KuwaharaPostFX.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -25,6 +26,7 @@ const config = {
       debug: false,
     },
   },
+  pipeline: { KuwaharaPostFX },
   scene: [BootScene, ResidencyScene, WorldMapScene, ExpeditionScene],
 };
 

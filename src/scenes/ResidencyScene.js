@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import Ambient from '../audio/Ambient.js';
+import { enablePainterly, togglePainterly } from '../shaders/KuwaharaPostFX.js';
 
 // The Residency — House Calder's seat, presented as static painted screens in
 // the spirit of Cryo's Dune: a hub hall you navigate point-and-click, each room
@@ -124,11 +125,17 @@ export default class ResidencyScene extends Phaser.Scene {
     this.hud.setDepth(905);
 
     this.createAudio();
+    this.createFilterToggle();
     this.input.keyboard.on('keydown-ESC', () => this.showLocation('hall'));
+    this.input.keyboard.on('keydown-K', () => {
+      const on = togglePainterly(this);
+      if (this.filterCircle) this.filterCircle.setAlpha(on ? 1 : 0.45);
+    });
 
     this.layout(this.scale.width, this.scale.height);
     this.cameras.main.fadeIn(600, 6, 4, 12);
     this.inputReadyAt = this.time.now + 350;
+    enablePainterly(this);
     this.showEntryTitle();
 
     this.scale.on('resize', this.onResize, this);
@@ -168,6 +175,23 @@ export default class ResidencyScene extends Phaser.Scene {
     });
   }
 
+  createFilterToggle() {
+    this.filterCircle = this.add
+      .circle(0, 0, 20, 0xffffff, 0.14)
+      .setStrokeStyle(2, GOLD, 0.5)
+      .setDepth(910)
+      .setInteractive({ useHandCursor: true });
+    this.filterLabel = this.add
+      .text(0, 0, '✦', { fontFamily: 'monospace', fontSize: '17px', color: CREAM })
+      .setOrigin(0.5)
+      .setDepth(911);
+    this.filterCircle.on('pointerdown', (p, x, y, e) => {
+      e?.stopPropagation();
+      const on = togglePainterly(this);
+      this.filterCircle.setAlpha(on ? 1 : 0.45);
+    });
+  }
+
   // --- Navigation -----------------------------------------------------------
 
   showLocation(key) {
@@ -202,6 +226,10 @@ export default class ResidencyScene extends Phaser.Scene {
     if (this.musicCircle) {
       this.musicCircle.setPosition(width - 32, 30);
       this.musicLabel.setPosition(width - 32, 30);
+    }
+    if (this.filterCircle) {
+      this.filterCircle.setPosition(width - 74, 30);
+      this.filterLabel.setPosition(width - 74, 30);
     }
 
     this.renderLocation();
