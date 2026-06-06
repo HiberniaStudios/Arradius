@@ -41,7 +41,10 @@ export default class AudioManager {
 
     this.enabled = true;
     this.isPlaying = false;
-    this.level = 0.36;
+    // Master loudness. Kept low on purpose: the soundscape is meant to be felt
+    // at the edge of attention — atmosphere, not a score sitting on top of the
+    // game. Raise toward ~0.32 if you want it more forward.
+    this.level = 0.2;
 
     this.musicVoices = []; // { osc, base } — retuned on state change
     this.droneFilter = null;
@@ -76,12 +79,16 @@ export default class AudioManager {
     this.revSend.gain.value = 0.6;
     this.revSend.connect(this.reverb);
 
+    // The harmonic bed is the "presence" of the world. Held well back so it
+    // reads as a distant drone you stop noticing, not a chord pressing on you.
     this.musicGain = ctx.createGain();
-    this.musicGain.gain.value = 1.0;
+    this.musicGain.gain.value = 0.5;
     this.musicGain.connect(this.master);
 
+    // Per-room air sits a touch under unity so atmosphere colours the silence
+    // rather than filling it.
     this.ambienceGain = ctx.createGain();
-    this.ambienceGain.gain.value = 1.0;
+    this.ambienceGain.gain.value = 0.8;
     this.ambienceGain.connect(this.master);
 
     // ~2s white-noise buffer — the seed for all air, wind, murmur and static.
