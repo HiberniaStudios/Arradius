@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import BootScene from './scenes/BootScene.js';
 import ResidencyScene from './scenes/ResidencyScene.js';
+import WorldMapScene from './scenes/WorldMapScene.js';
 import ExpeditionScene from './scenes/ExpeditionScene.js';
 
 const config = {
@@ -24,7 +25,7 @@ const config = {
       debug: false,
     },
   },
-  scene: [BootScene, ResidencyScene, ExpeditionScene],
+  scene: [BootScene, ResidencyScene, WorldMapScene, ExpeditionScene],
 };
 
 // eslint-disable-next-line no-new

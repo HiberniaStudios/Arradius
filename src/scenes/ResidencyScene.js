@@ -42,7 +42,8 @@ const ROOMS = [
     key: 'war',
     name: 'The War Room',
     accent: 0xff8a5a,
-    body: 'The map of Aridun. Direct the Saltguard, mark House Vorrin’s forts, plan the campaign. (World map — coming soon.)',
+    body: 'The map of Aridun. Direct the Saltguard, mark House Vorrin’s forts, plan the campaign.',
+    action: 'map',
   },
   {
     key: 'yard',
@@ -106,7 +107,6 @@ export default class ResidencyScene extends Phaser.Scene {
     this.scale.on('resize', this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off('resize', this.onResize, this);
-      if (this.ambient) this.ambient.stop();
     });
   }
 
@@ -321,19 +321,22 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
   createAudio() {
-    this.ambient = new Ambient();
+    if (!this.game.ambient) this.game.ambient = new Ambient();
+    this.ambient = this.game.ambient;
     const startOnce = () => this.ambient.start();
     this.input.once('pointerdown', startOnce);
     this.input.keyboard.once('keydown', startOnce);
 
+    const on0 = this.ambient.enabled;
     const circle = this.add
       .circle(0, 0, 22, 0xffffff, 0.14)
       .setStrokeStyle(2, 0xffce86, 0.5)
       .setScrollFactor(0)
       .setDepth(1000)
+      .setAlpha(on0 ? 1 : 0.5)
       .setInteractive({ useHandCursor: true });
     const label = this.add
-      .text(0, 0, '♪', {
+      .text(0, 0, on0 ? '♪' : '♪̷', {
         fontFamily: 'monospace',
         fontSize: '20px',
         color: '#ffe8c8',
@@ -378,18 +381,19 @@ export default class ResidencyScene extends Phaser.Scene {
   openRoom(room) {
     if (this.panelOpen) return;
     if (room.action === 'depart') {
-      this.depart();
+      this.goTo('ExpeditionScene');
+      return;
+    }
+    if (room.action === 'map') {
+      this.goTo('WorldMapScene');
       return;
     }
     this.openPanel(room.name, room.body);
   }
 
-  depart() {
-    this.cameras.main.fadeOut(700, 6, 4, 12);
-    this.cameras.main.once('camerafadeoutcomplete', () => {
-      if (this.ambient) this.ambient.stop();
-      this.scene.start('ExpeditionScene');
-    });
+  goTo(scene) {
+    this.cameras.main.fadeOut(600, 6, 4, 12);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(scene));
   }
 
   openPanel(title, body) {

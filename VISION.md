@@ -115,6 +115,8 @@ _Locked, but editable as we progress._
   side-scrolling levels.
 - **Vorrinhold** _(working)_ — House Vorrin's stronghold; the campaign's final
   objective. Take it to end the war.
+- **Tamir's Hollow** — the first Hollow Eren wins; home of the Shamen chief Tamir.
+- **Ashmaw** — a House Vorrin watchpost; an early target on the road to Vorrinhold.
 
 ### The court of House Calder
 
