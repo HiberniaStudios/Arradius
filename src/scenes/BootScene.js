@@ -15,8 +15,24 @@ export default class BootScene extends Phaser.Scene {
     this.makeGlow();
     this.makeAurun();
     this.makeEren();
+    this.makeFigure();
 
-    this.scene.start('GameScene');
+    this.scene.start('ResidencyScene');
+  }
+
+  /** A neutral standing figure, tintable per character (court NPCs). */
+  makeFigure() {
+    const w = 30;
+    const h = 54;
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+    // Two greys so a uniform tint still yields a little robe/head contrast.
+    g.fillStyle(0xbfbfbf, 1);
+    g.fillRoundedRect(7, 18, 16, 34, { tl: 6, tr: 6, bl: 2, br: 2 });
+    g.fillTriangle(4, 52, 26, 52, 15, 30);
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(15, 12, 8);
+    g.generateTexture('figure', w, h);
+    g.destroy();
   }
 
   /** Vertical dusk gradient: indigo night up top to burnt orange at the horizon. */

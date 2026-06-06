@@ -44,14 +44,15 @@ const DUNES = [
   { fy: 0.79, amp: 42, color: 0x180f24, scroll: 0.72 },
 ];
 
-export default class GameScene extends Phaser.Scene {
+export default class ExpeditionScene extends Phaser.Scene {
   constructor() {
-    super('GameScene');
+    super('ExpeditionScene');
     this.aurun = 0;
   }
 
   create() {
     this.aurun = 0;
+    this.returning = false;
     this.solids = [];
     this.touchButtons = [];
 
@@ -326,7 +327,7 @@ export default class GameScene extends Phaser.Scene {
 
   createHud() {
     this.hudText = this.add
-      .text(16, 14, 'Aurun  0', {
+      .text(16, 14, `Aurun  ${this.registry.get('aurun') || 0}`, {
         fontFamily: 'monospace',
         fontSize: '20px',
         color: '#ffce86',
@@ -338,7 +339,7 @@ export default class GameScene extends Phaser.Scene {
   createTitle() {
     const { width, height } = this.scale;
     const title = this.add
-      .text(width / 2, height * 0.4, 'ARRADIUS', {
+      .text(width / 2, height * 0.4, 'ARIDUN', {
         fontFamily: 'Georgia, serif',
         fontSize: '44px',
         color: '#f0e3d0',
@@ -348,7 +349,7 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(2000)
       .setAlpha(0);
     const sub = this.add
-      .text(width / 2, height * 0.4 + 38, '— the world they call Aridun —', {
+      .text(width / 2, height * 0.4 + 38, '— the deep desert —', {
         fontFamily: 'Georgia, serif',
         fontSize: '16px',
         color: '#c8a98f',
@@ -540,12 +541,30 @@ export default class GameScene extends Phaser.Scene {
   collectAurun(player, a) {
     a.disableBody(true, true);
     this.aurun += 1;
-    this.hudText.setText(`Aurun  ${this.aurun}`);
+    this.registry.inc('aurun', 1);
+    this.hudText.setText(`Aurun  ${this.registry.get('aurun')}`);
     // A brief burst of light where it was gathered.
     this.motes.emitParticleAt(a.x, a.y, 6);
   }
 
+  /** Fade out and hand back to the Residency hub. */
+  returnToResidency() {
+    if (this.returning) return;
+    this.returning = true;
+    if (this.ambient) this.ambient.stop();
+    this.cameras.main.fadeOut(700, 6, 4, 12);
+    this.cameras.main.once('camerafadeoutcomplete', () =>
+      this.scene.start('ResidencyScene')
+    );
+  }
+
   update(time) {
+    // Reaching the Hollow ends the expedition and returns home.
+    if (!this.returning && this.player.x >= this.hollowX - 24) {
+      this.returnToResidency();
+      return;
+    }
+
     this.aurunGroup.getChildren().forEach((a) => {
       if (!a.active) return;
       const baseY = a.getData('baseY');

@@ -36,10 +36,11 @@ Tap once to start the music; **♪** (top-right) toggles it.
 └── src/
     ├── main.js             # Phaser.Game config + entry point
     ├── audio/
-    │   └── Ambient.js      # procedural ambient desert soundbed (Web Audio)
+    │   └── Ambient.js          # procedural ambient desert soundbed (Web Audio)
     └── scenes/
-        ├── BootScene.js    # generates painterly textures, then starts the game
-        └── GameScene.js    # the Arradius slice: parallax dunes, Eren, Aurun, Hollow
+        ├── BootScene.js        # generates painterly textures, then starts the hub
+        ├── ResidencyScene.js   # the Palace hub: side-scroll through the court's rooms
+        └── ExpeditionScene.js  # the desert slice: parallax dunes, Eren, Aurun, Hollow
 ```
 
 ## Deploying to Cloudflare Pages
