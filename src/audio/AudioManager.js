@@ -24,9 +24,11 @@
 const freq = (midi) => 440 * 2 ** ((midi - 69) / 12);
 
 // Music states. `transpose` is in semitones from the bed's written pitch.
+// The lowpass cutoffs are deliberately low: the bed should be felt in the
+// chest, not heard as a mid-range chord. Open them up if you want it brighter.
 const MUSIC = {
-  residency: { transpose: 0, sub: 0.12, droneCut: 700, padCut: 1300 },
-  expedition: { transpose: -5, sub: 0.22, droneCut: 520, padCut: 1000 },
+  residency: { transpose: 0, sub: 0.12, droneCut: 320, padCut: 600 },
+  expedition: { transpose: -5, sub: 0.22, droneCut: 260, padCut: 480 },
 };
 
 export default class AudioManager {
@@ -153,9 +155,10 @@ export default class AudioManager {
     const now = this.ctx.currentTime;
     const ctx = this.ctx;
 
-    // Wet send shared by the harmonic music buses.
+    // Wet send shared by the harmonic music buses. Run it hot — most of the
+    // bed should reach you as reverb tail (the space), not direct sound.
     const musicRev = ctx.createGain();
-    musicRev.gain.value = 0.4;
+    musicRev.gain.value = 0.6;
     musicRev.connect(this.revSend);
 
     // Sacred drone chord through a soft lowpass — F1 C2 F2 C3 (open fifths).
@@ -166,8 +169,10 @@ export default class AudioManager {
     droneBus.connect(musicRev);
     this.droneFilter = droneBus;
 
-    const dNotes = [29, 36, 41, 48];
-    const dGains = [0.5, 0.34, 0.3, 0.18];
+    // F1 C2 F2 — open fifths only. The old top C3 added mid presence that read
+    // as a "chord"; dropping it leaves a darker, sparser bed.
+    const dNotes = [29, 36, 41];
+    const dGains = [0.5, 0.34, 0.3];
     dNotes.forEach((n, i) => {
       const osc = ctx.createOscillator();
       osc.type = i < 2 ? 'sine' : 'triangle';
@@ -195,7 +200,9 @@ export default class AudioManager {
     padBus.connect(musicRev);
     this.padFilter = padBus;
 
-    [53, 60, 65].forEach((n, i) => {
+    // F3 C4 — the choral colour, thinned (top F4 dropped) and held quieter so
+    // it tints the drone rather than singing over it.
+    [53, 60].forEach((n, i) => {
       const osc = ctx.createOscillator();
       osc.type = 'sawtooth';
       osc.frequency.value = freq(n);
@@ -203,11 +210,11 @@ export default class AudioManager {
       const g = ctx.createGain();
       g.gain.value = 0;
       const base = ctx.createConstantSource();
-      base.offset.value = 0.045;
+      base.offset.value = 0.028;
       const lfo = ctx.createOscillator();
       lfo.frequency.value = 0.016 + i * 0.005;
       const lg = ctx.createGain();
-      lg.gain.value = 0.045;
+      lg.gain.value = 0.028;
       base.connect(g.gain);
       lfo.connect(lg).connect(g.gain);
       osc.connect(g).connect(padBus);
@@ -233,6 +240,25 @@ export default class AudioManager {
     subLfo.start(now);
     this.subGain = subG;
     this.subBase = 0.12;
+
+    // Breath: the whole harmonic bed slowly swells in and recedes toward
+    // near-silence on a ~36s tide, so the score reads as presence coming and
+    // going rather than a constant drone. The bus gain is driven entirely by
+    // these two sources — its intrinsic value is held at 0 and they sum on top,
+    // swinging it between ~0.02 (almost gone) and ~0.38 (full). setMusicState
+    // and the master fade are untouched by this; they live on other nodes.
+    this.musicGain.gain.value = 0;
+    const breath = ctx.createConstantSource();
+    breath.offset.value = 0.2; // midpoint of the swell
+    const breathLfo = ctx.createOscillator();
+    breathLfo.type = 'sine';
+    breathLfo.frequency.value = 1 / 36; // ~36s in-and-out cycle
+    const breathDepth = ctx.createGain();
+    breathDepth.gain.value = 0.18; // swing depth around the midpoint
+    breath.connect(this.musicGain.gain);
+    breathLfo.connect(breathDepth).connect(this.musicGain.gain);
+    breath.start(now);
+    breathLfo.start(now);
   }
 
   /** Ramp the score between its Residency and Expedition states. */
@@ -377,6 +403,33 @@ export default class AudioManager {
     sw.start(now);
     sl.start(now);
     inst.nodes.push(src, sw, sl);
+  }
+
+  /**
+   * Steady low air — the felt pressure of a large enclosed space, no wind.
+   * Lowpassed noise with only a very slow swell, so it sits as room tone the
+   * ear stops noticing rather than weather moving through.
+   */
+  roomTone(inst, { cut = 200, level = 0.04, swellRate = 0.025 }) {
+    const now = this.ctx.currentTime;
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.noiseBuffer;
+    src.loop = true;
+    const filt = this.ctx.createBiquadFilter();
+    filt.type = 'lowpass';
+    filt.frequency.value = cut;
+    filt.Q.value = 0.3;
+    const g = this.ctx.createGain();
+    g.gain.value = level;
+    const sl = this.ctx.createOscillator();
+    sl.frequency.value = swellRate;
+    const slG = this.ctx.createGain();
+    slG.gain.value = level * 0.5;
+    sl.connect(slG).connect(g.gain);
+    src.connect(filt).connect(g).connect(inst.bus);
+    src.start(now);
+    sl.start(now);
+    inst.nodes.push(src, sl);
   }
 
   /** Filtered noise shaped to the speech band — a room full of low voices. */
@@ -543,11 +596,12 @@ export default class AudioManager {
 // The music bed carries the harmony; recipes only colour the air of a place.
 // Levels are deliberately low — the bus and master gains set final loudness.
 const RECIPES = {
-  // Great Hall — cavernous stone air with the occasional deep gong.
+  // Great Hall — the low pressure of a vast stone space, mostly silence, with
+  // a rare deep gong ringing out long into the hall. No wind; just air.
   hall(am, inst) {
-    am.reverbAmount(inst, 0.5);
-    am.wind(inst, { band: 420, Q: 0.5, level: 0.03, sweep: 180, sweepRate: 0.04, swellRate: 0.04 });
-    am.every(inst, 12000, 28000, () => am.gong(inst, { level: 0.13, decay: 7 }));
+    am.reverbAmount(inst, 0.7);
+    am.roomTone(inst, { cut: 200, level: 0.04, swellRate: 0.025 });
+    am.every(inst, 18000, 40000, () => am.gong(inst, { level: 0.1, decay: 8 }));
   },
 
   // The Court — formal hush over a low murmur of courtiers.
