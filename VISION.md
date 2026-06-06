@@ -1,6 +1,7 @@
 # Vision
 
-> **Working title:** _Arradius_ (front-runner — shortlist in World & characters)
+> **Working title:** **Arradius** — the Imperial name for the world its people
+> call _Aridun_.
 > **Logline:** An atmospheric, painterly exploration-platformer wrapped in a
 > strategy/adventure meta-layer, set in an original desert world that wears
 > Frank Herbert's thematic DNA — prophecy, ecology, water-as-life, and the slow
@@ -110,17 +111,24 @@ The shared vocabulary. Still editable, but these are our canon.
 
 | Role | Dune analogue | Name |
 | --- | --- | --- |
-| The desert world | Arrakis | **Aridun** |
+| The desert world | Arrakis | **Arradius** (Imperial name) · **Aridun** (the Shamen's name) |
 | The precious substance | Spice / water | **Aurun** — the glowing bloom |
 | The deep monsters | Sandworms | **the Sleepers** |
 | Desert nomads | Fremen | **the Shamen** |
 | Their refuges | Sietch | **Hollows / Warrens** |
 | The protagonist's house | House Atreides | **House Calder** |
 | The rival power | House Harkonnen | **House Vorrin** |
-| The protagonist | Paul | **Eren**, called **the Seer** by the Shamen |
+| The galactic ruler | House Corrino / the Emperor | **the Imperium** _(TBD)_ |
+| The protagonist | Paul | **Eren**, called **the Seir** by the Shamen |
 
-**Working title shortlist:** ⭐**Arradius** (front-runner) · _Aridun_ · _Erg_ ·
-_The Greening_ · _Dunesong_ · _Aurun_
+### Naming as politics
+
+The world has two names, and which you use says whose side you're on. The
+**Imperium** and the great houses call it **Arradius** — a registry name, a
+holding, a source of Aurun. The **Shamen** who were born to its dunes call it
+**Aridun**. The game leans on this everywhere: signage, dialogue, and faction
+framing use the name that fits the speaker. Our **title is _Arradius_** — the
+official name — while the world beneath it is always _Aridun_.
 
 ---
 
