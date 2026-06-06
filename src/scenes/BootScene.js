@@ -18,6 +18,7 @@ export default class BootScene extends Phaser.Scene {
     this.makeFigure();
     this.makeInteriorWall();
     this.makeVignette();
+    this.makeNoise();
 
     this.scene.start('ResidencyScene');
   }
@@ -144,5 +145,22 @@ export default class BootScene extends Phaser.Scene {
 
     g.generateTexture('eren', w, h);
     g.destroy();
+  }
+
+  /** Fine grain noise — used as a stone / parchment texture overlay in scenes. */
+  makeNoise() {
+    const size = 256;
+    const tex = this.textures.createCanvas('noise', size, size);
+    const ctx = tex.getContext();
+    const img = ctx.createImageData(size, size);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = Math.floor(Math.random() * 220 + 35);
+      img.data[i]     = v;
+      img.data[i + 1] = Math.floor(v * 0.82);
+      img.data[i + 2] = Math.floor(v * 0.60);
+      img.data[i + 3] = Math.floor(Math.random() * 52 + 8);
+    }
+    ctx.putImageData(img, 0, 0);
+    tex.refresh();
   }
 }

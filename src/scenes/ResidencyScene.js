@@ -257,12 +257,34 @@ export default class ResidencyScene extends Phaser.Scene {
     this.bd.clear();
     this.drawScene(loc, width, floorY, barTop);
 
-    // Bottom UI bar.
+    // Bottom UI bar — aged stone character with ornate corner details.
     this.bar.clear();
-    this.bar.fillStyle(0x140d22, 0.96);
+    this.bar.fillStyle(0x15101e, 1);
     this.bar.fillRect(0, barTop, width, height - barTop);
-    this.bar.fillStyle(GOLD, 0.7);
+    // Warm inner band to break flatness.
+    this.bar.fillStyle(0x1e162e, 0.65);
+    this.bar.fillRect(0, barTop + 4, width, height - barTop - 8);
+    // Sandstone warm tint strip at top.
+    this.bar.fillStyle(0xb07d4a, 0.16);
+    this.bar.fillRect(0, barTop, width, 22);
+    // Top divider: sandstone line + gold hairline.
+    this.bar.fillStyle(0xb07d4a, 0.78);
     this.bar.fillRect(0, barTop, width, 2);
+    this.bar.fillStyle(GOLD, 0.5);
+    this.bar.fillRect(0, barTop + 2, width, 1);
+    // Corner ornaments — top-left.
+    const cs = 28;
+    this.bar.fillStyle(0xc4956a, 0.45);
+    this.bar.fillTriangle(0, barTop, cs, barTop, 0, barTop + cs);
+    this.bar.fillStyle(GOLD, 0.75);
+    this.bar.fillRect(0, barTop, cs + 8, 2);
+    this.bar.fillRect(0, barTop, 2, cs + 8);
+    // Corner ornaments — top-right.
+    this.bar.fillStyle(0xc4956a, 0.45);
+    this.bar.fillTriangle(width, barTop, width - cs, barTop, width, barTop + cs);
+    this.bar.fillStyle(GOLD, 0.75);
+    this.bar.fillRect(width - cs - 8, barTop, cs + 8, 2);
+    this.bar.fillRect(width - 2, barTop, 2, cs + 8);
 
     if (this.current === 'hall') this.renderHallMenu(loc, width, height, barTop);
     else this.renderRoomBar(loc, width, height, barTop);
@@ -466,6 +488,18 @@ export default class ResidencyScene extends Phaser.Scene {
     this.dynamic.push(img);
   }
 
+  addStoneNoise(x, y, w, h, tint = 0xc4956a, alpha = 0.09) {
+    if (!this.textures.exists('noise')) return;
+    const img = this.add
+      .image(x, y, 'noise')
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setTint(tint)
+      .setAlpha(alpha)
+      .setDisplaySize(w, h)
+      .setDepth(-89);
+    this.dynamic.push(img);
+  }
+
   /** A generic painted room: floor, flanking columns, a central arch, banners. */
   sceneShell(g, width, floorY) {
     // Floor.
@@ -478,23 +512,37 @@ export default class ResidencyScene extends Phaser.Scene {
     g.fillStyle(GOLD, 0.6);
     g.fillRect(width * 0.18, floorY + 10, width * 0.64, 2);
 
-    // Central arch alcove.
+    // Central arch alcove — sandstone surround, dark interior.
     const aw = width * 0.5;
+    const ar = aw / 2;
     const at = floorY * 0.16;
-    g.fillStyle(0x180f2c, 1);
-    g.fillRoundedRect(width / 2 - aw / 2, at, aw, floorY - at, {
-      tl: aw / 2,
-      tr: aw / 2,
-      bl: 0,
-      br: 0,
+    // Shadow base surround.
+    g.fillStyle(0x7a4e28, 1);
+    g.fillRoundedRect(width / 2 - ar - 6, at - 4, aw + 12, floorY - at + 5, {
+      tl: ar + 4, tr: ar + 4, bl: 0, br: 0,
     });
-    g.fillStyle(0x231541, 1);
-    g.fillRoundedRect(width / 2 - aw / 2 + 8, at + 8, aw - 16, floorY - at - 8, {
-      tl: aw / 2 - 8,
-      tr: aw / 2 - 8,
-      bl: 0,
-      br: 0,
+    // Sandstone face.
+    g.fillStyle(0xb07d4a, 1);
+    g.fillRoundedRect(width / 2 - ar, at, aw, floorY - at, {
+      tl: ar, tr: ar, bl: 0, br: 0,
     });
+    // Ochre highlight on the lit side.
+    g.fillStyle(0xc4956a, 0.4);
+    g.fillRoundedRect(width / 2 - ar, at, aw * 0.42, floorY - at, {
+      tl: ar, tr: 0, bl: 0, br: 0,
+    });
+    // Stone joints below the semicircle.
+    g.fillStyle(0x6a3e1a, 0.5);
+    for (let jy = at + ar + 8; jy < floorY; jy += 16) {
+      g.fillRect(width / 2 - ar + 4, jy, aw - 8, 1.5);
+    }
+    // Dark interior.
+    g.fillStyle(0x130c08, 1);
+    g.fillRoundedRect(width / 2 - ar + 9, at + 9, aw - 18, floorY - at - 9, {
+      tl: ar - 9, tr: ar - 9, bl: 0, br: 0,
+    });
+    // Stone noise on arch surround.
+    this.addStoneNoise(width / 2, at + (floorY - at) * 0.5, aw + 14, floorY - at + 6);
 
     // Flanking columns.
     [width * 0.16, width * 0.84].forEach((x) => this.column(g, x, at - 6, floorY));
@@ -504,20 +552,31 @@ export default class ResidencyScene extends Phaser.Scene {
     g.fillRect(0, at - 8, width, 3);
   }
 
-  column(g, x, top, floorY) {
+  column(g, x, top, floorY, depth = 0) {
     const sw = 26;
-    g.fillStyle(0x2a1c44, 1);
+    // depth: 0 = nearest (warm, fully opaque), 1 = furthest (cool, hazy)
+    const a     = 1 - depth * 0.38;
+    const body  = depth < 0.5 ? 0x3a2a50 : 0x25203c;
+    const light = depth < 0.5 ? 0x5a4488 : 0x382e58;
+    const shade = depth < 0.5 ? 0x180f28 : 0x120c20;
+    const cap   = depth < 0.5 ? 0x4a3870 : 0x322855;
+    g.fillStyle(body, a);
     g.fillRect(x - sw / 2, top, sw, floorY - top);
-    g.fillStyle(0x42306a, 1);
+    g.fillStyle(light, a * 0.9);
     g.fillRect(x - sw / 2, top, 5, floorY - top);
-    g.fillStyle(0x180f28, 1);
+    g.fillStyle(shade, a);
     g.fillRect(x + sw / 2 - 4, top, 4, floorY - top);
-    g.fillStyle(0x3a2858, 1);
+    g.fillStyle(cap, a);
     g.fillRect(x - sw / 2 - 7, top - 14, sw + 14, 14);
-    g.fillStyle(GOLD, 0.8);
+    g.fillStyle(GOLD, (0.8 - depth * 0.55) * a);
     g.fillRect(x - sw / 2 - 7, top - 14, sw + 14, 3);
-    g.fillStyle(0x241640, 1);
+    g.fillStyle(0x241640, a);
     g.fillRect(x - sw / 2 - 7, floorY - 10, sw + 14, 10);
+    if (depth < 0.35) {
+      // Near columns: faint central groove for extra detail.
+      g.fillStyle(0x180f28, 0.4);
+      g.fillRect(x - 1, top + 4, 2, floorY - top - 8);
+    }
   }
 
   sceneHall(g, width, floorY) {
@@ -528,33 +587,64 @@ export default class ResidencyScene extends Phaser.Scene {
     g.fillRect(0, floorY, width, height - floorY);
     g.fillStyle(0x2a1d3a, 1);
     g.fillRect(0, floorY, width, 4);
-    // Receding runner to a vanishing point.
-    g.fillStyle(0x243a64, 0.9);
-    g.fillTriangle(cx - width * 0.16, floorY, cx + width * 0.16, floorY, cx, floorY * 0.42);
-    g.fillStyle(GOLD, 0.5);
-    g.fillTriangle(cx - 3, floorY, cx + 3, floorY, cx, floorY * 0.42);
-    // Far lit arch.
-    g.fillStyle(0x3a2350, 1);
-    g.fillRoundedRect(cx - 46, floorY * 0.34, 92, floorY * 0.5, {
-      tl: 46,
-      tr: 46,
-      bl: 0,
-      br: 0,
+    // Light cone — warm amber, soft feathered edges (no hard triangle).
+    const vp = floorY * 0.42;
+    const coneW = width * 0.17;
+    [
+      { w: coneW * 1.5, a: 0.05 },
+      { w: coneW * 1.2, a: 0.08 },
+      { w: coneW,       a: 0.13 },
+      { w: coneW * 0.7, a: 0.09 },
+    ].forEach(({ w, a }) => {
+      g.fillStyle(0xc8922a, a);
+      g.fillTriangle(cx - w, floorY, cx + w, floorY, cx, vp);
     });
-    g.fillStyle(0x7a4a3a, 1);
-    g.fillRoundedRect(cx - 36, floorY * 0.4, 72, floorY * 0.5, {
-      tl: 36,
-      tr: 36,
-      bl: 0,
-      br: 0,
+    g.fillStyle(0xe8b84a, 0.06);
+    g.fillTriangle(cx - coneW * 0.35, floorY, cx + coneW * 0.35, floorY, cx, vp);
+    g.fillStyle(GOLD, 0.42);
+    g.fillTriangle(cx - 3, floorY, cx + 3, floorY, cx, vp);
+    // Radial grain on the cone.
+    this.addStoneNoise(cx, (floorY + vp) / 2, coneW * 2.4, floorY - vp, 0xc8922a, 0.055);
+    // Far arch — sandstone/ochre palette with stone joints.
+    const archW = 92;
+    const archRad = archW / 2;
+    const archTop = floorY * 0.34;
+    const archH = floorY * 0.5;
+    // Shadow surround (slightly irregular by offset).
+    g.fillStyle(0x7a4e28, 1);
+    g.fillRoundedRect(cx - archRad - 5, archTop - 4, archW + 10, archH + 5, {
+      tl: archRad + 3, tr: archRad + 3, bl: 0, br: 0,
     });
-    this.addGlow(cx, floorY * 0.5, width * 0.4, 0xffce86, 0.4);
-    // Receding columns on both sides.
+    // Sandstone face.
+    g.fillStyle(0xb07d4a, 1);
+    g.fillRoundedRect(cx - archRad, archTop, archW, archH, {
+      tl: archRad, tr: archRad, bl: 0, br: 0,
+    });
+    // Ochre highlight on the lit side.
+    g.fillStyle(0xc4956a, 0.5);
+    g.fillRoundedRect(cx - archRad, archTop, archW * 0.44, archH, {
+      tl: archRad, tr: 0, bl: 0, br: 0,
+    });
+    // Stone joint lines in the straight section below the semicircle.
+    g.fillStyle(0x6a3e1a, 0.55);
+    for (let jy = archTop + archRad + 6; jy < archTop + archH; jy += 13) {
+      g.fillRect(cx - archRad + 2, jy, archW - 4, 1.5);
+    }
+    // Dark inner opening.
+    g.fillStyle(0x130c08, 1);
+    g.fillRoundedRect(cx - archRad + 9, archTop + 9, archW - 18, archH - 9, {
+      tl: archRad - 9, tr: archRad - 9, bl: 0, br: 0,
+    });
+    // Stone noise overlay on the arch face.
+    this.addStoneNoise(cx, archTop + archH * 0.55, archW + 14, archH + 6);
+    this.addGlow(cx, archTop + archH * 0.55, width * 0.38, 0xffce86, 0.52);
+    // Receding columns — i=0 nearest/warmest, i=2 furthest/haziest.
     const pairs = [0.12, 0.24, 0.36];
     pairs.forEach((f, i) => {
       const top = floorY * (0.2 + i * 0.05);
-      this.column(g, cx - width * (0.46 - f * 0.6), top, floorY);
-      this.column(g, cx + width * (0.46 - f * 0.6), top, floorY);
+      const colDepth = i / 2;
+      this.column(g, cx - width * (0.46 - f * 0.6), top, floorY, colDepth);
+      this.column(g, cx + width * (0.46 - f * 0.6), top, floorY, colDepth);
     });
     // Banners.
     [cx - width * 0.22, cx + width * 0.22].forEach((x) =>
@@ -563,17 +653,37 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
   banner(g, x, topY, len) {
-    const w = 26;
-    g.fillStyle(0x243a64, 1);
+    const w = 38;
+    // House Calder — rich deep blue.
+    g.fillStyle(0x1e5090, 1);
     g.fillRect(x - w / 2, topY, w, len);
-    g.fillTriangle(x - w / 2, topY + len, x + w / 2, topY + len, x, topY + len + 12);
-    g.fillStyle(GOLD, 0.9);
-    g.fillRect(x - w / 2, topY, 2, len);
-    g.fillRect(x + w / 2 - 2, topY, 2, len);
-    const cy = topY + len * 0.42;
+    g.fillTriangle(x - w / 2, topY + len, x + w / 2, topY + len, x, topY + len + 18);
+    // Edge highlights.
+    g.fillStyle(0x4888c8, 0.85);
+    g.fillRect(x - w / 2, topY, 3, len + 18);
+    g.fillRect(x + w / 2 - 3, topY, 3, len);
+    // Gold top bar.
     g.fillStyle(GOLD, 1);
-    g.fillTriangle(x - 8, cy, x + 8, cy, x, cy - 10);
-    g.fillCircle(x, cy + 8, 3);
+    g.fillRect(x - w / 2 - 5, topY - 3, w + 10, 5);
+    // Sigil — diamond with cross and centre jewel.
+    const sy = topY + len * 0.38;
+    g.fillStyle(GOLD, 0.95);
+    g.fillTriangle(x, sy - 14, x + 11, sy, x, sy + 14);
+    g.fillTriangle(x, sy - 14, x - 11, sy, x, sy + 14);
+    g.fillStyle(0x1e5090, 1);
+    g.fillTriangle(x, sy - 8, x + 6, sy, x, sy + 8);
+    g.fillTriangle(x, sy - 8, x - 6, sy, x, sy + 8);
+    g.fillStyle(GOLD, 1);
+    g.fillCircle(x, sy, 3);
+    g.fillRect(x - 10, sy - 1.5, 20, 3);
+    // Wave marks — salt-and-sea for House Calder.
+    const wy = topY + len * 0.7;
+    g.fillStyle(0x6aaad8, 0.8);
+    g.fillRect(x - 9, wy, 18, 2);
+    g.fillStyle(0x6aaad8, 0.6);
+    g.fillRect(x - 7, wy + 5, 14, 2);
+    g.fillStyle(0x6aaad8, 0.4);
+    g.fillRect(x - 5, wy + 10, 10, 2);
   }
 
   // Feature props (centred on the floor) ------------------------------------
