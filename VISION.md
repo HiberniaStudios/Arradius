@@ -242,6 +242,20 @@ the Veiled Knives before **Winning the Tribes**, cannot turn the Sleepers before
 
 **Painterly / atmospheric.** (Chosen.)
 
+### Presentation — painted hubs, side-scroll trips
+
+Following Cryo's _Dune_, the game is **not** a side-scroller throughout:
+
+- **Hubs are static painted screens** — the Residency and its rooms, the Hollows,
+  the court — navigated point-and-click, with **portrait-led dialogue**. Movement
+  is between screens, not walking a level.
+- **The World Map** is the strategic travel/command view.
+- **Side-scrolling is reserved for expeditions** — desert journeys, Warren-delves,
+  and Corsair flights — the moments where being on foot makes the world _felt_.
+
+So Phaser is used as a general 2D engine (static scenes + portraits + map +
+side-scroll set-pieces), not as a platformer.
+
 - Hand-painted-feel backdrops, layered for parallax depth and haze.
 - Palette: deep purples, indigo night, burnt orange, bone, dust. Bloom and
   god-rays for the sacred register.

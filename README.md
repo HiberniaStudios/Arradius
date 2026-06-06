@@ -39,7 +39,8 @@ Tap once to start the music; **♪** (top-right) toggles it.
     │   └── Ambient.js          # procedural ambient desert soundbed (Web Audio)
     └── scenes/
         ├── BootScene.js        # generates painterly textures, then starts the hub
-        ├── ResidencyScene.js   # the Palace hub: side-scroll through the court's rooms
+        ├── ResidencyScene.js   # the Palace hub: painted room screens, point-and-click + portraits
+        ├── WorldMapScene.js    # the strategic War Map of Aridun
         └── ExpeditionScene.js  # the desert slice: parallax dunes, Eren, Aurun, Hollow
 ```
 

@@ -1,68 +1,84 @@
 import Phaser from 'phaser';
 import Ambient from '../audio/Ambient.js';
 
-// The Residency — House Calder's seat in Saltspire, and the game's hub.
-// Navigated by the same side-scroll method as the desert: Eren walks the palace
-// cutaway left and right; each room is a station he enters with ↑ / tap.
+// The Residency — House Calder's seat, presented as static painted screens in
+// the spirit of Cryo's Dune: a hub hall you navigate point-and-click, each room
+// a painted scene with portrait-led dialogue. Side-scrolling is reserved for
+// expeditions (the Corsair Deck) and the World Map handles strategy.
 
-const START_X = 280;
-const ROOM_GAP = 340;
+const GOLD = 0xc9a24a;
+const GOLD_S = '#c9a24a';
+const CREAM = '#e8d8c0';
 
-// Rooms, left to right. `who` adds a court figure; `action: 'depart'` launches an
-// expedition; everything else opens a placeholder panel for now.
-const ROOMS = [
-  {
-    key: 'quarters',
-    name: "Eren's Quarters",
-    accent: 0x6fb0ff,
-    body: 'Where Eren rests, and the Aurun-dreams come. (Save & reflect — coming soon.)',
+const LOCATIONS = {
+  hall: {
+    name: 'The Residency',
+    flavor:
+      'The great hall of House Calder at Saltspire. Lamplight and slow dust, and the weight of a world just handed to your house.',
+    feature: 'hall',
+    exits: ['court', 'war', 'veil', 'infirmary', 'yard', 'quarters', 'deck'],
   },
-  {
-    key: 'veil',
-    name: "The Veil's Sanctum",
-    accent: 0xb98cff,
-    who: 'Mother Ysolde',
-    body: 'Mother Ysolde of the Veil reads the threads of what may come. Prophecy and counsel. (Coming soon.)',
-  },
-  {
-    key: 'infirmary',
-    name: 'The Infirmary',
-    accent: 0x7fd0a0,
-    who: 'Master Orlin',
-    body: 'Master Orlin tends the house. He smiles, and bows, and something behind his eyes does not settle. (Coming soon.)',
-  },
-  {
-    key: 'court',
+  court: {
     name: 'The Court',
-    accent: 0xffd27a,
     who: 'Lord Aldric',
-    body: 'Lord Aldric Calder holds audience. The business of the house, the weight of the Imperium. (Decisions — coming soon.)',
+    accent: 0xffd27a,
+    feature: 'court',
+    say: [
+      '“Aridun will test us, Eren. Hold to its people and we hold to the world.”',
+      '“Korinth did not gift us this fief out of love. Watch the dunes — and watch our own halls.”',
+    ],
   },
-  {
-    key: 'war',
+  war: {
     name: 'The War Room',
     accent: 0xff8a5a,
-    body: 'The map of Aridun. Direct the Saltguard, mark House Vorrin’s forts, plan the campaign.',
-    action: 'map',
+    feature: 'war',
+    flavor: 'The map of Aridun waits, House Vorrin’s forts marked in red.',
+    actions: [{ label: 'Study the map', scene: 'WorldMapScene' }],
   },
-  {
-    key: 'yard',
+  veil: {
+    name: "The Veil's Sanctum",
+    who: 'Mother Ysolde',
+    accent: 0xb98cff,
+    feature: 'veil',
+    say: [
+      '“The threads tangle around you, child. I cannot yet see the knot.”',
+      '“When the Aurun takes you, do not look away. The Seir is born in that seeing.”',
+    ],
+  },
+  infirmary: {
+    name: 'The Infirmary',
+    who: 'Master Orlin',
+    accent: 0x7fd0a0,
+    feature: 'infirmary',
+    say: [
+      '“All is well, my lord. The house is in good health.”',
+      'He smiles, and bows, and holds the smile a moment too long.',
+    ],
+  },
+  yard: {
     name: "The Bladewarden's Yard",
-    accent: 0xd0a070,
     who: 'Brannic',
-    body: 'Brannic drills the Saltguard. Train and muster your forces. (Military — coming soon.)',
+    accent: 0xd0a070,
+    feature: 'yard',
+    say: [
+      '“Steel won’t win Aridun alone — but it’ll keep you breathing till the Shamen do.”',
+      '“Say the word and the Saltguard musters. We are yours.”',
+    ],
   },
-  {
-    key: 'deck',
+  quarters: {
+    name: "Eren's Quarters",
+    accent: 0x6fb0ff,
+    feature: 'quarters',
+    flavor: 'Your own rooms. The Aurun-dreams come here, when they come.',
+  },
+  deck: {
     name: 'The Corsair Deck',
     accent: 0xffce86,
-    body: 'A corsair waits, wings folded against the dusk. Ride out into Aridun.',
-    action: 'depart',
+    feature: 'deck',
+    flavor: 'A corsair waits, wings folded against the dusk.',
+    actions: [{ label: 'Ride out into Aridun', scene: 'ExpeditionScene' }],
   },
-];
-
-const RESIDENCY_WIDTH = START_X * 2 + ROOM_GAP * (ROOMS.length - 1);
-const INTERACT_RANGE = 95;
+};
 
 export default class ResidencyScene extends Phaser.Scene {
   constructor() {
@@ -70,298 +86,55 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
   create() {
-    this.touchButtons = [];
-    this.panelOpen = false;
-    this.roomObjs = [];
+    this.current = 'hall';
+    this.sayIndex = 0;
+    this.dynamic = [];
 
-    const { width, height } = this.scale;
-    this.cameras.main.setBounds(0, 0, RESIDENCY_WIDTH, height);
-    this.cameras.main.roundPixels = true;
-
-    this.buildInterior();
-    this.buildRooms();
-    this.createPlayer(height);
-    this.createHud();
-    this.setupInput();
-    this.createTouchControls();
-    this.createAudio();
-
-    this.prompt = this.add
-      .text(0, 0, '', {
-        fontFamily: 'monospace',
-        fontSize: '15px',
-        color: '#ffe8c8',
-        align: 'center',
-      })
-      .setOrigin(0.5, 1)
-      .setDepth(900)
-      .setVisible(false);
-
-    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setDeadzone(width * 0.3, height);
-
-    this.layout(width, height);
-    this.cameras.main.fadeIn(600, 6, 4, 12);
-    // Ignore input briefly so a ghost click from the previous scene's tap can't
-    // immediately trigger a room here.
-    this.inputReadyAt = this.time.now + 400;
-    this.showEntryTitle();
-
-    this.scale.on('resize', this.onResize, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.scale.off('resize', this.onResize, this);
-    });
-  }
-
-  // --- Interior shell -------------------------------------------------------
-
-  buildInterior() {
-    // Static, warm back wall fixed to the camera (parallax behind the pillars).
+    // Persistent layers.
     this.wall = this.add
       .image(0, 0, 'interiorWall')
       .setOrigin(0, 0)
-      .setScrollFactor(0)
       .setDepth(-100);
+    this.bd = this.add.graphics().setDepth(-90);
+    this.bar = this.add.graphics().setDepth(100);
+    this.frame = this.add.graphics().setDepth(900);
+    this.vignette = this.add.image(0, 0, 'vignette').setOrigin(0, 0).setDepth(940);
 
-    // Painterly architecture, all drawn across the palace in layout().
-    this.ceiling = this.add.graphics().setDepth(-82);
-    this.alcoves = this.add.graphics().setDepth(-72);
-    this.banners = this.add.graphics().setDepth(-38);
-    this.frieze = this.add.graphics().setDepth(-54);
-    this.floor = this.add.graphics().setDepth(-50);
-    this.lightpools = this.add
-      .graphics()
-      .setDepth(-44)
-      .setBlendMode(Phaser.BlendModes.ADD);
-    this.columns = this.add.graphics().setDepth(-40);
-    this.props = this.add.graphics().setDepth(0);
-
-    // Drifting dust caught in the lamplight.
     this.dust = this.add
       .particles(0, 0, 'glow', {
-        x: { min: 0, max: RESIDENCY_WIDTH },
-        y: { min: 60, max: this.scale.height * 0.9 },
+        x: { min: 0, max: this.scale.width },
+        y: { min: 40, max: this.scale.height * 0.6 },
         lifespan: 9000,
         speedX: { min: -5, max: 5 },
-        speedY: { min: -7, max: 4 },
+        speedY: { min: -6, max: 4 },
         scale: { start: 0.05, end: 0 },
-        alpha: { start: 0.22, end: 0 },
+        alpha: { start: 0.18, end: 0 },
         tint: 0xffe0b0,
         blendMode: Phaser.BlendModes.ADD,
-        frequency: 260,
+        frequency: 320,
         quantity: 1,
       })
-      .setDepth(6)
-      .setScrollFactor(0.4);
+      .setDepth(50);
 
-    // Edge vignette for mood.
-    this.vignette = this.add
-      .image(0, 0, 'vignette')
-      .setOrigin(0, 0)
-      .setScrollFactor(0)
-      .setDepth(940);
-  }
-
-  buildRooms() {
-    ROOMS.forEach((room, i) => {
-      const x = START_X + i * ROOM_GAP;
-      room.x = x;
-
-      // A coloured glow filling the room's alcove.
-      const accent = this.add
-        .image(x, 0, 'glow')
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setTint(room.accent)
-        .setAlpha(0.22)
-        .setDepth(-71);
-
-      // A hanging lamp with a soft flicker.
-      const lamp = this.add
-        .image(x, 0, 'glow')
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setTint(0xffd9a0)
-        .setAlpha(0.55)
-        .setDepth(-30);
-      this.tweens.add({
-        targets: lamp,
-        alpha: { from: 0.45, to: 0.62 },
-        duration: 1200 + Math.random() * 800,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.inOut',
-      });
-
-      // The interaction marker — a pulsing Aurun mote.
-      const marker = this.add
-        .image(x, 0, 'aurun')
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(1)
-        .setScale(0.9)
-        .setInteractive({ useHandCursor: true });
-      marker.on('pointerdown', (p, lx, ly, e) => {
-        e?.stopPropagation();
-        this.openRoom(room);
-      });
-      this.tweens.add({
-        targets: marker,
-        scale: { from: 0.85, to: 1.15 },
-        alpha: { from: 0.8, to: 1 },
-        duration: 1400,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.inOut',
-      });
-
-      // Optional court figure.
-      let figure = null;
-      let nameLabel = null;
-      if (room.who) {
-        figure = this.add
-          .image(x + 40, 0, 'figure')
-          .setTint(room.accent)
-          .setDepth(1);
-        nameLabel = this.add
-          .text(x + 40, 0, room.who, {
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            color: '#d8c4b0',
-          })
-          .setOrigin(0.5, 1)
-          .setDepth(2);
-      }
-
-      // A faint etched room name on the wall.
-      const label = this.add
-        .text(x, 0, room.name, {
-          fontFamily: 'Georgia, serif',
-          fontSize: '15px',
-          color: '#9a86b0',
-        })
-        .setOrigin(0.5, 0)
-        .setAlpha(0.65)
-        .setDepth(0);
-
-      this.roomObjs.push({ room, accent, lamp, marker, figure, nameLabel, label });
+    this.hud = this.add.text(14, 12, '', {
+      fontFamily: 'monospace',
+      fontSize: '15px',
+      color: GOLD_S,
     });
-  }
+    this.hud.setDepth(905);
 
-  createPlayer(height) {
-    const floorY = height - 70;
-    this.player = this.add.image(ROOMS[3].x, floorY - 26, 'eren').setDepth(3);
-    this.facing = 1;
-  }
+    this.createAudio();
+    this.input.keyboard.on('keydown-ESC', () => this.showLocation('hall'));
 
-  createHud() {
-    const aurun = this.registry.get('aurun') || 0;
-    const water = this.registry.get('water') ?? 100;
-    this.registry.set('water', water);
-    this.hudText = this.add
-      .text(16, 14, `Aurun  ${aurun}     Water  ${water}`, {
-        fontFamily: 'monospace',
-        fontSize: '18px',
-        color: '#ffce86',
-      })
-      .setScrollFactor(0)
-      .setDepth(1000);
-  }
+    this.layout(this.scale.width, this.scale.height);
+    this.cameras.main.fadeIn(600, 6, 4, 12);
+    this.inputReadyAt = this.time.now + 350;
+    this.showEntryTitle();
 
-  showEntryTitle() {
-    const { width, height } = this.scale;
-    const first = !this.registry.get('enteredResidency');
-    this.registry.set('enteredResidency', true);
-
-    const main = first ? 'ARRADIUS' : 'The Residency';
-    const sub = first ? 'House Calder · the Residency at Saltspire' : 'Saltspire';
-
-    const t1 = this.add
-      .text(width / 2, height * 0.38, main, {
-        fontFamily: 'Georgia, serif',
-        fontSize: first ? '46px' : '30px',
-        color: '#f0e3d0',
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(2000)
-      .setAlpha(0);
-    const t2 = this.add
-      .text(width / 2, height * 0.38 + 38, sub, {
-        fontFamily: 'Georgia, serif',
-        fontSize: '15px',
-        color: '#c8a98f',
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(2000)
-      .setAlpha(0);
-
-    this.tweens.add({
-      targets: [t1, t2],
-      alpha: 1,
-      duration: 1400,
-      hold: 1800,
-      yoyo: true,
-      onComplete: () => {
-        t1.destroy();
-        t2.destroy();
-      },
-    });
-  }
-
-  // --- Input ----------------------------------------------------------------
-
-  setupInput() {
-    this.cursors = this.input.keyboard.createCursorKeys();
-    this.keys = this.input.keyboard.addKeys({
-      left: Phaser.Input.Keyboard.KeyCodes.A,
-      right: Phaser.Input.Keyboard.KeyCodes.D,
-      interact: Phaser.Input.Keyboard.KeyCodes.W,
-    });
-    this.touch = { left: false, right: false };
-  }
-
-  createTouchControls() {
-    const hasTouch =
-      this.sys.game.device.input.touch ||
-      'ontouchstart' in window ||
-      navigator.maxTouchPoints > 0;
-    if (!hasTouch) return;
-
-    const makeButton = (anchor, label, opts) => {
-      const circle = this.add
-        .circle(0, 0, 38, 0xffffff, 0.14)
-        .setStrokeStyle(2, 0xffce86, 0.5)
-        .setScrollFactor(0)
-        .setDepth(1000)
-        .setInteractive({ useHandCursor: true });
-      const text = this.add
-        .text(0, 0, label, {
-          fontFamily: 'monospace',
-          fontSize: '26px',
-          color: '#ffe8c8',
-        })
-        .setOrigin(0.5)
-        .setScrollFactor(0)
-        .setDepth(1001);
-      if (opts.down) circle.on('pointerdown', opts.down);
-      if (opts.up) {
-        circle.on('pointerup', opts.up);
-        circle.on('pointerout', opts.up);
-      }
-      this.touchButtons.push({ circle, text, anchor });
-    };
-
-    const pad = 70;
-    makeButton((w, h) => ({ x: pad, y: h - pad }), '◀', {
-      down: () => (this.touch.left = true),
-      up: () => (this.touch.left = false),
-    });
-    makeButton((w, h) => ({ x: pad + 92, y: h - pad }), '▶', {
-      down: () => (this.touch.right = true),
-      up: () => (this.touch.right = false),
-    });
-    makeButton((w, h) => ({ x: w - pad, y: h - pad }), '▲', {
-      down: () => this.tryInteract(),
-    });
+    this.scale.on('resize', this.onResize, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
+      this.scale.off('resize', this.onResize, this)
+    );
   }
 
   createAudio() {
@@ -372,499 +145,577 @@ export default class ResidencyScene extends Phaser.Scene {
     this.input.keyboard.once('keydown', startOnce);
 
     const on0 = this.ambient.enabled;
-    const circle = this.add
-      .circle(0, 0, 22, 0xffffff, 0.14)
-      .setStrokeStyle(2, 0xffce86, 0.5)
-      .setScrollFactor(0)
-      .setDepth(1000)
+    this.musicCircle = this.add
+      .circle(0, 0, 20, 0xffffff, 0.14)
+      .setStrokeStyle(2, GOLD, 0.5)
+      .setDepth(910)
       .setAlpha(on0 ? 1 : 0.5)
       .setInteractive({ useHandCursor: true });
-    const label = this.add
+    this.musicLabel = this.add
       .text(0, 0, on0 ? '♪' : '♪̷', {
         fontFamily: 'monospace',
-        fontSize: '20px',
-        color: '#ffe8c8',
+        fontSize: '18px',
+        color: CREAM,
       })
       .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(1001);
-    circle.on('pointerdown', (p, x, y, e) => {
+      .setDepth(911);
+    this.musicCircle.on('pointerdown', (p, x, y, e) => {
       e?.stopPropagation();
       this.ambient.start();
       const on = this.ambient.toggle();
-      circle.setAlpha(on ? 1 : 0.5);
-      label.setText(on ? '♪' : '♪̷');
+      this.musicCircle.setAlpha(on ? 1 : 0.5);
+      this.musicLabel.setText(on ? '♪' : '♪̷');
     });
-    this.musicButton = { circle, label, anchor: (w) => ({ x: w - 36, y: 36 }) };
   }
 
-  // --- Interaction ----------------------------------------------------------
+  // --- Navigation -----------------------------------------------------------
 
-  nearestRoom() {
-    let best = null;
-    let bestDist = INTERACT_RANGE;
-    this.roomObjs.forEach(({ room }) => {
-      const d = Math.abs(room.x - this.player.x);
-      if (d < bestDist) {
-        bestDist = d;
-        best = room;
-      }
-    });
-    return best;
-  }
-
-  tryInteract() {
+  showLocation(key) {
     if (this.time.now < this.inputReadyAt) return;
-    if (this.panelOpen) {
-      this.closePanel();
-      return;
-    }
-    const room = this.nearestRoom();
-    if (room) this.openRoom(room);
-  }
-
-  openRoom(room) {
-    if (this.panelOpen) return;
-    if (room.action === 'depart') {
-      this.goTo('ExpeditionScene');
-      return;
-    }
-    if (room.action === 'map') {
-      this.goTo('WorldMapScene');
-      return;
-    }
-    this.openPanel(room.name, room.body);
+    this.current = key;
+    this.sayIndex = 0;
+    this.renderLocation();
   }
 
   goTo(scene) {
-    this.cameras.main.fadeOut(600, 6, 4, 12);
+    if (this.time.now < this.inputReadyAt) return;
+    this.cameras.main.fadeOut(500, 6, 4, 12);
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(scene));
   }
 
-  openPanel(title, body) {
-    this.panelOpen = true;
-    // Guard against the synthesized "ghost click" mobile browsers fire shortly
-    // after a tap, which would otherwise dismiss the panel the instant it opens.
-    this.panelOpenedAt = this.time.now;
-    const { width, height } = this.scale;
-    const pw = Math.min(width * 0.8, 460);
-    const ph = Math.min(height * 0.6, 260);
-    const cx = width / 2;
-    const cy = height / 2;
-
-    const scrim = this.add
-      .rectangle(0, 0, width, height, 0x05030a, 0.62)
-      .setOrigin(0, 0)
-      .setScrollFactor(0)
-      .setDepth(3000)
-      .setInteractive();
-    scrim.on('pointerdown', () => this.closePanel());
-
-    const box = this.add
-      .rectangle(cx, cy, pw, ph, 0x1a1230, 0.96)
-      .setStrokeStyle(2, 0xffce86, 0.6)
-      .setScrollFactor(0)
-      .setDepth(3001);
-
-    const titleText = this.add
-      .text(cx, cy - ph / 2 + 26, title, {
-        fontFamily: 'Georgia, serif',
-        fontSize: '24px',
-        color: '#ffe8c8',
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(3002);
-
-    const bodyText = this.add
-      .text(cx, cy - 6, body, {
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '16px',
-        color: '#d8c8e0',
-        align: 'center',
-        wordWrap: { width: pw - 44 },
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(3002);
-
-    const hint = this.add
-      .text(cx, cy + ph / 2 - 22, 'press ▲ / ↑ or tap to close', {
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        color: '#9a86b0',
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(3002);
-
-    this.panel = [scrim, box, titleText, bodyText, hint];
-  }
-
-  closePanel() {
-    if (!this.panel) return;
-    // Ignore dismiss attempts within the ghost-click window after opening.
-    if (this.time.now - this.panelOpenedAt < 400) return;
-    this.panel.forEach((o) => o.destroy());
-    this.panel = null;
-    this.panelOpen = false;
-  }
-
-  // --- Layout ---------------------------------------------------------------
+  // --- Rendering ------------------------------------------------------------
 
   layout(width, height) {
-    this.cameras.main.setBounds(0, 0, RESIDENCY_WIDTH, height);
-    this.cameras.main.setDeadzone(width * 0.3, height);
-    this.moveSpeed = Phaser.Math.Clamp(width * 0.32, 190, 460);
-
     this.wall.setDisplaySize(width, height);
     this.vignette.setDisplaySize(width, height);
 
-    const floorY = height - 70;
-    const colTop = height * 0.12;
-    this.drawArchitecture(width, height, floorY, colTop);
-    this.drawProps(floorY);
+    // Ornate frame.
+    this.frame.clear();
+    this.frame.lineStyle(3, GOLD, 0.5);
+    this.frame.strokeRect(6, 6, width - 12, height - 12);
+    this.frame.lineStyle(1, GOLD, 0.3);
+    this.frame.strokeRect(11, 11, width - 22, height - 22);
 
-    // Per-room props.
-    this.roomObjs.forEach(({ room, accent, lamp, marker, figure, nameLabel, label }) => {
-      accent.setPosition(room.x, floorY - 80).setDisplaySize(280, 280);
-      lamp.setPosition(room.x, colTop + 20).setDisplaySize(120, 120);
-      marker.setPosition(room.x, floorY - 28);
-      label.setPosition(room.x, colTop + 16);
-      if (figure) figure.setPosition(room.x + 46, floorY - 27);
-      if (nameLabel) nameLabel.setPosition(room.x + 46, floorY - 56);
-    });
-
-    this.player.y = floorY - 26;
-
-    this.touchButtons.forEach(({ circle, text, anchor }) => {
-      const { x, y } = anchor(width, height);
-      circle.setPosition(x, y);
-      text.setPosition(x, y);
-    });
-    if (this.musicButton) {
-      const { x, y } = this.musicButton.anchor(width, height);
-      this.musicButton.circle.setPosition(x, y);
-      this.musicButton.label.setPosition(x, y);
+    this.hud.setText(
+      `Aurun  ${this.registry.get('aurun') || 0}     Water  ${this.registry.get('water') ?? 100}`
+    );
+    if (this.musicCircle) {
+      this.musicCircle.setPosition(width - 32, 30);
+      this.musicLabel.setPosition(width - 32, 30);
     }
+
+    this.renderLocation();
   }
 
   onResize(gameSize) {
     this.layout(gameSize.width, gameSize.height);
   }
 
-  // --- Painterly architecture ----------------------------------------------
-
-  drawArchitecture(width, height, floorY, colTop) {
-    // Ceiling band.
-    const c = this.ceiling;
-    c.clear();
-    c.fillStyle(0x130c20, 1);
-    c.fillRect(0, 0, RESIDENCY_WIDTH, colTop);
-
-    // Frieze: a gold line under the ceiling with a row of studs.
-    const f = this.frieze;
-    f.clear();
-    f.fillStyle(0xc9a24a, 0.85);
-    f.fillRect(0, colTop - 5, RESIDENCY_WIDTH, 3);
-    f.fillStyle(0x7a5a26, 0.8);
-    f.fillRect(0, colTop - 2, RESIDENCY_WIDTH, 2);
-    f.fillStyle(0xc9a24a, 0.6);
-    for (let x = 16; x < RESIDENCY_WIDTH; x += 30) f.fillCircle(x, colTop - 11, 1.6);
-
-    // Arched alcoves behind each room.
-    const a = this.alcoves;
-    a.clear();
-    ROOMS.forEach((room) => {
-      const w = ROOM_GAP * 0.62;
-      const top = colTop + 16;
-      const r = w / 2;
-      a.fillStyle(0x180f2c, 1);
-      a.fillRoundedRect(room.x - r, top, w, floorY - top, { tl: r, tr: r, bl: 0, br: 0 });
-      a.fillStyle(0x231541, 1);
-      a.fillRoundedRect(room.x - r + 6, top + 6, w - 12, floorY - top - 6, {
-        tl: r - 6,
-        tr: r - 6,
-        bl: 0,
-        br: 0,
-      });
-    });
-
-    // Floor: stone, seams, and a House Calder carpet runner.
-    const fl = this.floor;
-    fl.clear();
-    fl.fillStyle(0x140d20, 1);
-    fl.fillRect(0, floorY, RESIDENCY_WIDTH, height - floorY + 10);
-    fl.fillStyle(0x2a1d3a, 1);
-    fl.fillRect(0, floorY, RESIDENCY_WIDTH, 4);
-    fl.fillStyle(0x1d1330, 0.6);
-    for (let x = 0; x < RESIDENCY_WIDTH; x += 80) fl.fillRect(x, floorY + 6, 2, height - floorY);
-    const ry = floorY + 12;
-    fl.fillStyle(0x243a64, 0.95);
-    fl.fillRect(0, ry, RESIDENCY_WIDTH, 16);
-    fl.fillStyle(0xc9a24a, 0.7);
-    fl.fillRect(0, ry, RESIDENCY_WIDTH, 2);
-    fl.fillRect(0, ry + 14, RESIDENCY_WIDTH, 2);
-
-    // Warm light pools on the floor beneath each lamp.
-    const lp = this.lightpools;
-    lp.clear();
-    ROOMS.forEach((room) => {
-      lp.fillStyle(0xffcaa0, 0.1);
-      lp.fillEllipse(room.x, floorY + 8, ROOM_GAP * 0.72, 30);
-    });
-
-    // Fluted columns with gold capitals and bases.
-    const co = this.columns;
-    co.clear();
-    const sw = 22;
-    for (let i = 0; i <= ROOMS.length; i += 1) {
-      const x = START_X - ROOM_GAP / 2 + i * ROOM_GAP;
-      const colH = floorY - colTop;
-      co.fillStyle(0x2a1c44, 1);
-      co.fillRect(x - sw / 2, colTop, sw, colH);
-      co.fillStyle(0x42306a, 1); // lit edge
-      co.fillRect(x - sw / 2, colTop, 5, colH);
-      co.fillStyle(0x180f28, 1); // shadowed edge
-      co.fillRect(x + sw / 2 - 4, colTop, 4, colH);
-      co.fillStyle(0x1d1334, 0.8); // fluting
-      co.fillRect(x - 4, colTop, 1, colH);
-      co.fillRect(x + 2, colTop, 1, colH);
-      co.fillStyle(0x3a2858, 1); // capital
-      co.fillRect(x - sw / 2 - 6, colTop - 14, sw + 12, 14);
-      co.fillStyle(0xc9a24a, 0.8);
-      co.fillRect(x - sw / 2 - 6, colTop - 14, sw + 12, 3);
-      co.fillStyle(0x241640, 1); // base
-      co.fillRect(x - sw / 2 - 6, floorY - 10, sw + 12, 10);
-      co.fillStyle(0xc9a24a, 0.5);
-      co.fillRect(x - sw / 2 - 6, floorY - 10, sw + 12, 2);
-    }
-
-    // House Calder banners on the interior columns.
-    const b = this.banners;
-    b.clear();
-    const len = (floorY - colTop) * 0.42;
-    for (let i = 1; i < ROOMS.length; i += 1) {
-      const x = START_X - ROOM_GAP / 2 + i * ROOM_GAP;
-      this.drawBanner(b, x, colTop + 6, len);
-    }
+  clearDynamic() {
+    this.dynamic.forEach((o) => o.destroy());
+    this.dynamic = [];
   }
 
-  drawBanner(g, x, topY, len) {
+  renderLocation() {
+    if (!this.bd) return;
+    this.clearDynamic();
+    const { width, height } = this.scale;
+    const loc = LOCATIONS[this.current];
+
+    const barTop = Math.round(height * 0.66);
+    const floorY = barTop - 12;
+
+    // Painted scene.
+    this.bd.clear();
+    this.drawScene(loc, width, floorY, barTop);
+
+    // Bottom UI bar.
+    this.bar.clear();
+    this.bar.fillStyle(0x140d22, 0.96);
+    this.bar.fillRect(0, barTop, width, height - barTop);
+    this.bar.fillStyle(GOLD, 0.7);
+    this.bar.fillRect(0, barTop, width, 2);
+
+    if (this.current === 'hall') this.renderHallMenu(loc, width, height, barTop);
+    else this.renderRoomBar(loc, width, height, barTop);
+  }
+
+  // --- Hall (hub menu) ------------------------------------------------------
+
+  renderHallMenu(loc, width, height, barTop) {
+    const title = this.add
+      .text(width / 2, barTop + 14, 'Where to, my lord?', {
+        fontFamily: 'Georgia, serif',
+        fontSize: '18px',
+        color: CREAM,
+      })
+      .setOrigin(0.5, 0)
+      .setDepth(102);
+    this.dynamic.push(title);
+
+    const items = loc.exits;
+    const cols = width < 560 ? 2 : 4;
+    const rows = Math.ceil(items.length / cols);
+    const areaTop = barTop + 44;
+    const areaH = height - areaTop - 14;
+    const bw = Math.min((width - 40) / cols - 12, 180);
+    const bh = Math.min(areaH / rows - 8, 42);
+
+    items.forEach((key, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const totalW = cols * (bw + 12) - 12;
+      const x = (width - totalW) / 2 + col * (bw + 12) + bw / 2;
+      const y = areaTop + row * (bh + 8) + bh / 2;
+      this.makeButton(x, y, bw, bh, LOCATIONS[key].name, () =>
+        this.showLocation(key)
+      );
+    });
+  }
+
+  // --- Room bar (portrait + dialogue + actions) -----------------------------
+
+  renderRoomBar(loc, width, height, barTop) {
+    const padY = barTop + 16;
+    let textLeft = 24;
+
+    // Portrait, if the room has a character.
+    if (loc.who) {
+      const px = 60;
+      const py = barTop + (height - barTop) / 2;
+      this.drawPortrait(px, py, loc.accent, loc.who);
+      textLeft = 116;
+    }
+
+    // Name.
+    const nameText = this.add
+      .text(textLeft, padY, loc.name, {
+        fontFamily: 'Georgia, serif',
+        fontSize: '20px',
+        color: Phaser.Display.Color.IntegerToColor(loc.accent || 0xf0e3d0).rgba,
+      })
+      .setDepth(102);
+    this.dynamic.push(nameText);
+
+    // Line / flavour.
+    const line = loc.who ? (loc.say ? loc.say[this.sayIndex] : '') : loc.flavor || '';
+    const actionsW = 210;
+    const lineText = this.add
+      .text(textLeft, padY + 30, line, {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '15px',
+        color: '#d8c8e0',
+        wordWrap: { width: width - textLeft - actionsW - 24 },
+      })
+      .setDepth(102);
+    this.dynamic.push(lineText);
+
+    // Actions (right-aligned stack).
+    const actions = [];
+    if (loc.who && loc.say && loc.say.length > 1) {
+      actions.push({
+        label: `Speak with ${loc.who}`,
+        onClick: () => {
+          this.sayIndex = (this.sayIndex + 1) % loc.say.length;
+          this.renderLocation();
+        },
+      });
+    }
+    (loc.actions || []).forEach((a) =>
+      actions.push({ label: a.label, onClick: () => this.goTo(a.scene) })
+    );
+    actions.push({ label: '‹ The Residency', onClick: () => this.showLocation('hall') });
+
+    const bw = Math.min(actionsW, width * 0.5);
+    const bh = 38;
+    const totalH = actions.length * (bh + 8) - 8;
+    let by = barTop + (height - barTop - totalH) / 2 + bh / 2;
+    const bx = width - 16 - bw / 2;
+    actions.forEach((a) => {
+      this.makeButton(bx, by, bw, bh, a.label, a.onClick);
+      by += bh + 8;
+    });
+  }
+
+  makeButton(cx, cy, w, h, label, onClick) {
+    const bg = this.add
+      .rectangle(cx, cy, w, h, 0x2a1c40, 1)
+      .setStrokeStyle(2, GOLD, 0.55)
+      .setDepth(103)
+      .setInteractive({ useHandCursor: true });
+    const txt = this.add
+      .text(cx, cy, label, {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: CREAM,
+        align: 'center',
+        wordWrap: { width: w - 14 },
+      })
+      .setOrigin(0.5)
+      .setDepth(104);
+    bg.on('pointerover', () => bg.setFillStyle(0x3a2858, 1));
+    bg.on('pointerout', () => bg.setFillStyle(0x2a1c40, 1));
+    bg.on('pointerdown', (p, x, y, e) => {
+      e?.stopPropagation();
+      onClick();
+    });
+    this.dynamic.push(bg, txt);
+  }
+
+  // --- Portraits ------------------------------------------------------------
+
+  drawPortrait(cx, cy, accent, name) {
+    const g = this.add.graphics().setDepth(102);
+    const w = 84;
+    const h = 96;
+    // Frame.
+    g.fillStyle(0x0e0a18, 1);
+    g.fillRect(cx - w / 2, cy - h / 2, w, h);
+    g.lineStyle(2, GOLD, 0.7);
+    g.strokeRect(cx - w / 2, cy - h / 2, w, h);
+    // Backing glow.
+    g.fillStyle(accent, 0.18);
+    g.fillRect(cx - w / 2 + 3, cy - h / 2 + 3, w - 6, h - 6);
+    // Bust.
+    const by = cy + 18;
+    g.fillStyle(0x1b1228, 1);
+    g.fillRoundedRect(cx - 26, by - 6, 52, 40, { tl: 16, tr: 16, bl: 0, br: 0 });
+    g.fillStyle(Phaser.Display.Color.IntegerToColor(accent).darken(40).color, 1);
+    g.fillCircle(cx, by - 18, 17);
+    g.fillStyle(0x140d20, 1); // hood/hair
+    g.fillRoundedRect(cx - 18, cy - 26, 36, 22, 10);
+    // Eyes.
+    g.fillStyle(0xffce86, 0.9);
+    g.fillCircle(cx - 6, by - 18, 1.7);
+    g.fillCircle(cx + 6, by - 18, 1.7);
+    this.dynamic.push(g);
+
+    const nm = this.add
+      .text(cx, cy + h / 2 + 4, name, {
+        fontFamily: 'monospace',
+        fontSize: '11px',
+        color: '#c8a98f',
+      })
+      .setOrigin(0.5, 0)
+      .setDepth(102);
+    this.dynamic.push(nm);
+  }
+
+  // --- Painted scenes -------------------------------------------------------
+
+  drawScene(loc, width, floorY) {
+    const g = this.bd;
+    if (loc.feature === 'hall') {
+      this.sceneHall(g, width, floorY);
+      return;
+    }
+    this.sceneShell(g, width, floorY);
+    const cx = width / 2;
+    const s = Phaser.Math.Clamp(floorY / 360, 0.8, 1.7);
+    const fns = {
+      court: this.featureCourt,
+      war: this.featureWar,
+      veil: this.featureVeil,
+      infirmary: this.featureInfirmary,
+      yard: this.featureYard,
+      quarters: this.featureQuarters,
+      deck: this.featureDeck,
+    };
+    fns[loc.feature]?.call(this, g, cx, floorY, s);
+    // A warm hanging light over the room.
+    this.addGlow(cx, floorY * 0.2, width * 0.5, 0xffd9a0, 0.4);
+    this.addGlow(cx, floorY + 6, width * 0.5, 0xffcaa0, 0.12);
+  }
+
+  addGlow(x, y, size, tint, alpha) {
+    const img = this.add
+      .image(x, y, 'glow')
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setTint(tint)
+      .setAlpha(alpha)
+      .setDisplaySize(size, size)
+      .setDepth(-80);
+    this.dynamic.push(img);
+  }
+
+  /** A generic painted room: floor, flanking columns, a central arch, banners. */
+  sceneShell(g, width, floorY) {
+    // Floor.
+    g.fillStyle(0x140d20, 1);
+    g.fillRect(0, floorY, width, this.scale.height - floorY);
+    g.fillStyle(0x2a1d3a, 1);
+    g.fillRect(0, floorY, width, 4);
+    g.fillStyle(0x243a64, 0.9); // runner
+    g.fillRect(width * 0.18, floorY + 10, width * 0.64, 14);
+    g.fillStyle(GOLD, 0.6);
+    g.fillRect(width * 0.18, floorY + 10, width * 0.64, 2);
+
+    // Central arch alcove.
+    const aw = width * 0.5;
+    const at = floorY * 0.16;
+    g.fillStyle(0x180f2c, 1);
+    g.fillRoundedRect(width / 2 - aw / 2, at, aw, floorY - at, {
+      tl: aw / 2,
+      tr: aw / 2,
+      bl: 0,
+      br: 0,
+    });
+    g.fillStyle(0x231541, 1);
+    g.fillRoundedRect(width / 2 - aw / 2 + 8, at + 8, aw - 16, floorY - at - 8, {
+      tl: aw / 2 - 8,
+      tr: aw / 2 - 8,
+      bl: 0,
+      br: 0,
+    });
+
+    // Flanking columns.
+    [width * 0.16, width * 0.84].forEach((x) => this.column(g, x, at - 6, floorY));
+
+    // Frieze.
+    g.fillStyle(GOLD, 0.7);
+    g.fillRect(0, at - 8, width, 3);
+  }
+
+  column(g, x, top, floorY) {
+    const sw = 26;
+    g.fillStyle(0x2a1c44, 1);
+    g.fillRect(x - sw / 2, top, sw, floorY - top);
+    g.fillStyle(0x42306a, 1);
+    g.fillRect(x - sw / 2, top, 5, floorY - top);
+    g.fillStyle(0x180f28, 1);
+    g.fillRect(x + sw / 2 - 4, top, 4, floorY - top);
+    g.fillStyle(0x3a2858, 1);
+    g.fillRect(x - sw / 2 - 7, top - 14, sw + 14, 14);
+    g.fillStyle(GOLD, 0.8);
+    g.fillRect(x - sw / 2 - 7, top - 14, sw + 14, 3);
+    g.fillStyle(0x241640, 1);
+    g.fillRect(x - sw / 2 - 7, floorY - 10, sw + 14, 10);
+  }
+
+  sceneHall(g, width, floorY) {
+    const cx = width / 2;
+    const height = this.scale.height;
+    // Floor.
+    g.fillStyle(0x140d20, 1);
+    g.fillRect(0, floorY, width, height - floorY);
+    g.fillStyle(0x2a1d3a, 1);
+    g.fillRect(0, floorY, width, 4);
+    // Receding runner to a vanishing point.
+    g.fillStyle(0x243a64, 0.9);
+    g.fillTriangle(cx - width * 0.16, floorY, cx + width * 0.16, floorY, cx, floorY * 0.42);
+    g.fillStyle(GOLD, 0.5);
+    g.fillTriangle(cx - 3, floorY, cx + 3, floorY, cx, floorY * 0.42);
+    // Far lit arch.
+    g.fillStyle(0x3a2350, 1);
+    g.fillRoundedRect(cx - 46, floorY * 0.34, 92, floorY * 0.5, {
+      tl: 46,
+      tr: 46,
+      bl: 0,
+      br: 0,
+    });
+    g.fillStyle(0x7a4a3a, 1);
+    g.fillRoundedRect(cx - 36, floorY * 0.4, 72, floorY * 0.5, {
+      tl: 36,
+      tr: 36,
+      bl: 0,
+      br: 0,
+    });
+    this.addGlow(cx, floorY * 0.5, width * 0.4, 0xffce86, 0.4);
+    // Receding columns on both sides.
+    const pairs = [0.12, 0.24, 0.36];
+    pairs.forEach((f, i) => {
+      const top = floorY * (0.2 + i * 0.05);
+      this.column(g, cx - width * (0.46 - f * 0.6), top, floorY);
+      this.column(g, cx + width * (0.46 - f * 0.6), top, floorY);
+    });
+    // Banners.
+    [cx - width * 0.22, cx + width * 0.22].forEach((x) =>
+      this.banner(g, x, floorY * 0.18, floorY * 0.28)
+    );
+  }
+
+  banner(g, x, topY, len) {
     const w = 26;
-    g.fillStyle(0x3a2858, 1); // crossbar
-    g.fillRect(x - w / 2 - 4, topY, w + 8, 4);
-    g.fillStyle(0x243a64, 1); // field
-    g.fillRect(x - w / 2, topY + 4, w, len);
-    g.fillTriangle(x - w / 2, topY + 4 + len, x + w / 2, topY + 4 + len, x, topY + 4 + len + 12);
-    g.fillStyle(0xc9a24a, 0.9); // gold borders
-    g.fillRect(x - w / 2, topY + 4, 2, len);
-    g.fillRect(x + w / 2 - 2, topY + 4, 2, len);
-    // Sigil: a gold chevron over a disc.
-    const cy = topY + 4 + len * 0.42;
-    g.fillStyle(0xc9a24a, 1);
+    g.fillStyle(0x243a64, 1);
+    g.fillRect(x - w / 2, topY, w, len);
+    g.fillTriangle(x - w / 2, topY + len, x + w / 2, topY + len, x, topY + len + 12);
+    g.fillStyle(GOLD, 0.9);
+    g.fillRect(x - w / 2, topY, 2, len);
+    g.fillRect(x + w / 2 - 2, topY, 2, len);
+    const cy = topY + len * 0.42;
+    g.fillStyle(GOLD, 1);
     g.fillTriangle(x - 8, cy, x + 8, cy, x, cy - 10);
     g.fillCircle(x, cy + 8, 3);
   }
 
-  drawFlame(g, fx, fy) {
-    g.fillStyle(0xddd0c0, 1);
-    g.fillRect(fx - 2, fy - 14, 4, 14);
-    g.fillStyle(0xff8a3a, 0.9);
-    g.fillEllipse(fx, fy - 18, 6, 12);
-    g.fillStyle(0xffe0a0, 1);
-    g.fillEllipse(fx, fy - 18, 3, 7);
+  // Feature props (centred on the floor) ------------------------------------
+
+  featureCourt(g, x, floorY, s) {
+    g.fillStyle(0x2a1d40, 1);
+    g.fillRect(x - 80 * s, floorY - 12 * s, 160 * s, 12 * s);
+    g.fillStyle(0x33244e, 1);
+    g.fillRect(x - 58 * s, floorY - 24 * s, 116 * s, 12 * s);
+    g.fillStyle(0x3a2858, 1);
+    g.fillRect(x - 22 * s, floorY - 86 * s, 44 * s, 62 * s);
+    g.fillStyle(0x243a64, 1);
+    g.fillRect(x - 20 * s, floorY - 54 * s, 40 * s, 8 * s);
+    g.fillStyle(GOLD, 1);
+    g.fillCircle(x - 22 * s, floorY - 88 * s, 4 * s);
+    g.fillCircle(x + 22 * s, floorY - 88 * s, 4 * s);
   }
 
-  drawProps(floorY) {
-    const p = this.props;
-    p.clear();
-    ROOMS.forEach((room) => {
-      const x = room.x;
-      switch (room.key) {
-        case 'quarters':
-          this.propQuarters(p, x, floorY);
-          break;
-        case 'veil':
-          this.propVeil(p, x, floorY);
-          break;
-        case 'infirmary':
-          this.propInfirmary(p, x, floorY);
-          break;
-        case 'court':
-          this.propCourt(p, x, floorY);
-          break;
-        case 'war':
-          this.propWar(p, x, floorY);
-          break;
-        case 'yard':
-          this.propYard(p, x, floorY);
-          break;
-        case 'deck':
-          this.propDeck(p, x, floorY);
-          break;
-        default:
-          break;
-      }
-    });
+  featureWar(g, x, floorY, s) {
+    g.fillStyle(0x2e2142, 1);
+    g.fillRect(x - 70 * s, floorY - 40 * s, 140 * s, 10 * s);
+    g.fillStyle(0x241a36, 1);
+    g.fillRect(x - 64 * s, floorY - 30 * s, 10 * s, 30 * s);
+    g.fillRect(x + 54 * s, floorY - 30 * s, 10 * s, 30 * s);
+    g.fillStyle(0xb89a6a, 0.95);
+    g.fillRect(x - 56 * s, floorY - 47 * s, 112 * s, 8 * s);
+    g.fillStyle(0xe0503c, 1);
+    g.fillCircle(x - 28 * s, floorY - 43 * s, 3 * s);
+    g.fillStyle(0x6fb0ff, 1);
+    g.fillCircle(x + 8 * s, floorY - 43 * s, 3 * s);
+    g.fillStyle(0xffce86, 1);
+    g.fillCircle(x + 32 * s, floorY - 43 * s, 3 * s);
   }
 
-  propQuarters(p, x, floorY) {
-    p.fillStyle(0x3a2850, 1);
-    p.fillRect(x - 74, floorY - 22, 60, 22);
-    p.fillStyle(0x5a466e, 1);
-    p.fillRect(x - 74, floorY - 26, 60, 8);
-    p.fillStyle(0xcfc0d8, 1);
-    p.fillRect(x - 70, floorY - 28, 18, 8);
-    // Arched night window.
-    p.fillStyle(0x0c1430, 1);
-    p.fillRoundedRect(x + 20, floorY - 120, 40, 96, { tl: 20, tr: 20, bl: 0, br: 0 });
-    p.fillStyle(0x6fa0d0, 0.5);
-    p.fillCircle(x + 40, floorY - 92, 7);
-    p.fillStyle(0xffffff, 0.85);
-    p.fillCircle(x + 28, floorY - 104, 1);
-    p.fillCircle(x + 52, floorY - 110, 1);
-    p.fillCircle(x + 48, floorY - 86, 1);
+  featureVeil(g, x, floorY, s) {
+    g.fillStyle(0x3a2a6a, 0.8);
+    for (let k = -1; k <= 1; k += 1)
+      g.fillRect(x - 70 * s + k * 52 * s, floorY - 150 * s, 18 * s, 150 * s);
+    g.fillStyle(0xb98cff, 0.5);
+    g.fillCircle(x, floorY - 120 * s, 22 * s);
+    g.fillStyle(0x231541, 1);
+    g.fillCircle(x, floorY - 120 * s, 16 * s);
+    g.fillStyle(0xb98cff, 0.85);
+    g.fillCircle(x, floorY - 120 * s, 4 * s);
+    this.drawFlame(g, x - 78 * s, floorY, s);
+    this.drawFlame(g, x + 78 * s, floorY, s);
   }
 
-  propVeil(p, x, floorY) {
-    p.fillStyle(0x3a2a6a, 0.8);
-    for (let k = -1; k <= 1; k += 1) p.fillRect(x - 52 + k * 38, floorY - 150, 14, 128);
-    p.fillStyle(0xb98cff, 0.5);
-    p.fillCircle(x, floorY - 110, 16);
-    p.fillStyle(0x231541, 1);
-    p.fillCircle(x, floorY - 110, 12);
-    p.fillStyle(0xb98cff, 0.8);
-    p.fillCircle(x, floorY - 110, 3);
-    this.drawFlame(p, x - 60, floorY - 24);
-    this.drawFlame(p, x + 60, floorY - 24);
-  }
-
-  propInfirmary(p, x, floorY) {
+  featureInfirmary(g, x, floorY, s) {
     const cols = [0x7fd0a0, 0xff8a5a, 0x6fb0ff, 0xffd27a];
-    p.fillStyle(0x3a2850, 1);
-    p.fillRect(x - 74, floorY - 92, 52, 6);
-    p.fillRect(x - 74, floorY - 66, 52, 6);
+    g.fillStyle(0x3a2850, 1);
+    g.fillRect(x - 80 * s, floorY - 96 * s, 60 * s, 7 * s);
+    g.fillRect(x - 80 * s, floorY - 66 * s, 60 * s, 7 * s);
     for (let i = 0; i < 4; i += 1) {
-      p.fillStyle(cols[i], 0.9);
-      p.fillRect(x - 72 + i * 12, floorY - 102, 7, 10);
-      p.fillStyle(cols[(i + 1) % 4], 0.9);
-      p.fillRect(x - 72 + i * 12, floorY - 76, 7, 10);
+      g.fillStyle(cols[i], 0.9);
+      g.fillRect(x - 78 * s + i * 14 * s, floorY - 108 * s, 8 * s, 12 * s);
     }
-    p.fillStyle(0x2e2142, 1);
-    p.fillRect(x + 14, floorY - 14, 56, 14);
-    p.fillStyle(0x4a3a5e, 1);
-    p.fillRect(x + 14, floorY - 18, 56, 6);
+    g.fillStyle(0x2e2142, 1);
+    g.fillRect(x + 8 * s, floorY - 16 * s, 70 * s, 16 * s);
+    g.fillStyle(0x4a3a5e, 1);
+    g.fillRect(x + 8 * s, floorY - 20 * s, 70 * s, 6 * s);
   }
 
-  propCourt(p, x, floorY) {
-    p.fillStyle(0x2a1d40, 1);
-    p.fillRect(x - 62, floorY - 10, 124, 10);
-    p.fillStyle(0x33244e, 1);
-    p.fillRect(x - 44, floorY - 20, 88, 10);
-    p.fillStyle(0x3a2858, 1);
-    p.fillRect(x - 16, floorY - 66, 32, 46);
-    p.fillStyle(0x243a64, 1);
-    p.fillRect(x - 14, floorY - 42, 28, 6);
-    p.fillStyle(0xc9a24a, 1);
-    p.fillCircle(x - 16, floorY - 68, 3);
-    p.fillCircle(x + 16, floorY - 68, 3);
+  featureYard(g, x, floorY, s) {
+    g.fillStyle(0x3a2850, 1);
+    g.fillRect(x - 80 * s, floorY - 80 * s, 7 * s, 80 * s);
+    g.fillRect(x - 30 * s, floorY - 80 * s, 7 * s, 80 * s);
+    g.fillRect(x - 80 * s, floorY - 80 * s, 57 * s, 6 * s);
+    g.fillStyle(0xcfd0d8, 1);
+    g.fillRect(x - 70 * s, floorY - 74 * s, 4 * s, 64 * s);
+    g.fillRect(x - 58 * s, floorY - 74 * s, 4 * s, 64 * s);
+    g.fillStyle(0x5a4632, 1);
+    g.fillRect(x + 36 * s, floorY - 50 * s, 12 * s, 50 * s);
+    g.fillStyle(0x7a5a3a, 1);
+    g.fillCircle(x + 42 * s, floorY - 56 * s, 11 * s);
+    g.fillStyle(0x6a4a2a, 1);
+    g.fillRect(x + 20 * s, floorY - 46 * s, 40 * s, 9 * s);
   }
 
-  propWar(p, x, floorY) {
-    p.fillStyle(0x2e2142, 1);
-    p.fillRect(x - 50, floorY - 30, 100, 8);
-    p.fillStyle(0x241a36, 1);
-    p.fillRect(x - 46, floorY - 22, 8, 22);
-    p.fillRect(x + 38, floorY - 22, 8, 22);
-    p.fillStyle(0xb89a6a, 0.95);
-    p.fillRect(x - 40, floorY - 35, 80, 6);
-    p.fillStyle(0xe0503c, 1);
-    p.fillCircle(x - 20, floorY - 32, 2);
-    p.fillStyle(0x6fb0ff, 1);
-    p.fillCircle(x + 6, floorY - 32, 2);
-    p.fillStyle(0xffce86, 1);
-    p.fillCircle(x + 24, floorY - 32, 2);
+  featureQuarters(g, x, floorY, s) {
+    g.fillStyle(0x3a2850, 1);
+    g.fillRect(x - 90 * s, floorY - 24 * s, 80 * s, 24 * s);
+    g.fillStyle(0x5a466e, 1);
+    g.fillRect(x - 90 * s, floorY - 30 * s, 80 * s, 9 * s);
+    g.fillStyle(0xcfc0d8, 1);
+    g.fillRect(x - 86 * s, floorY - 32 * s, 22 * s, 9 * s);
+    g.fillStyle(0x0c1430, 1);
+    g.fillRoundedRect(x + 24 * s, floorY - 150 * s, 56 * s, 120 * s, {
+      tl: 28 * s,
+      tr: 28 * s,
+      bl: 0,
+      br: 0,
+    });
+    g.fillStyle(0x6fa0d0, 0.5);
+    g.fillCircle(x + 52 * s, floorY - 116 * s, 9 * s);
+    g.fillStyle(0xffffff, 0.85);
+    g.fillCircle(x + 36 * s, floorY - 130 * s, 1.4);
+    g.fillCircle(x + 66 * s, floorY - 138 * s, 1.4);
   }
 
-  propYard(p, x, floorY) {
-    p.fillStyle(0x3a2850, 1);
-    p.fillRect(x - 66, floorY - 70, 6, 70);
-    p.fillRect(x - 22, floorY - 70, 6, 70);
-    p.fillRect(x - 66, floorY - 70, 50, 5);
-    p.fillStyle(0xcfd0d8, 1);
-    p.fillRect(x - 58, floorY - 64, 3, 54);
-    p.fillRect(x - 48, floorY - 64, 3, 54);
-    p.fillStyle(0xc9a24a, 1);
-    p.fillRect(x - 59, floorY - 14, 5, 4);
-    p.fillRect(x - 49, floorY - 14, 5, 4);
-    // Training dummy.
-    p.fillStyle(0x5a4632, 1);
-    p.fillRect(x + 34, floorY - 44, 10, 44);
-    p.fillStyle(0x7a5a3a, 1);
-    p.fillCircle(x + 39, floorY - 50, 9);
-    p.fillStyle(0x6a4a2a, 1);
-    p.fillRect(x + 22, floorY - 40, 34, 8);
+  featureDeck(g, x, floorY, s) {
+    g.fillStyle(0x4a2858, 1);
+    g.fillRoundedRect(x - 110 * s, floorY - 190 * s, 220 * s, 178 * s, {
+      tl: 110 * s,
+      tr: 110 * s,
+      bl: 0,
+      br: 0,
+    });
+    g.fillStyle(0x7a4a3a, 1);
+    g.fillRoundedRect(x - 98 * s, floorY - 178 * s, 196 * s, 166 * s, {
+      tl: 98 * s,
+      tr: 98 * s,
+      bl: 0,
+      br: 0,
+    });
+    g.fillStyle(0xffce86, 0.5);
+    g.fillCircle(x + 44 * s, floorY - 120 * s, 26 * s);
+    g.fillStyle(0x1a1224, 1);
+    g.fillEllipse(x, floorY - 30 * s, 90 * s, 18 * s);
+    g.fillTriangle(x - 66 * s, floorY - 38 * s, x - 10 * s, floorY - 46 * s, x - 10 * s, floorY - 28 * s);
+    g.fillTriangle(x + 66 * s, floorY - 38 * s, x + 10 * s, floorY - 46 * s, x + 10 * s, floorY - 28 * s);
   }
 
-  propDeck(p, x, floorY) {
-    // Arched opening to the dusk sky.
-    p.fillStyle(0x4a2858, 1);
-    p.fillRoundedRect(x - 70, floorY - 152, 140, 142, { tl: 70, tr: 70, bl: 0, br: 0 });
-    p.fillStyle(0x7a4a3a, 1);
-    p.fillRoundedRect(x - 62, floorY - 144, 124, 134, { tl: 62, tr: 62, bl: 0, br: 0 });
-    p.fillStyle(0xffce86, 0.5);
-    p.fillCircle(x + 28, floorY - 102, 18);
-    // Docked corsair silhouette.
-    p.fillStyle(0x1a1224, 1);
-    p.fillEllipse(x, floorY - 38, 54, 12);
-    p.fillTriangle(x - 40, floorY - 44, x - 6, floorY - 50, x - 6, floorY - 36);
-    p.fillTriangle(x + 40, floorY - 44, x + 6, floorY - 50, x + 6, floorY - 36);
+  drawFlame(g, fx, fy, s) {
+    g.fillStyle(0xddd0c0, 1);
+    g.fillRect(fx - 2 * s, fy - 16 * s, 4 * s, 16 * s);
+    g.fillStyle(0xff8a3a, 0.9);
+    g.fillEllipse(fx, fy - 20 * s, 7 * s, 13 * s);
+    g.fillStyle(0xffe0a0, 1);
+    g.fillEllipse(fx, fy - 20 * s, 3 * s, 7 * s);
   }
 
-  // --- Loop -----------------------------------------------------------------
+  // --- Title ----------------------------------------------------------------
 
-  update(_time, delta) {
-    // Interact (keyboard, debounced).
-    if (
-      Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
-      Phaser.Input.Keyboard.JustDown(this.cursors.space) ||
-      Phaser.Input.Keyboard.JustDown(this.keys.interact)
-    ) {
-      this.tryInteract();
-    }
+  showEntryTitle() {
+    const { width, height } = this.scale;
+    const first = !this.registry.get('enteredResidency');
+    this.registry.set('enteredResidency', true);
+    this.registry.set('water', this.registry.get('water') ?? 100);
 
-    if (this.panelOpen) {
-      this.updatePrompt(null);
-      return;
-    }
-
-    const left = this.cursors.left.isDown || this.keys.left.isDown || this.touch.left;
-    const right =
-      this.cursors.right.isDown || this.keys.right.isDown || this.touch.right;
-
-    const step = (this.moveSpeed * delta) / 1000;
-    if (left) {
-      this.player.x -= step;
-      this.player.setFlipX(true);
-    } else if (right) {
-      this.player.x += step;
-      this.player.setFlipX(false);
-    }
-    this.player.x = Phaser.Math.Clamp(this.player.x, 60, RESIDENCY_WIDTH - 60);
-
-    this.updatePrompt(this.nearestRoom());
-  }
-
-  updatePrompt(room) {
-    if (!room) {
-      this.prompt.setVisible(false);
-      return;
-    }
-    const verb = room.action === 'depart' ? 'ride out' : 'enter';
-    this.prompt
-      .setText(`▲  ${room.name}  — ${verb}`)
-      .setPosition(room.x, this.player.y - 40)
-      .setVisible(true);
+    const main = first ? 'ARRADIUS' : 'The Residency';
+    const sub = first ? 'House Calder · Saltspire' : 'Saltspire';
+    const t1 = this.add
+      .text(width / 2, height * 0.3, main, {
+        fontFamily: 'Georgia, serif',
+        fontSize: first ? '46px' : '28px',
+        color: '#f0e3d0',
+      })
+      .setOrigin(0.5)
+      .setDepth(2000)
+      .setAlpha(0);
+    const t2 = this.add
+      .text(width / 2, height * 0.3 + 38, sub, {
+        fontFamily: 'Georgia, serif',
+        fontSize: '15px',
+        color: '#c8a98f',
+      })
+      .setOrigin(0.5)
+      .setDepth(2000)
+      .setAlpha(0);
+    this.tweens.add({
+      targets: [t1, t2],
+      alpha: 1,
+      duration: 1300,
+      hold: 1600,
+      yoyo: true,
+      onComplete: () => {
+        t1.destroy();
+        t2.destroy();
+      },
+    });
   }
 }
