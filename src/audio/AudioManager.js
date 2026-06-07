@@ -32,9 +32,10 @@ const MUSIC = {
 };
 
 // Melodic pools over the F drone (residency state), in the Spice Opera's desert
-// colour: F Phrygian dominant / Hijaz — degrees 0,1,4,5,7,8,10. The b2 (Gb) and
-// the augmented 2nd between it and the major 3rd (A) are *the* desert sound.
-const FLUTE_POOL = [65, 66, 69, 70, 72, 73, 75]; // F4 Gb4 A4 Bb4 C5 Db5 Eb5
+// colour: F natural Phrygian — degrees 0,1,3,5,7,8,10. Keeps the signature b2
+// (Gb) but a minor 3rd (Ab), so the lonely flute reads dark and yearning rather
+// than the brighter, more theatrical Hijaz (major-3rd) it was.
+const FLUTE_POOL = [65, 66, 68, 70, 72, 73, 75]; // F4 Gb4 Ab4 Bb4 C5 Db5 Eb5
 const BELL_POOL = [70, 72, 77, 81]; // sparse, warm chimes (Bb4 C5 F5 A5)
 
 export default class AudioManager {

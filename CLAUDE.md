@@ -99,8 +99,8 @@ master ─┬─ musicGain    (continuous score — drone chord + pad + sub, "br
   `chord`, `hum`, `subRumble`, `gong`, `ping`, `pulse`, scheduled via `every`).
 - **Spice Opera voices (HERAD-style FM):** `cryingFlute`/`flutePhrase` (the
   signature breathy lead, used in `hall`) and `fmBell` (inharmonic chimes, used
-  in `comms`), drawn from the `FLUTE_POOL`/`BELL_POOL` (F Phrygian-dominant /
-  Hijaz desert modes). `radarSweep` gives `comms` a rotating-dish throb + sweep.
+  in `comms`), drawn from the `FLUTE_POOL` (F natural Phrygian — dark/yearning)
+  and `BELL_POOL`. `radarSweep` gives `comms` a rotating-dish throb + sweep.
   **First pass so far covers `hall` + `comms` only** — the other rooms still use
   the older generic recipes.
 
