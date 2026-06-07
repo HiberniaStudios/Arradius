@@ -252,6 +252,43 @@ modGain.gain.exponentialRampToValueAtTime(index * 0.25, now + 0.6); // mellow ta
 
 ---
 
+## Part 7 — Implementation notes & what we learned building it
+
+What's actually been built so far, and the practical lessons (update as we go).
+
+### Status
+- **Hall + Comms reworked** on these principles; other rooms still use the older
+  generic recipes (wind/gong/ping). Next: extend the treatment outward + add the
+  adaptive room-crossfade layer.
+- **Implemented:** co-prime breathing bed (3 LFOs, ≈67/97/139 s, dips through
+  silence); pink (1/f) noise seed for air/breath; HERAD-style 2-op FM voices —
+  `cryingFlute`/`flutePhrase` (the lead, **F natural Phrygian** — minor 3rd, for
+  dark/yearning over the brighter Hijaz) and `fmBell` (inharmonic chimes);
+  `radarSweep` (rotating-dish throb + sweep) for Comms.
+
+### The crackle was CPU, not DSP — verified, don't re-litigate
+We rendered the engine **offline** (`node-web-audio-api` + `OfflineAudioContext`)
+and scanned the raw PCM: the synthesised signal is **pristine everywhere** —
+bed, every event voice, and the looping noise textures all show **zero clipping,
+zero discontinuities, zero NaN**, peaks ~0.03–0.05. So live crackle is **not**
+clipping/clicks — it's **real-time audio-thread CPU underruns**, dominated by the
+always-on **convolution reverb**.
+- Fix applied: **mono ~2.4 s IR** (was 4.2 s stereo) → ~70% less convolution CPU;
+  removed the master limiter (offline proved it never engaged).
+- **If crackle returns** on weaker devices, the next lever is replacing the
+  ConvolverNode with an **algorithmic FDN reverb** (delay lines + feedback +
+  damping) — a fraction of the CPU, no IR. Don't chase it as a DSP/clipping bug.
+- An offline-render scan (max-abs / clip-count / discontinuity-count) is the
+  fastest way to re-confirm the signal is clean after future changes.
+
+### Loudness & entrance (tuned by ear, repeatedly)
+- **Master `level` = 0.14**, and the standing preference is to **err quiet** —
+  it has come back as "too loud" several times. Only raise on explicit request.
+- The bed `start()`s with a **long ~6 s fade-in** and a deliberately **light
+  drone/sub** so it *emerges* as background rather than landing heavy on entry.
+
+---
+
 ## Sources (primary)
 
 **Psychoacoustics:** ncbi.nlm.nih.gov/pmc/articles/PMC10637696, PMC4731741,
