@@ -163,13 +163,6 @@ export default class ResidencyScene extends Phaser.Scene {
       })
       .setDepth(50);
 
-    this.hud = this.add.text(14, 12, '', {
-      fontFamily: 'monospace',
-      fontSize: '15px',
-      color: GOLD_S,
-    });
-    this.hud.setDepth(905);
-
     this.createAudio();
     this.createFilterToggle();
     // ESC walks back one room (toward the hall).
@@ -268,9 +261,6 @@ export default class ResidencyScene extends Phaser.Scene {
     this.frame.lineStyle(1, GOLD, 0.3);
     this.frame.strokeRect(11, 11, width - 22, height - 22);
 
-    this.hud.setText(
-      `Aurun  ${this.registry.get('aurun') || 0}     Water  ${this.registry.get('water') ?? 100}`
-    );
     if (this.musicCircle) {
       this.musicCircle.setPosition(width - 32, 30);
       this.musicLabel.setPosition(width - 32, 30);
@@ -418,44 +408,45 @@ export default class ResidencyScene extends Phaser.Scene {
   renderHallCaption(loc, width, height, barTop) {
     this.defaultCaption = 'Four wings open off the entrance — the Court lies beyond the arch.';
     this.captionText = this.add
-      .text(width / 2, barTop + (height - barTop) / 2, this.defaultCaption, {
+      .text(width * 0.44, barTop + (height - barTop) / 2, this.defaultCaption, {
         fontFamily: 'Georgia, serif',
         fontSize: '17px',
         color: CREAM,
         align: 'center',
-        wordWrap: { width: width * 0.7 },
+        wordWrap: { width: width * 0.62 },
       })
       .setOrigin(0.5)
       .setDepth(102);
     this.dynamic.push(this.captionText);
+    this.drawCodex(width - 36, barTop + (height - barTop) / 2);
   }
 
 
-  // --- Room bar (portrait + dialogue + actions) -----------------------------
+  // --- Room bar (portrait + dialogue + text menu) ---------------------------
 
   renderRoomBar(loc, width, height, barTop) {
-    const padY = barTop + 16;
-    let textLeft = 24;
+    const bh = height - barTop;
+    const cy = barTop + bh / 2;
+    let textLeft = 20;
 
     // Portrait, if the room has a character.
     if (loc.who) {
-      const px = 60;
-      const py = barTop + (height - barTop) / 2;
-      this.drawPortrait(px, py, loc.accent, loc.who);
+      this.drawPortrait(60, cy, loc.accent, loc.who);
       textLeft = 116;
     }
 
-    // Name.
+    // Room name.
+    const nameColor = Phaser.Display.Color.IntegerToColor(loc.accent || 0xf0e3d0).rgba;
     const nameText = this.add
-      .text(textLeft, padY, loc.name, {
+      .text(textLeft, barTop + 14, loc.name, {
         fontFamily: 'Georgia, serif',
-        fontSize: '20px',
-        color: Phaser.Display.Color.IntegerToColor(loc.accent || 0xf0e3d0).rgba,
+        fontSize: '18px',
+        color: nameColor,
       })
       .setDepth(102);
     this.dynamic.push(nameText);
 
-    // Choices: speak, scene-actions (World Map / Expedition), onward doors, back.
+    // Choices: speak, scene-actions, onward doors, back.
     const choices = [];
     if (loc.who && loc.say && loc.say.length > 1) {
       choices.push({
@@ -475,62 +466,135 @@ export default class ResidencyScene extends Phaser.Scene {
     const back = (EXITS[this.current] && EXITS[this.current].back) || 'hall';
     choices.push({ label: `‹ ${LOCATIONS[back].name}`, onClick: () => this.travelTo(back) });
 
-    // Lay the choices out in a 1- or 2-column grid in the bar's right area.
-    const ncols = choices.length > 3 ? 2 : 1;
-    const bh = 34;
-    const gapX = 10;
-    const gapY = 7;
-    const bw = Math.min(168, (width * 0.5) / ncols - gapX);
-    const nrows = Math.ceil(choices.length / ncols);
-    const gridW = ncols * bw + (ncols - 1) * gapX;
-    const gridH = nrows * bh + (nrows - 1) * gapY;
-    const gridLeft = width - 16 - gridW;
-    const gridTop = barTop + (height - barTop - gridH) / 2;
+    // Right panel: codex icon + text menu list, separated from content by a thin rule.
+    const codexCX = width - 36;
+    const menuRight = codexCX - 46;
+    const menuLeft = menuRight - 195;
+    const divX = menuLeft - 10;
 
-    // Line / flavour — wrap up to where the choice grid begins.
+    // Thin gold rule.
+    const divG = this.add.graphics().setDepth(102);
+    divG.lineStyle(1, GOLD, 0.22);
+    divG.lineBetween(divX, barTop + 12, divX, height - 12);
+    this.dynamic.push(divG);
+
+    // Dialogue / flavour — wraps up to the rule.
     const line = loc.who ? (loc.say ? loc.say[this.sayIndex] : '') : loc.flavor || '';
     const lineText = this.add
-      .text(textLeft, padY + 30, line, {
+      .text(textLeft, barTop + 40, line, {
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '15px',
-        color: '#d8c8e0',
-        wordWrap: { width: gridLeft - textLeft - 16 },
+        fontSize: '14px',
+        color: '#c8b8d0',
+        wordWrap: { width: divX - textLeft - 18 },
       })
       .setDepth(102);
     this.dynamic.push(lineText);
 
+    // Text option list.
+    const itemH = 28;
+    const totalH = choices.length * itemH;
+    const menuStartY = barTop + (bh - totalH) / 2;
     choices.forEach((c, i) => {
-      const col = i % ncols;
-      const row = Math.floor(i / ncols);
-      const x = gridLeft + col * (bw + gapX) + bw / 2;
-      const y = gridTop + row * (bh + gapY) + bh / 2;
-      this.makeButton(x, y, bw, bh, c.label, c.onClick);
+      this.makeTextOption(
+        menuLeft,
+        menuStartY + i * itemH + itemH / 2,
+        c.label,
+        c.onClick,
+        loc.accent
+      );
     });
+
+    // Codex book — far right, stub for lore access.
+    this.drawCodex(codexCX, cy);
   }
 
-  makeButton(cx, cy, w, h, label, onClick) {
-    const bg = this.add
-      .rectangle(cx, cy, w, h, 0x2a1c40, 1)
-      .setStrokeStyle(2, GOLD, 0.55)
-      .setDepth(103)
-      .setInteractive({ useHandCursor: true });
-    const txt = this.add
-      .text(cx, cy, label, {
+  makeTextOption(x, y, label, onClick, accent) {
+    const accentHex = accent
+      ? Phaser.Display.Color.IntegerToColor(accent).rgba
+      : GOLD_S;
+
+    const bullet = this.add
+      .text(x, y, '›', {
         fontFamily: 'monospace',
         fontSize: '14px',
-        color: CREAM,
-        align: 'center',
-        wordWrap: { width: w - 14 },
+        color: accentHex,
       })
-      .setOrigin(0.5)
+      .setOrigin(0, 0.5)
       .setDepth(104);
-    bg.on('pointerover', () => bg.setFillStyle(0x3a2858, 1));
-    bg.on('pointerout', () => bg.setFillStyle(0x2a1c40, 1));
-    bg.on('pointerdown', (p, x, y, e) => {
+
+    const txt = this.add
+      .text(x + 16, y, label, {
+        fontFamily: 'Georgia, serif',
+        fontSize: '13px',
+        color: '#a09078',
+      })
+      .setOrigin(0, 0.5)
+      .setDepth(104);
+
+    // Invisible hit zone wider than the text so short labels stay clickable.
+    const zone = this.add
+      .rectangle(x + 110, y, 224, 26, 0xffffff, 0)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(105);
+
+    zone.on('pointerover', () => txt.setColor('#f0e0c0'));
+    zone.on('pointerout', () => txt.setColor('#a09078'));
+    zone.on('pointerdown', (p, lx, ly, e) => {
       e?.stopPropagation();
       onClick();
     });
-    this.dynamic.push(bg, txt);
+
+    this.dynamic.push(bullet, txt, zone);
+  }
+
+  drawCodex(cx, cy) {
+    const w = 30;
+    const h = 40;
+    const g = this.add.graphics().setDepth(103);
+
+    const draw = (hover) => {
+      g.clear();
+      g.fillStyle(0x1e120a, 1);
+      g.fillRect(cx - w / 2, cy - h / 2, w, h);
+      g.lineStyle(1.5, hover ? GOLD : 0x7a5a22, hover ? 0.85 : 0.45);
+      g.strokeRect(cx - w / 2, cy - h / 2, w, h);
+      g.fillStyle(0x3a2010, 1);
+      g.fillRect(cx - w / 2, cy - h / 2, 5, h);                 // spine
+      g.lineStyle(1, 0xc8922a, hover ? 0.5 : 0.22);
+      g.lineBetween(cx - w / 2 + 5, cy - h / 2 + 3, cx - w / 2 + 5, cy + h / 2 - 3);
+      g.lineStyle(1, hover ? 0x8a7a5a : 0x3a2e1e, 0.7);         // page lines
+      [-9, -2, 5, 12].forEach((dy) => {
+        g.lineBetween(cx - w / 2 + 8, cy + dy, cx + w / 2 - 3, cy + dy);
+      });
+      const aa = hover ? 0.8 : 0.4;
+      g.fillStyle(hover ? GOLD : 0x7a5a22, aa);                  // corner accents
+      g.fillRect(cx + w / 2 - 6, cy - h / 2, 6, 1.5);
+      g.fillRect(cx + w / 2 - 1.5, cy - h / 2, 1.5, 6);
+      g.fillRect(cx + w / 2 - 6, cy + h / 2 - 1.5, 6, 1.5);
+      g.fillRect(cx + w / 2 - 1.5, cy + h / 2 - 6, 1.5, 6);
+    };
+
+    draw(false);
+
+    const lbl = this.add
+      .text(cx, cy + h / 2 + 5, 'CODEX', {
+        fontFamily: 'monospace',
+        fontSize: '9px',
+        color: '#5a4a2a',
+      })
+      .setOrigin(0.5, 0)
+      .setDepth(103);
+
+    const zone = this.add
+      .rectangle(cx, cy, w + 10, h + 16, 0xffffff, 0)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(106);
+
+    zone.on('pointerover', () => { draw(true); lbl.setColor('#c8a84a'); });
+    zone.on('pointerout', () => { draw(false); lbl.setColor('#5a4a2a'); });
+    zone.on('pointerdown', (p, lx, ly, e) => { e?.stopPropagation(); });
+
+    this.dynamic.push(g, lbl, zone);
   }
 
   // --- Portraits ------------------------------------------------------------
