@@ -425,14 +425,15 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
 
-  // --- Room bar (slim strip: character disc + navigation) -------------------
+  // --- Room bar (identity left · interactions centre · navigation right) ----
 
   renderRoomBar(loc, width, height, barTop) {
     const bh = height - barTop;
     const cy = barTop + bh / 2;
 
+    // LEFT — character coin disc + name, or plain room name.
+    const identW = 172;
     if (loc.who) {
-      // Coin portrait disc — click to open dialogue overlay.
       const dx = 42;
       const dg = this.add.graphics().setDepth(103);
       dg.fillStyle(0x0e0a18, 1);
@@ -449,16 +450,13 @@ export default class ResidencyScene extends Phaser.Scene {
       this.dynamic.push(dg);
 
       const discZone = this.add
-        .circle(dx, cy, 30)
-        .setInteractive({ useHandCursor: true })
-        .setDepth(104);
+        .circle(dx, cy, 30).setInteractive({ useHandCursor: true }).setDepth(104);
       discZone.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.enterDialogue(loc); });
       this.dynamic.push(discZone);
 
       const nameTxt = this.add
         .text(80, cy - 8, loc.who, {
-          fontFamily: 'Georgia, serif',
-          fontSize: '14px',
+          fontFamily: 'Georgia, serif', fontSize: '14px',
           color: Phaser.Display.Color.IntegerToColor(loc.accent).rgba,
         })
         .setOrigin(0, 0.5).setDepth(104).setInteractive({ useHandCursor: true });
@@ -467,51 +465,82 @@ export default class ResidencyScene extends Phaser.Scene {
       nameTxt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.enterDialogue(loc); });
       this.dynamic.push(nameTxt);
 
-      const roomTxt = this.add
+      this.dynamic.push(this.add
         .text(80, cy + 8, loc.name, { fontFamily: 'monospace', fontSize: '11px', color: '#5a4a3a' })
-        .setOrigin(0, 0.5).setDepth(104);
-      this.dynamic.push(roomTxt);
+        .setOrigin(0, 0.5).setDepth(104));
     } else {
-      const nm = this.add
+      this.dynamic.push(this.add
         .text(20, cy, loc.name, { fontFamily: 'Georgia, serif', fontSize: '15px', color: CREAM })
-        .setOrigin(0, 0.5).setDepth(104);
-      this.dynamic.push(nm);
+        .setOrigin(0, 0.5).setDepth(104));
     }
 
-    // Right: navigation text options + Codex.
+    // Column boundaries.
     const codexCX = width - 36;
-    const menuRight = codexCX - 46;
-    const menuLeft = menuRight - 195;
-    const divX = menuLeft - 10;
+    const navRight = codexCX - 46;
+    const navW = 210;
+    const navLeft = navRight - navW;
+    const div1X = identW;           // identity | interactions
+    const div2X = navLeft - 10;     // interactions | navigation
 
     const divG = this.add.graphics().setDepth(102);
     divG.lineStyle(1, GOLD, 0.22);
-    divG.lineBetween(divX, barTop + 8, divX, height - 8);
+    divG.lineBetween(div1X, barTop + 8, div1X, height - 8);
+    divG.lineBetween(div2X, barTop + 8, div2X, height - 8);
     this.dynamic.push(divG);
 
-    const choices = [];
+    // CENTRE — interactions: talk + scene actions, centred in the zone.
+    const interactions = [];
+    if (loc.who) {
+      interactions.push({ label: `Talk to ${loc.who}`, onClick: () => this.enterDialogue(loc) });
+    }
     (loc.actions || []).forEach((a) =>
-      choices.push({ label: a.label, onClick: () => this.goTo(a.scene) })
+      interactions.push({ label: a.label, onClick: () => this.goTo(a.scene) })
     );
-    // Forward/side exits come exclusively from the EXITS adjacency table.
+    if (interactions.length > 0) {
+      const centerX = div1X + (div2X - div1X) / 2;
+      const iItemH = Math.min(32, (bh - 8) / interactions.length);
+      const iTotalH = interactions.length * iItemH;
+      const iStartY = barTop + (bh - iTotalH) / 2;
+      interactions.forEach((c, i) => {
+        this.makeInteractionOption(centerX, iStartY + i * iItemH + iItemH / 2, c.label, c.onClick, loc.accent);
+      });
+    }
+
+    // RIGHT — navigation exits, derived from EXITS adjacency table only.
+    const navExits = [];
     const roomExits = EXITS[this.current] || {};
     ['forward', 'left', 'right', 'leftInner', 'rightInner'].forEach((dir) => {
       if (roomExits[dir]) {
         const key = roomExits[dir];
-        choices.push({ label: `${LOCATIONS[key].name}  ›`, onClick: () => this.travelTo(key) });
+        navExits.push({ label: `${LOCATIONS[key].name}  ›`, onClick: () => this.travelTo(key) });
       }
     });
     const back = roomExits.back || 'hall';
-    choices.push({ label: `‹ ${LOCATIONS[back].name}`, onClick: () => this.travelTo(back) });
+    navExits.push({ label: `‹ ${LOCATIONS[back].name}`, onClick: () => this.travelTo(back) });
 
-    const itemH = Math.min(28, (bh - 8) / Math.max(choices.length, 1));
-    const totalH = choices.length * itemH;
-    const menuStartY = barTop + (bh - totalH) / 2;
-    choices.forEach((c, i) => {
-      this.makeTextOption(menuLeft, menuStartY + i * itemH + itemH / 2, c.label, c.onClick, loc.accent);
+    const nItemH = Math.min(28, (bh - 8) / navExits.length);
+    const nTotalH = navExits.length * nItemH;
+    const nStartY = barTop + (bh - nTotalH) / 2;
+    navExits.forEach((c, i) => {
+      this.makeTextOption(navLeft, nStartY + i * nItemH + nItemH / 2, c.label, c.onClick, loc.accent);
     });
 
     this.drawCodex(codexCX, cy);
+  }
+
+  makeInteractionOption(cx, cy, label, onClick, accent) {
+    const accentHex = accent ? Phaser.Display.Color.IntegerToColor(accent).rgba : GOLD_S;
+    const txt = this.add
+      .text(cx, cy, label, {
+        fontFamily: 'Georgia, serif',
+        fontSize: '15px',
+        color: accentHex,
+      })
+      .setOrigin(0.5, 0.5).setDepth(104).setInteractive({ useHandCursor: true });
+    txt.on('pointerover', () => txt.setColor('#f0e0c0'));
+    txt.on('pointerout', () => txt.setColor(accentHex));
+    txt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); onClick(); });
+    this.dynamic.push(txt);
   }
 
   makeTextOption(x, y, label, onClick, accent) {
