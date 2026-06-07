@@ -508,7 +508,7 @@ export default class ResidencyScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(102);
     this.dynamic.push(this.captionText);
-    this.drawCodex(width - 36, barTop + (height - barTop) / 2);
+    this.drawCodex(width - 58, barTop + (height - barTop) / 2);
   }
 
 
@@ -562,7 +562,7 @@ export default class ResidencyScene extends Phaser.Scene {
     }
 
     // Column boundaries.
-    const codexCX = width - 36;
+    const codexCX = width - 58;
     const navRight = codexCX - 46;
     const navW = 210;
     const navLeft = navRight - navW;
@@ -676,20 +676,20 @@ export default class ResidencyScene extends Phaser.Scene {
 
     const draw = (hover) => {
       g.clear();
-      g.fillStyle(hover ? 0x3a2010 : 0x2c1a0a, 1);              // cover — readable brown
+      g.fillStyle(hover ? 0x5a3418 : 0x3e2210, 1);              // cover
       g.fillRect(cx - w / 2, cy - h / 2, w, h);
-      g.lineStyle(1.5, hover ? GOLD : 0xb07828, hover ? 0.9 : 0.75);
+      g.lineStyle(2, hover ? GOLD : 0xd4922e, 1);               // border — full opacity
       g.strokeRect(cx - w / 2, cy - h / 2, w, h);
-      g.fillStyle(hover ? 0x5a3018 : 0x4a2812, 1);              // spine
+      g.fillStyle(hover ? 0x7a4820 : 0x5c3216, 1);              // spine
       g.fillRect(cx - w / 2, cy - h / 2, 5, h);
-      g.lineStyle(1, 0xc8922a, hover ? 0.7 : 0.5);              // spine highlight
+      g.lineStyle(1, 0xe0a840, hover ? 0.9 : 0.7);              // spine highlight
       g.lineBetween(cx - w / 2 + 5, cy - h / 2 + 3, cx - w / 2 + 5, cy + h / 2 - 3);
-      g.lineStyle(1, hover ? 0xb0a080 : 0x6a5a3a, 0.8);         // page lines
+      g.lineStyle(1, hover ? 0xe0d0a0 : 0xa89060, 0.9);         // page lines
       [-9, -2, 5, 12].forEach((dy) => {
         g.lineBetween(cx - w / 2 + 8, cy + dy, cx + w / 2 - 3, cy + dy);
       });
-      const aa = hover ? 0.9 : 0.7;
-      g.fillStyle(hover ? GOLD : 0xb07828, aa);                  // corner accents
+      const aa = hover ? 1 : 0.85;
+      g.fillStyle(hover ? GOLD : 0xd4922e, aa);                  // corner accents
       g.fillRect(cx + w / 2 - 6, cy - h / 2, 6, 1.5);
       g.fillRect(cx + w / 2 - 1.5, cy - h / 2, 1.5, 6);
       g.fillRect(cx + w / 2 - 6, cy + h / 2 - 1.5, 6, 1.5);
@@ -702,7 +702,7 @@ export default class ResidencyScene extends Phaser.Scene {
       .text(cx, cy + h / 2 + 5, 'CODEX', {
         fontFamily: 'monospace',
         fontSize: '9px',
-        color: '#a07838',
+        color: '#c8922a',
       })
       .setOrigin(0.5, 0)
       .setDepth(103);
@@ -712,8 +712,8 @@ export default class ResidencyScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .setDepth(106);
 
-    zone.on('pointerover', () => { draw(true); lbl.setColor('#f0c050'); });
-    zone.on('pointerout', () => { draw(false); lbl.setColor('#a07838'); });
+    zone.on('pointerover', () => { draw(true); lbl.setColor('#f0d060'); });
+    zone.on('pointerout', () => { draw(false); lbl.setColor('#c8922a'); });
     zone.on('pointerdown', (p, lx, ly, e) => { e?.stopPropagation(); this.openCodex(); });
 
     this.dynamic.push(g, lbl, zone);
