@@ -126,6 +126,74 @@ const EXITS = {
   quarters:  { back: 'court' },
 };
 
+// ─── Codex data ───────────────────────────────────────────────────────────────
+
+const CODEX_LORE = [
+  {
+    id: 'aridun', title: 'Aridun',
+    body: 'Two landscapes define Aridun: the rockbed plains — ancient, hard, vast — and the dune seas that move between them. Below the hard rockbed lies a softer friable layer. Below that, the Sleeper domain.\n\nHouse Calder has held this world for two generations. The decree that takes it has just arrived.',
+  },
+  {
+    id: 'sleepers', title: 'The Sleepers',
+    body: 'Great creatures of the deep rock. They move through the softer friable layer beneath the rockbed, displacing rather than boring — the stone yields to them.\n\nWhat they leave behind is a network of void passages, traced with Aurun residue. The network is the ecology: it carries moisture to the surface, structures the food web, maintains the mechanical integrity of the rock above. Destroy the network and you destroy the world.',
+  },
+  {
+    id: 'aurun', title: 'Aurun',
+    body: 'A luminescent material found in the wake of Sleeper passage. It cannot be mined or harvested in any conventional sense — attempts to extract it directly leave nothing.\n\nIt follows. Those who move with the deep patterns, who are recognised by whatever the Sleepers recognise, find it settling around them. House Calder\'s position here has been sustained, in part, because Aurun finds Calder hands.',
+  },
+  {
+    id: 'seir', title: 'The Seir',
+    body: 'An ancient text in the Shadmen tradition, contested in its interpretation. The Veil reads it as ecological prophecy — a precise account of what happens when the Sleeper network is disrupted, and what might restore it.\n\nThe "third path" it names between extraction and preservation has not yet been identified. Mother Ysolde holds that it does not arrive. It surfaces.',
+  },
+  {
+    id: 'calder', title: 'House Calder',
+    body: 'Granted the Aridun fief sixty years ago — a consolidation prize when the empire needed a reliable presence in a difficult seat.\n\nThe grandfather made first contact with the Shadmen and established a relationship of cautious respect. Two generations have held the world carefully: no mass extraction, no drilling, Aurun gathered as it comes. The fief has now been revoked in favour of House Vorrin.',
+  },
+  {
+    id: 'vorrin', title: 'House Vorrin',
+    body: 'The new grantees. They arrived with boring rigs and have been drilling directly into the hard rockbed — the fastest route to Aurun deposits.\n\nThe drilling collapses Sleeper passages immediately, destroying travel networks built over generations and, in some cases, killing Shadmen who depend on them. The ecology cannot recover at this pace.',
+  },
+  {
+    id: 'shadmen', title: 'The Shadmen',
+    body: 'The indigenous people of the rockbed. They build their communities — Hollows — within the hard stone, navigating via Sleeper-adjacent passages. Their material culture is shaped by the rock: they know it as living infrastructure, not raw resource.\n\nFirst contact with House Calder was made two generations ago. The relationship has been careful and, on both sides, sustained. Vorrin\'s drilling threatens everything they built.',
+  },
+  {
+    id: 'korinth', title: 'Korinth',
+    body: 'The empire that granted and has now revoked the Aridun fief. Its interests are material and distant.\n\nThe formal Calder objection to Vorrin\'s drilling methods has not been acknowledged. Korinth does not appear to be listening.',
+  },
+  {
+    id: 'saltspire', title: 'Saltspire',
+    body: 'House Calder\'s seat on Aridun — a palace and administrative complex built into a coastal rockbed formation.\n\nThe great hall, the communications room, the Veil\'s sanctum, the Corsair deck: all carved from the same ancient stone that the boring rigs are now beginning to reach.',
+  },
+];
+
+const CODEX_CHARACTERS = {
+  'Lord Aldric': {
+    title: 'Lord Aldric Calder',
+    body: 'Your father. Second generation of Calder on Aridun, and the one who deepened the Shadmen relationship beyond his own father\'s first contact into something closer to alliance.\n\nHe believes the fief revocation can be argued — that Korinth will hear reason. He intends to be heard. He is also watching Halix. He has not yet told you what he suspects.',
+  },
+  'Halix': {
+    title: 'Halix',
+    body: 'The house intelligencer. His provenance is uncertain; the account varies depending on who tells it.\n\nHe monitors Vorrin drilling sites, Pale Legion movements, Shadmen Hollow positions, and a dozen other feeds. He claims to be three moves ahead of any position. Your father watches him. His loyalty to the house is not in doubt; his loyalty to individual members of it is a more interesting question.',
+  },
+  'Mother Ysolde': {
+    title: 'Mother Ysolde',
+    body: 'Keeper of the Veil\'s sanctum at Saltspire. The Veil is not an order so much as a discipline — readers of deep pattern, students of the Seir.\n\nYsolde has been at Saltspire longer than Lord Aldric. She reads the Seir as prophecy and believes what is coming has already begun to move through the deep rock.',
+  },
+  'Sela': {
+    title: 'Sela',
+    body: 'She grew up on Aridun. She has lived here long enough that she feels the Sleepers move — a sensitivity she says you share, if you have learned to listen for it.\n\nShe has been waiting for the right moment to tell you something. She believes the moment will come.',
+  },
+  'Master Orlin': {
+    title: 'Master Orlin',
+    body: 'The house physician. His reports are invariably good; the house is invariably in good health.\n\nHe smiles, and bows, and holds the smile a moment too long. Lord Aldric is aware.',
+  },
+  'Brannic': {
+    title: 'Brannic',
+    body: 'Bladewarden of House Calder, commander of the Saltguard — the house\'s standing force.\n\nPractical, loyal, direct. He knows steel alone will not hold Aridun and says so plainly. He is ready to muster when the word comes.',
+  },
+};
+
 export default class ResidencyScene extends Phaser.Scene {
   constructor() {
     super('ResidencyScene');
@@ -137,6 +205,10 @@ export default class ResidencyScene extends Phaser.Scene {
     this.dynamic = [];
     this.dialogueObjects = [];
     this.dialogueActive = false;
+    this.codexOpen = false;
+    this.codexObjects = [];
+    this.codexSection = 'world';
+    this.codexEntryId = CODEX_LORE[0].id;
 
     // Persistent layers.
     this.wall = this.add
@@ -186,6 +258,7 @@ export default class ResidencyScene extends Phaser.Scene {
       this.scale.off('resize', this.onResize, this);
       this.destroyCommsAnim();
       this.exitDialogue();
+      this.closeCodex();
     });
   }
 
@@ -277,6 +350,7 @@ export default class ResidencyScene extends Phaser.Scene {
 
   onResize(gameSize) {
     this.exitDialogue();
+    this.closeCodex();
     this.layout(gameSize.width, gameSize.height);
   }
 
@@ -296,6 +370,14 @@ export default class ResidencyScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const loc = LOCATIONS[this.current];
     const floorY = Math.round(height * 0.60); // full-canvas floor line (procedural rooms)
+
+    // Track which characters the player has encountered (for the Codex).
+    if (loc.who) {
+      const met = this.registry.get('metCharacters') || [];
+      if (!met.includes(loc.who)) {
+        this.registry.set('metCharacters', [...met, loc.who]);
+      }
+    }
 
     // Painted scene — EVERY room fills the full canvas, for one consistent frame.
     this.bd.clear();
@@ -394,6 +476,7 @@ export default class ResidencyScene extends Phaser.Scene {
   travelTo(key) {
     if (this.time.now < this.inputReadyAt || this.travelling) return;
     this.exitDialogue();
+    this.closeCodex();
     this.travelling = true;
     this.cameras.main.fadeOut(200, 6, 4, 12);
     this.cameras.main.once('camerafadeoutcomplete', () => {
@@ -627,9 +710,212 @@ export default class ResidencyScene extends Phaser.Scene {
 
     zone.on('pointerover', () => { draw(true); lbl.setColor('#c8a84a'); });
     zone.on('pointerout', () => { draw(false); lbl.setColor('#5a4a2a'); });
-    zone.on('pointerdown', (p, lx, ly, e) => { e?.stopPropagation(); });
+    zone.on('pointerdown', (p, lx, ly, e) => { e?.stopPropagation(); this.openCodex(); });
 
     this.dynamic.push(g, lbl, zone);
+  }
+
+  // --- Codex overlay --------------------------------------------------------
+
+  openCodex() {
+    if (this.codexOpen) { this.closeCodex(); return; }
+    this.exitDialogue();
+    this.codexOpen = true;
+    this.codexObjects = [];
+    if (!this.codexSection) this.codexSection = 'world';
+    if (!this.codexEntryId) this.codexEntryId = CODEX_LORE[0].id;
+    this.renderCodexPanel();
+  }
+
+  closeCodex() {
+    if (!this.codexOpen) return;
+    (this.codexObjects || []).forEach((o) => o.destroy());
+    this.codexObjects = [];
+    this.codexOpen = false;
+  }
+
+  renderCodexPanel() {
+    (this.codexObjects || []).forEach((o) => o.destroy());
+    this.codexObjects = [];
+    const C = this.codexObjects;
+    const { width, height } = this.scale;
+
+    const pw = Math.round(width * 0.86);
+    const ph = Math.round(height * 0.84);
+    const px = Math.round((width - pw) / 2);
+    const py = Math.round((height - ph) / 2);
+    const headerH = 44;
+    const listW = 230;
+
+    // Scrim — full canvas, click outside panel to close.
+    const scrim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.72)
+      .setInteractive().setDepth(970);
+    scrim.on('pointerdown', () => this.closeCodex());
+    C.push(scrim);
+
+    // Main panel background.
+    const bg = this.add.graphics().setDepth(971);
+    bg.fillStyle(0x080512, 1);
+    bg.fillRect(px, py, pw, ph);
+    bg.lineStyle(1.5, GOLD, 0.55);
+    bg.strokeRect(px, py, pw, ph);
+    bg.lineStyle(1, GOLD, 0.2);
+    bg.strokeRect(px + 4, py + 4, pw - 8, ph - 8);
+    C.push(bg);
+
+    // Header band.
+    const hdr = this.add.graphics().setDepth(972);
+    hdr.fillStyle(0x100c22, 1);
+    hdr.fillRect(px, py, pw, headerH);
+    hdr.lineStyle(1, GOLD, 0.3);
+    hdr.lineBetween(px, py + headerH, px + pw, py + headerH);
+    C.push(hdr);
+
+    C.push(this.add.text(px + pw / 2, py + headerH / 2, 'CODEX', {
+      fontFamily: 'monospace', fontSize: '16px', color: GOLD_S, letterSpacing: 8,
+    }).setOrigin(0.5).setDepth(973));
+
+    const closeTxt = this.add.text(px + pw - 14, py + headerH / 2, '✕', {
+      fontFamily: 'monospace', fontSize: '15px', color: '#6a5040',
+    }).setOrigin(1, 0.5).setDepth(973).setInteractive({ useHandCursor: true });
+    closeTxt.on('pointerover', () => closeTxt.setColor('#f0e0c0'));
+    closeTxt.on('pointerout', () => closeTxt.setColor('#6a5040'));
+    closeTxt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.closeCodex(); });
+    C.push(closeTxt);
+
+    // Left column background.
+    const contentY = py + headerH;
+    const colH = ph - headerH;
+    const listBg = this.add.graphics().setDepth(972);
+    listBg.fillStyle(0x060410, 1);
+    listBg.fillRect(px, contentY, listW, colH);
+    listBg.lineStyle(1, GOLD, 0.18);
+    listBg.lineBetween(px + listW, contentY, px + listW, py + ph);
+    C.push(listBg);
+
+    // Section tabs.
+    const TABS = [{ id: 'world', label: 'WORLD LORE' }, { id: 'people', label: 'PEOPLE' }];
+    const tabH = 36;
+    TABS.forEach((tab, i) => {
+      const tabY = contentY + i * tabH;
+      const sel = this.codexSection === tab.id;
+      if (sel) {
+        const hl = this.add.graphics().setDepth(972);
+        hl.fillStyle(0x1c1638, 1);
+        hl.fillRect(px, tabY, listW, tabH);
+        hl.lineStyle(2, GOLD, 0.45);
+        hl.lineBetween(px, tabY + tabH - 1, px + listW, tabY + tabH - 1);
+        C.push(hl);
+      }
+      const tabTxt = this.add.text(px + listW / 2, tabY + tabH / 2, tab.label, {
+        fontFamily: 'monospace', fontSize: '11px', color: sel ? GOLD_S : '#4a3a2a', letterSpacing: 2,
+      }).setOrigin(0.5).setDepth(973).setInteractive({ useHandCursor: true });
+      if (!sel) {
+        tabTxt.on('pointerover', () => tabTxt.setColor('#a08060'));
+        tabTxt.on('pointerout', () => tabTxt.setColor('#4a3a2a'));
+      }
+      tabTxt.on('pointerdown', (p, x, y, e) => {
+        e?.stopPropagation();
+        if (this.codexSection === tab.id) return;
+        this.codexSection = tab.id;
+        if (tab.id === 'world') {
+          this.codexEntryId = CODEX_LORE[0].id;
+        } else {
+          const met = this.registry.get('metCharacters') || [];
+          const first = met.find((n) => CODEX_CHARACTERS[n]);
+          this.codexEntryId = first || null;
+        }
+        this.renderCodexPanel();
+      });
+      C.push(tabTxt);
+
+      // Hairline divider between tabs.
+      if (i < TABS.length - 1) {
+        const td = this.add.graphics().setDepth(972);
+        td.lineStyle(1, 0x1e1830, 1);
+        td.lineBetween(px + 12, tabY + tabH, px + listW - 12, tabY + tabH);
+        C.push(td);
+      }
+    });
+
+    // Entry list.
+    const entries = this.codexSection === 'world'
+      ? CODEX_LORE.map((e) => ({ id: e.id, label: e.title }))
+      : (this.registry.get('metCharacters') || [])
+          .filter((n) => CODEX_CHARACTERS[n])
+          .map((n) => ({ id: n, label: CODEX_CHARACTERS[n].title }));
+
+    const listStartY = contentY + TABS.length * tabH + 6;
+    const entryH = 27;
+    entries.forEach((entry) => {
+      const ey = listStartY + entries.indexOf(entry) * entryH;
+      const sel = this.codexEntryId === entry.id;
+      if (sel) {
+        const ehl = this.add.graphics().setDepth(972);
+        ehl.fillStyle(0x1e1840, 1);
+        ehl.fillRect(px + 2, ey, listW - 4, entryH);
+        ehl.lineStyle(1, GOLD, 0.2);
+        ehl.lineBetween(px + 2, ey + entryH - 1, px + listW - 4, ey + entryH - 1);
+        C.push(ehl);
+      }
+      const eTxt = this.add.text(px + 14, ey + entryH / 2, entry.label, {
+        fontFamily: 'Georgia, serif', fontSize: '13px',
+        color: sel ? '#f0e0c0' : '#7a6a4a',
+      }).setOrigin(0, 0.5).setDepth(973).setInteractive({ useHandCursor: true });
+      if (!sel) {
+        eTxt.on('pointerover', () => eTxt.setColor('#c8b090'));
+        eTxt.on('pointerout', () => eTxt.setColor('#7a6a4a'));
+      }
+      eTxt.on('pointerdown', (p, x, y, e) => {
+        e?.stopPropagation();
+        if (this.codexEntryId === entry.id) return;
+        this.codexEntryId = entry.id;
+        this.renderCodexPanel();
+      });
+      C.push(eTxt);
+    });
+
+    // Empty-state message for people tab.
+    if (this.codexSection === 'people' && entries.length === 0) {
+      C.push(this.add.text(px + listW / 2, listStartY + 40, 'No one\nencountered yet.', {
+        fontFamily: 'Georgia, serif', fontSize: '12px', color: '#3a2e1e', align: 'center',
+      }).setOrigin(0.5, 0).setDepth(973));
+    }
+
+    // Right column — entry content.
+    const rightX = px + listW + 28;
+    const rightW = pw - listW - 44;
+    const rightY = contentY + 20;
+
+    let entry = null;
+    if (this.codexSection === 'world') {
+      entry = CODEX_LORE.find((e) => e.id === this.codexEntryId);
+      if (entry) entry = { title: entry.title, body: entry.body };
+    } else if (this.codexEntryId) {
+      const cd = CODEX_CHARACTERS[this.codexEntryId];
+      if (cd) entry = { title: cd.title, body: cd.body };
+    }
+
+    if (entry) {
+      C.push(this.add.text(rightX, rightY, entry.title, {
+        fontFamily: 'Georgia, serif', fontSize: '19px', color: GOLD_S,
+      }).setDepth(973));
+
+      const divG = this.add.graphics().setDepth(973);
+      divG.lineStyle(1, GOLD, 0.22);
+      divG.lineBetween(rightX, rightY + 30, rightX + rightW, rightY + 30);
+      C.push(divG);
+
+      C.push(this.add.text(rightX, rightY + 46, entry.body, {
+        fontFamily: 'Georgia, serif', fontSize: '14px', color: '#c0b0cc',
+        wordWrap: { width: rightW },
+        lineSpacing: 6,
+      }).setDepth(973));
+    } else if (this.codexSection === 'people') {
+      C.push(this.add.text(px + listW + (pw - listW) / 2, contentY + colH / 2, 'Select a name.', {
+        fontFamily: 'Georgia, serif', fontSize: '14px', color: '#3a2e1e',
+      }).setOrigin(0.5).setDepth(973));
+    }
   }
 
   // --- Character sprites in scene -------------------------------------------
