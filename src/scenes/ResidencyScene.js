@@ -9,7 +9,7 @@ import { enablePainterly, togglePainterly } from '../shaders/KuwaharaPostFX.js';
 
 const GOLD = 0xc9a24a;
 const GOLD_S = '#c9a24a';
-const CREAM = '#e8d8c0';
+const CREAM = '#f2e6d0';
 
 // Experiment: use the painted PNG backdrop for the hall instead of the
 // procedural art. Set false to fall back to the fully procedural hall (which
@@ -339,9 +339,9 @@ export default class ResidencyScene extends Phaser.Scene {
 
     // Ornate frame.
     this.frame.clear();
-    this.frame.lineStyle(3, GOLD, 0.5);
+    this.frame.lineStyle(3, GOLD, 0.72);
     this.frame.strokeRect(6, 6, width - 12, height - 12);
-    this.frame.lineStyle(1, GOLD, 0.3);
+    this.frame.lineStyle(1, GOLD, 0.48);
     this.frame.strokeRect(11, 11, width - 22, height - 22);
 
     if (this.musicCircle) {
@@ -424,19 +424,21 @@ export default class ResidencyScene extends Phaser.Scene {
   drawPanel(width, height, bt) {
     const b = this.bar;
     b.clear();
-    const grad = 6;
+    const ph = height - bt;
+    // Transparent purple overlay — room shows through with a purple tint.
+    const grad = 5;
     for (let i = 0; i < grad; i += 1) {
-      b.fillStyle(0x0a0610, 0.58 * ((i + 1) / grad));
-      b.fillRect(0, bt + ((height - bt) * i) / grad, width, (height - bt) / grad + 1);
+      b.fillStyle(0x2a1848, (0.35 + 0.40 * ((i + 1) / grad)));
+      b.fillRect(0, bt + (ph * i) / grad, width, ph / grad + 1);
     }
     // Sandstone + gold top trim.
-    b.fillStyle(0xb07d4a, 0.5);
+    b.fillStyle(0xb07d4a, 0.90);
     b.fillRect(0, bt, width, 2);
-    b.fillStyle(GOLD, 0.35);
+    b.fillStyle(GOLD, 0.80);
     b.fillRect(0, bt + 2, width, 1);
-    // Subtle gold corner brackets (echo of the old ornate bar, kept light).
+    // Gold corner brackets.
     const cs = 22;
-    b.fillStyle(GOLD, 0.55);
+    b.fillStyle(GOLD, 0.90);
     b.fillRect(0, bt, cs, 2);
     b.fillRect(0, bt, 2, cs);
     b.fillRect(width - cs, bt, cs, 2);
@@ -559,17 +561,17 @@ export default class ResidencyScene extends Phaser.Scene {
 
       const nameTxt = this.add
         .text(80, cy - 8, loc.who, {
-          fontFamily: 'Georgia, serif', fontSize: '14px',
-          color: Phaser.Display.Color.IntegerToColor(loc.accent).rgba,
+          fontFamily: 'Georgia, serif', fontSize: '15px',
+          color: CREAM,
         })
         .setOrigin(0, 0.5).setDepth(104).setInteractive({ useHandCursor: true });
-      nameTxt.on('pointerover', () => nameTxt.setColor('#f0e0c0'));
-      nameTxt.on('pointerout', () => nameTxt.setColor(Phaser.Display.Color.IntegerToColor(loc.accent).rgba));
+      nameTxt.on('pointerover', () => nameTxt.setColor(GOLD_S));
+      nameTxt.on('pointerout', () => nameTxt.setColor(CREAM));
       nameTxt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.enterDialogue(loc); });
       this.dynamic.push(nameTxt);
 
       this.dynamic.push(this.add
-        .text(80, cy + 8, loc.name, { fontFamily: 'monospace', fontSize: '11px', color: '#5a4a3a' })
+        .text(80, cy + 8, loc.name, { fontFamily: 'monospace', fontSize: '11px', color: '#9a8878' })
         .setOrigin(0, 0.5).setDepth(104));
     } else {
       this.dynamic.push(this.add
@@ -586,7 +588,7 @@ export default class ResidencyScene extends Phaser.Scene {
     const div2X = navLeft - 10;     // interactions | navigation
 
     const divG = this.add.graphics().setDepth(102);
-    divG.lineStyle(1, GOLD, 0.22);
+    divG.lineStyle(1, GOLD, 0.40);
     divG.lineBetween(div1X, barTop + 8, div1X, height - 8);
     divG.lineBetween(div2X, barTop + 8, div2X, height - 8);
     this.dynamic.push(divG);
@@ -632,16 +634,15 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
   makeInteractionOption(cx, cy, label, onClick, accent) {
-    const accentHex = accent ? Phaser.Display.Color.IntegerToColor(accent).rgba : GOLD_S;
     const txt = this.add
       .text(cx, cy, label, {
         fontFamily: 'Georgia, serif',
-        fontSize: '15px',
-        color: accentHex,
+        fontSize: '16px',
+        color: CREAM,
       })
       .setOrigin(0.5, 0.5).setDepth(104).setInteractive({ useHandCursor: true });
-    txt.on('pointerover', () => txt.setColor('#f0e0c0'));
-    txt.on('pointerout', () => txt.setColor(accentHex));
+    txt.on('pointerover', () => txt.setColor(GOLD_S));
+    txt.on('pointerout', () => txt.setColor(CREAM));
     txt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); onClick(); });
     this.dynamic.push(txt);
   }
@@ -655,7 +656,7 @@ export default class ResidencyScene extends Phaser.Scene {
       .text(x, y, '›', {
         fontFamily: 'monospace',
         fontSize: '14px',
-        color: accentHex,
+        color: GOLD_S,
       })
       .setOrigin(0, 0.5)
       .setDepth(104);
@@ -663,8 +664,8 @@ export default class ResidencyScene extends Phaser.Scene {
     const txt = this.add
       .text(x + 16, y, label, {
         fontFamily: 'Georgia, serif',
-        fontSize: '13px',
-        color: '#a09078',
+        fontSize: '14px',
+        color: '#d8c4a0',
       })
       .setOrigin(0, 0.5)
       .setDepth(104);
@@ -675,8 +676,8 @@ export default class ResidencyScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .setDepth(105);
 
-    zone.on('pointerover', () => txt.setColor('#f0e0c0'));
-    zone.on('pointerout', () => txt.setColor('#a09078'));
+    zone.on('pointerover', () => txt.setColor(CREAM));
+    zone.on('pointerout', () => txt.setColor('#d8c4a0'));
     zone.on('pointerdown', (p, lx, ly, e) => {
       e?.stopPropagation();
       onClick();
@@ -922,7 +923,7 @@ export default class ResidencyScene extends Phaser.Scene {
       }).setDepth(973));
 
       const divG = this.add.graphics().setDepth(973);
-      divG.lineStyle(1, GOLD, 0.22);
+      divG.lineStyle(1, GOLD, 0.40);
       divG.lineBetween(rightX, rightY + 30, rightX + rightW, rightY + 30);
       C.push(divG);
 
