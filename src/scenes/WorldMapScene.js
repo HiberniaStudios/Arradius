@@ -12,15 +12,7 @@ const WORLD_H = 2048;   // pole to pole
 const MM_W = 220;
 const MM_H = Math.round(MM_W * WORLD_H / WORLD_W); // ≈ 110
 
-// Zoom limits
-// The zoom FLOOR is computed dynamically from the LIVE camera height (see
-// _zoomFloor()), not a fixed constant: Scale.RESIZE makes the viewport the
-// whole window, so a hardcoded 720-based floor left a navy gap above/below the
-// terrain on any window taller than 720. ZOOM_MARGIN over-fills slightly so
-// floating-point rounding can never reveal a black bar.
-const ZOOM_MARGIN = 1.08;
-const ZOOM_MAX    = 2.0;
-const ZOOM_SPD   = 0.0012;
+// Zoom is fixed at 1.0 — the map is a fixed-scale cartographic view.
 
 // Drag threshold (px) before we commit to a pan (not a click)
 const DRAG_THR = 7;
@@ -92,11 +84,10 @@ export default class WorldMapScene extends Phaser.Scene {
     // Two-camera HUD split — must come after all objects are built.
     // uiCam (zoom=1, no scroll) renders UI chrome; cameras.main renders the world.
     // camera.ignore() also gates input so interactive UI elements hit-test
-    // against uiCam's fixed transform, not the zooming main camera.
+    // against uiCam's fixed 1:1 transform.
     this._setupCameras();
     this._setupCamera();
     this._setupDrag();
-    this._setupZoom();
     this._setupKeys();
     this._createAudio();
     this._layout();
@@ -109,9 +100,6 @@ export default class WorldMapScene extends Phaser.Scene {
     this.scale.on('resize', () => {
       const { width: W, height: H } = this.cameras.main;
       this.uiCam?.setSize(W, H);
-      // A taller window raises the floor — re-clamp zoom + reposition so the
-      // terrain keeps filling the viewport with no gap.
-      this._wrapCamera();
       this._layout();
     }, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
@@ -460,29 +448,19 @@ export default class WorldMapScene extends Phaser.Scene {
 
   // ── Camera ────────────────────────────────────────────────────────────────
 
-  // Minimum zoom at which the world covers the viewport HEIGHT. Width wraps
-  // (3 tiles), so it's always covered — only height can leave a gap. Tracks the
-  // live camera height so it stays correct at any window size under RESIZE.
-  _zoomFloor() {
-    return (this.cameras.main.height / WORLD_H) * ZOOM_MARGIN;
-  }
-
   _setupCamera() {
     // No setBounds — we manage wrapping manually in update()
     const cam = this.cameras.main;
-    // Map void colour: any momentary uncovered sliver blends with the terrain's
-    // dark sky instead of flashing the navy scene background.
-    cam.setBackgroundColor(0x0a0806);
-    cam.zoom = Math.max(1.20, this._zoomFloor());
+    cam.zoom = 1;
     // Centre on Saltspire
     this._setCamWorld(NODES[0].wx, NODES[0].wy);
   }
 
-  // Set camera to look at world position (wx, wy), accounting for zoom & wrap
+  // Set camera to look at world position (wx, wy)
   _setCamWorld(wx, wy) {
     const cam = this.cameras.main;
-    const vw  = cam.width  / cam.zoom;
-    const vh  = cam.height / cam.zoom;
+    const vw  = cam.width;
+    const vh  = cam.height;
     cam.scrollX = wx - vw / 2;
     cam.scrollY = Phaser.Math.Clamp(wy - vh / 2, 0, WORLD_H - vh);
     this._wrapCamera();
@@ -492,9 +470,7 @@ export default class WorldMapScene extends Phaser.Scene {
   // scrollX wraps modulo WORLD_W; scrollY is clamped pole-to-pole.
   _wrapCamera() {
     const cam  = this.cameras.main;
-    const zf   = this._zoomFloor();
-    if (cam.zoom < zf) cam.zoom = zf;
-    const vh   = cam.height / cam.zoom;
+    const vh   = cam.height;
     // Horizontal wrap — tiles endlessly, no clamping needed
     cam.scrollX = ((cam.scrollX % WORLD_W) + WORLD_W) % WORLD_W;
     // Vertical clamp — poles are hard edges
@@ -504,8 +480,8 @@ export default class WorldMapScene extends Phaser.Scene {
   // Pan camera smoothly to the node that's nearest the current viewport centre
   _panToNode(node) {
     const cam    = this.cameras.main;
-    const vw     = cam.width  / cam.zoom;
-    const vh     = cam.height / cam.zoom;
+    const vw     = cam.width;
+    const vh     = cam.height;
     const centX  = cam.scrollX + vw / 2;
     // Choose the copy closest to current viewport centre (wrapped space)
     const copies = [-WORLD_W, 0, WORLD_W].map(off => node.wx + off);
@@ -545,35 +521,13 @@ export default class WorldMapScene extends Phaser.Scene {
 
       const cam = this.cameras.main;
       // Grab-and-drag: the world follows the cursor (like sliding a paper map).
-      cam.scrollX = ((camX - dx / cam.zoom) % WORLD_W + WORLD_W) % WORLD_W;
-      cam.scrollY = Phaser.Math.Clamp(camY - dy / cam.zoom, 0,
-        Math.max(0, WORLD_H - cam.height / cam.zoom));
+      cam.scrollX = ((camX - dx) % WORLD_W + WORLD_W) % WORLD_W;
+      cam.scrollY = Phaser.Math.Clamp(camY - dy, 0,
+        Math.max(0, WORLD_H - cam.height));
     });
 
     this.input.on('pointerup', () => {
       this.time.delayedCall(20, () => { this.isDrag = false; });
-    });
-  }
-
-  // ── Zoom ─────────────────────────────────────────────────────────────────
-
-  _setupZoom() {
-    this.input.on('wheel', (pointer, objs, dx, dy) => {
-      const cam    = this.cameras.main;
-      const oldZ   = cam.zoom;
-      const newZ   = Phaser.Math.Clamp(oldZ * (1 - dy * ZOOM_SPD), this._zoomFloor(), ZOOM_MAX);
-      if (newZ === oldZ) return;
-
-      // Zoom toward the cursor
-      const worldX = cam.scrollX + pointer.x / oldZ;
-      const worldY = cam.scrollY + pointer.y / oldZ;
-      cam.zoom = newZ;
-      cam.scrollX = ((worldX - pointer.x / newZ) % WORLD_W + WORLD_W) % WORLD_W;
-      cam.scrollY = Phaser.Math.Clamp(
-        worldY - pointer.y / newZ,
-        0, Math.max(0, WORLD_H - cam.height / newZ));
-
-      if (this._zoomTxt) this._zoomTxt.setText(`${Math.round(newZ * 100)}%`);
     });
   }
 
@@ -598,16 +552,6 @@ export default class WorldMapScene extends Phaser.Scene {
     this.backBtn.on('pointerover', () => this.backBtn.setColor('#ffffff'));
     this.backBtn.on('pointerout',  () => this.backBtn.setColor('#ffe8c8'));
     this.backBtn.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.goHome(); });
-
-    this.hintTxt = this.add.text(0, 0,
-      'drag to pan  ·  scroll to zoom  ·  Tab to cycle nodes', {
-        fontFamily: 'monospace', fontSize: '11px', color: '#6a5a3a',
-      }).setOrigin(0.5, 1).setDepth(300);
-
-    // Zoom indicator
-    this._zoomTxt = this.add.text(0, 0, '55%', {
-      fontFamily: 'monospace', fontSize: '11px', color: '#7a6a4a',
-    }).setOrigin(0, 0).setDepth(300);
 
     // Info panel
     this.infoName   = this.add.text(0, 0, '', {
@@ -685,7 +629,7 @@ export default class WorldMapScene extends Phaser.Scene {
     // Screen-space UI chrome: fixed size, rendered by uiCam only
     const uiObjs = [
       this.minimapG, this.infoBgG,
-      this.titleTxt, this.subtitleTxt, this.backBtn, this.hintTxt, this._zoomTxt,
+      this.titleTxt, this.subtitleTxt, this.backBtn,
       this.infoName, this.infoStatus, this.infoDesc,
       this.actBtn, this.actLabel,
       this.mmLbl, this.mmZone,
@@ -723,8 +667,6 @@ export default class WorldMapScene extends Phaser.Scene {
     this.titleTxt.setPosition(W / 2, 14);
     this.subtitleTxt.setPosition(W / 2, 42);
     this.backBtn.setPosition(18, 14);
-    this.hintTxt.setPosition(W / 2, H - PH - 8);
-    this._zoomTxt.setPosition(18, H - PH - 24);
 
     // Info panel bg
     this.infoBgG.clear();
@@ -836,9 +778,8 @@ export default class WorldMapScene extends Phaser.Scene {
 
     // Background + terrain sketch
     g.fillStyle(0x0a0806, 0.90); g.fillRect(mx, my, MM_W, MM_H);
-    g.fillStyle(0x100c08, 1);    g.fillRect(mx, my, MM_W, MM_H * 0.13); // polar
     g.fillStyle(0x1a1208, 1);
-    g.fillRect(mx, my + MM_H * 0.13, MM_W, MM_H * (0.55 - 0.13));       // rockbed
+    g.fillRect(mx, my, MM_W, MM_H * 0.55);                               // rockbed (full top)
     g.fillStyle(0x2c1e0e, 1);
     g.fillRect(mx, my + MM_H * 0.55, MM_W, MM_H * 0.45);                // dune sea
 
@@ -865,8 +806,8 @@ export default class WorldMapScene extends Phaser.Scene {
     });
 
     // Viewport rectangle — may span the wrap seam, draw up to 2 rects
-    const vw = (cam.width  / cam.zoom / WORLD_W) * MM_W;
-    const vh = (cam.height / cam.zoom / WORLD_H) * MM_H;
+    const vw = (cam.width  / WORLD_W) * MM_W;
+    const vh = (cam.height / WORLD_H) * MM_H;
     const vx = mx + ((cam.scrollX % WORLD_W + WORLD_W) % WORLD_W / WORLD_W) * MM_W;
     const vy = my + (cam.scrollY / WORLD_H) * MM_H;
 
@@ -913,9 +854,9 @@ export default class WorldMapScene extends Phaser.Scene {
     this._updateMinimap();
     this._wrapCamera();
 
-    // Keyboard pan (arrows) — speed scales with zoom so feel is consistent
+    // Keyboard pan (arrows)
     const cam   = this.cameras.main;
-    const speed = 10 / cam.zoom;
+    const speed = 10;
     if (this.cursors.left.isDown)  {
       cam.scrollX = ((cam.scrollX - speed) % WORLD_W + WORLD_W) % WORLD_W;
     }
@@ -924,17 +865,12 @@ export default class WorldMapScene extends Phaser.Scene {
     }
     if (this.cursors.up.isDown)    cam.scrollY = Math.max(0, cam.scrollY - speed);
     if (this.cursors.down.isDown)  {
-      cam.scrollY = Math.min(Math.max(0, WORLD_H - cam.height / cam.zoom), cam.scrollY + speed);
+      cam.scrollY = Math.min(Math.max(0, WORLD_H - cam.height), cam.scrollY + speed);
     }
 
     // Tab → cycle, Enter → act, Esc → go home
     if (Phaser.Input.Keyboard.JustDown(this.tabKey)) this.cycle(1);
     if (Phaser.Input.Keyboard.JustDown(this.entKey)) this.act();
     if (Phaser.Input.Keyboard.JustDown(this.escKey)) this.goHome();
-
-    // Zoom readout
-    if (this._zoomTxt) {
-      this._zoomTxt.setText(`zoom ${Math.round(cam.zoom * 100)}%`);
-    }
   }
 }
