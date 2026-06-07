@@ -948,7 +948,7 @@ export default class ResidencyScene extends Phaser.Scene {
       infirmary: -80, yard: 80,
     };
     // Some rooms draw their floor at a different fraction than the global 0.60.
-    const floorFracs = { comms: 0.67 };
+    const floorFracs = { comms: 0.75 };
     const actualFloorY = floorFracs[loc.feature]
       ? Math.round(this.scale.height * floorFracs[loc.feature])
       : floorY;
