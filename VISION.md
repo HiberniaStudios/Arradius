@@ -122,6 +122,26 @@ entrances that read as natural geology to anyone who doesn't know what they're
 looking for. Aurun blooms surface through porous sections of the rock face, not
 through sand; to find blooms, you read the rock, not the dune.
 
+**The Sleeper network is the ecosystem.** A healthy route network produces
+effects at every scale simultaneously:
+
+- *Deep rock* — the Sleepers' passage aerates the rock and maintains moisture in
+  the deep layer; organisms in the lower Hollow chambers survive the dry seasons;
+  Shadmen communities remain viable through the long hot periods.
+- *Surface* — Aurun bioluminescence attracts surface organisms; a food web
+  builds on the rockbeds around active bloom sites; the rock plains are not
+  barren — they support visible life that depends entirely on what moves below.
+- *Structural* — Aurun chemistry changes the rock's properties over generations
+  of repeated Sleeper passage; active-route rock can be worked and built into;
+  dead-route rock becomes brittle and unsafe to excavate. Healthy routes are what
+  allow the Shadmen to expand and deepen their Hollows.
+
+All three die together when a route dies. Vorrin's drilling kills the world at
+every scale simultaneously — the deep water, the surface life, and the material
+the Shadmen need to build with. Restoration is visible at every scale too: bloom
+glow returning to dark rockbeds, surface life reappearing, Warren walls that can
+be worked again. This is what the ecology mechanic measures and rewards.
+
 Beneath the hard rockbed is a deeper geological layer — older, softer, more
 friable; compressed over vast timescales but yielding under enough force. The
 hard surface layer is the ceiling of this world. The Sleepers live below it
@@ -399,8 +419,9 @@ The systems are modelled on Cryo's _Dune_, refit to Aridun:
   the truest currency), troops, and equipment.
 - **Territorial war** — push **House Vorrin** out of Aridun region by region;
   take their holds.
-- **Ecology** — green the desert over time; a visible, consequential, slow
-  transformation of the world.
+- **Ecology** — protect and restore the Sleeper route network; a visible,
+  consequential, slow transformation of the world as the rockbeds come back to
+  life.
 - **Aurun & sensitivity** — Aurun is a secretion left by the Sleepers in their
   passage channels; it is not mined but followed — collected from the rockbed
   surface in a Sleeper's wake, never extracted from an active site. The Shadmen
@@ -465,8 +486,10 @@ something closer to foresight. The Shadmen who believe in him call him the
 **Seir** — one who walks both the surface world and the rock-world. Half don't.
 The prophecy is a contested reading of an ecological text, not a proclamation,
 and Eren cannot be certain it describes him. The realm game opens fully —
-Aurun-following, ecology, war — and the greening of Aridun begins as he turns
-the deep rock and its Sleepers against Vorrin, taking their forts one by one.
+Aurun-following, ecology, war — and the restoration of Aridun's route network
+begins: bloom glow returning to dark rockbeds, Hollows reconnecting, surface life
+coming back — as he turns the deep rock and its Sleepers against Vorrin, fort by
+fort.
 
 **Act III — The Reckoning.** The fort campaign culminates in the assault on
 **Vorrinhold**, and the hand of House Korinth behind it is revealed. The cost of
@@ -493,7 +516,7 @@ consciousness, Fremen loyalty, spice mining, army, ecology).
 | 4 | **The Road Ambush** — Vorrin strikes on the open road; Lord Aldric falls; Eren takes command | Residency | The war footing — the fort campaign begins |
 | 5 | **First Passage** — Eren enters the deep rock; watches a Sleeper pass in the dark; enters the channel it leaves; raw Aurun exposure sharpens his pattern-reading | Side-scroll | Deep-rock traversal; sensitivity (read terrain, probable outcomes) |
 | 6 | **Winning the Tribes** — earn Shadmen loyalty, Hollow by Hollow | Map + visits | The **Veiled Knives** and broader map reach |
-| 7 | **The Following & the Greening** — Aurun route-following and the ecology project come online | Residency | Economy scaling + slow world transformation |
+| 7 | **The Following & the Restoration** — Aurun route-following and the ecology project come online; first rockbeds show bloom glow returning | Residency | Economy scaling + visible world restoration |
 | 8 | **The Seir Awakens** _(the contested name)_ — Eren enters a Sleeper's channel with a Shadmen guide; some call him the Seir; the skeptics still disagree | Side-scroll | Sleeper channels as late-game traversal; the prophecy question sharpens |
 | 9 | **The Fort Campaign** — take Vorrin's holds region by region | Map | Map expansion; the noose tightens |
 | 10 | **The Reckoning** _(finale)_ — assault **Vorrinhold**; Korinth's hand revealed | Map + finale | The ending fork: greened or scorched Aridun |
@@ -590,7 +613,8 @@ A three-house triangle, in Herbert's tradition:
 
 ## Themes
 
-- **Ecology** — the planet as a character that changes by your hand.
+- **Ecology** — the Sleeper network is the ecosystem; its health determines
+  everything living on and in the rock. The planet changes by your hand.
 - **Prophecy & free will** — does seeing the future free you or trap you?
 - **Power & its cost** — empire, loyalty, the price of becoming a messiah.
 - **Scarcity** — water as the truest currency.
