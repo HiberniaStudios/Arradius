@@ -339,9 +339,9 @@ export default class ResidencyScene extends Phaser.Scene {
 
     // Ornate frame.
     this.frame.clear();
-    this.frame.lineStyle(3, GOLD, 0.5);
+    this.frame.lineStyle(3, GOLD, 0.72);
     this.frame.strokeRect(6, 6, width - 12, height - 12);
-    this.frame.lineStyle(1, GOLD, 0.3);
+    this.frame.lineStyle(1, GOLD, 0.48);
     this.frame.strokeRect(11, 11, width - 22, height - 22);
 
     if (this.musicCircle) {
@@ -426,17 +426,17 @@ export default class ResidencyScene extends Phaser.Scene {
     b.clear();
     const grad = 6;
     for (let i = 0; i < grad; i += 1) {
-      b.fillStyle(0x0a0610, 0.58 * ((i + 1) / grad));
+      b.fillStyle(0x1a1030, 0.90 * ((i + 1) / grad));
       b.fillRect(0, bt + ((height - bt) * i) / grad, width, (height - bt) / grad + 1);
     }
     // Sandstone + gold top trim.
-    b.fillStyle(0xb07d4a, 0.5);
+    b.fillStyle(0xb07d4a, 0.75);
     b.fillRect(0, bt, width, 2);
-    b.fillStyle(GOLD, 0.35);
+    b.fillStyle(GOLD, 0.60);
     b.fillRect(0, bt + 2, width, 1);
     // Subtle gold corner brackets (echo of the old ornate bar, kept light).
     const cs = 22;
-    b.fillStyle(GOLD, 0.55);
+    b.fillStyle(GOLD, 0.80);
     b.fillRect(0, bt, cs, 2);
     b.fillRect(0, bt, 2, cs);
     b.fillRect(width - cs, bt, cs, 2);
@@ -569,7 +569,7 @@ export default class ResidencyScene extends Phaser.Scene {
       this.dynamic.push(nameTxt);
 
       this.dynamic.push(this.add
-        .text(80, cy + 8, loc.name, { fontFamily: 'monospace', fontSize: '11px', color: '#5a4a3a' })
+        .text(80, cy + 8, loc.name, { fontFamily: 'monospace', fontSize: '11px', color: '#9a8878' })
         .setOrigin(0, 0.5).setDepth(104));
     } else {
       this.dynamic.push(this.add
@@ -586,7 +586,7 @@ export default class ResidencyScene extends Phaser.Scene {
     const div2X = navLeft - 10;     // interactions | navigation
 
     const divG = this.add.graphics().setDepth(102);
-    divG.lineStyle(1, GOLD, 0.22);
+    divG.lineStyle(1, GOLD, 0.40);
     divG.lineBetween(div1X, barTop + 8, div1X, height - 8);
     divG.lineBetween(div2X, barTop + 8, div2X, height - 8);
     this.dynamic.push(divG);
@@ -632,16 +632,15 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
   makeInteractionOption(cx, cy, label, onClick, accent) {
-    const accentHex = accent ? Phaser.Display.Color.IntegerToColor(accent).rgba : GOLD_S;
     const txt = this.add
       .text(cx, cy, label, {
         fontFamily: 'Georgia, serif',
-        fontSize: '15px',
-        color: accentHex,
+        fontSize: '16px',
+        color: CREAM,
       })
       .setOrigin(0.5, 0.5).setDepth(104).setInteractive({ useHandCursor: true });
-    txt.on('pointerover', () => txt.setColor('#f0e0c0'));
-    txt.on('pointerout', () => txt.setColor(accentHex));
+    txt.on('pointerover', () => txt.setColor(GOLD_S));
+    txt.on('pointerout', () => txt.setColor(CREAM));
     txt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); onClick(); });
     this.dynamic.push(txt);
   }
@@ -663,8 +662,8 @@ export default class ResidencyScene extends Phaser.Scene {
     const txt = this.add
       .text(x + 16, y, label, {
         fontFamily: 'Georgia, serif',
-        fontSize: '13px',
-        color: '#a09078',
+        fontSize: '14px',
+        color: '#c8b898',
       })
       .setOrigin(0, 0.5)
       .setDepth(104);
@@ -675,8 +674,8 @@ export default class ResidencyScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .setDepth(105);
 
-    zone.on('pointerover', () => txt.setColor('#f0e0c0'));
-    zone.on('pointerout', () => txt.setColor('#a09078'));
+    zone.on('pointerover', () => txt.setColor(CREAM));
+    zone.on('pointerout', () => txt.setColor('#c8b898'));
     zone.on('pointerdown', (p, lx, ly, e) => {
       e?.stopPropagation();
       onClick();
@@ -922,7 +921,7 @@ export default class ResidencyScene extends Phaser.Scene {
       }).setDepth(973));
 
       const divG = this.add.graphics().setDepth(973);
-      divG.lineStyle(1, GOLD, 0.22);
+      divG.lineStyle(1, GOLD, 0.40);
       divG.lineBetween(rightX, rightY + 30, rightX + rightW, rightY + 30);
       C.push(divG);
 
