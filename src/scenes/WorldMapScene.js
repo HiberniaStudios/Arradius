@@ -82,11 +82,16 @@ export default class WorldMapScene extends Phaser.Scene {
     this.routesG   = this.add.graphics().setDepth(1);
     this.nodeSymG  = this.add.graphics().setDepth(3);
     this.selRing   = this.add.graphics().setDepth(11);
-    this.minimapG  = this.add.graphics().setScrollFactor(0).setDepth(500);
-    this.infoBgG   = this.add.graphics().setScrollFactor(0).setDepth(200);
+    this.minimapG  = this.add.graphics().setDepth(500);
+    this.infoBgG   = this.add.graphics().setDepth(200);
 
     this._buildNodes();
     this._buildChrome();
+    // Two-camera HUD split — must come after all objects are built.
+    // uiCam (zoom=1, no scroll) renders UI chrome; cameras.main renders the world.
+    // camera.ignore() also gates input so interactive UI elements hit-test
+    // against uiCam's fixed transform, not the zooming main camera.
+    this._setupCameras();
     this._setupCamera();
     this._setupDrag();
     this._setupZoom();
@@ -96,9 +101,14 @@ export default class WorldMapScene extends Phaser.Scene {
     this.refreshSelection();
 
     this.cameras.main.fadeIn(500, 6, 4, 12);
+    this.uiCam.fadeIn(500, 6, 4, 12);
     this.inputReadyAt = this.time.now + 500;
     this.input.keyboard.on('keydown-K', () => togglePainterly(this));
-    this.scale.on('resize', () => this._layout(), this);
+    this.scale.on('resize', () => {
+      const { width: W, height: H } = this.cameras.main;
+      this.uiCam?.setSize(W, H);
+      this._layout();
+    }, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
       this.scale.off('resize', this._layout, this));
   }
@@ -554,20 +564,21 @@ export default class WorldMapScene extends Phaser.Scene {
   // ── Chrome / UI ───────────────────────────────────────────────────────────
 
   _buildChrome() {
-    const SF = 0;
+    // No setScrollFactor needed — all chrome objects are assigned to uiCam
+    // (zoom=1, scroll=0) by _setupCameras() and ignored by cameras.main.
     this.titleTxt    = this.add.text(0, 0, 'ARRADIUS', {
       fontFamily: 'Georgia, serif', fontSize: '24px', color: '#f0e3d0',
-    }).setOrigin(0.5, 0).setScrollFactor(SF).setDepth(300);
+    }).setOrigin(0.5, 0).setDepth(300);
 
     this.subtitleTxt = this.add.text(0, 0, 'the War Map · Aridun', {
       fontFamily: 'Georgia, serif', fontStyle: 'italic',
       fontSize: '13px', color: '#b09070',
-    }).setOrigin(0.5, 0).setScrollFactor(SF).setDepth(300);
+    }).setOrigin(0.5, 0).setDepth(300);
 
     this.backBtn = this.add.text(0, 0, '‹ Communications', {
       fontFamily: 'monospace', fontSize: '14px', color: '#ffe8c8',
       backgroundColor: '#1a1010', padding: { x: 10, y: 6 },
-    }).setScrollFactor(SF).setDepth(300).setInteractive({ useHandCursor: true });
+    }).setDepth(300).setInteractive({ useHandCursor: true });
     this.backBtn.on('pointerover', () => this.backBtn.setColor('#ffffff'));
     this.backBtn.on('pointerout',  () => this.backBtn.setColor('#ffe8c8'));
     this.backBtn.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.goHome(); });
@@ -575,38 +586,38 @@ export default class WorldMapScene extends Phaser.Scene {
     this.hintTxt = this.add.text(0, 0,
       'drag to pan  ·  scroll to zoom  ·  Tab to cycle nodes', {
         fontFamily: 'monospace', fontSize: '11px', color: '#6a5a3a',
-      }).setOrigin(0.5, 1).setScrollFactor(SF).setDepth(300);
+      }).setOrigin(0.5, 1).setDepth(300);
 
     // Zoom indicator
     this._zoomTxt = this.add.text(0, 0, '55%', {
       fontFamily: 'monospace', fontSize: '11px', color: '#7a6a4a',
-    }).setOrigin(0, 0).setScrollFactor(SF).setDepth(300);
+    }).setOrigin(0, 0).setDepth(300);
 
     // Info panel
     this.infoName   = this.add.text(0, 0, '', {
       fontFamily: 'Georgia, serif', fontSize: '19px',
-    }).setScrollFactor(SF).setOrigin(0, 0).setDepth(301);
+    }).setOrigin(0, 0).setDepth(301);
     this.infoStatus = this.add.text(0, 0, '', {
       fontFamily: 'monospace', fontSize: '11px',
-    }).setScrollFactor(SF).setOrigin(0, 0).setDepth(301);
+    }).setOrigin(0, 0).setDepth(301);
     this.infoDesc   = this.add.text(0, 0, '', {
       fontFamily: 'Georgia, serif', fontStyle: 'italic',
       fontSize: '13px', color: '#c8b898',
-    }).setScrollFactor(SF).setOrigin(0, 0).setDepth(301);
+    }).setOrigin(0, 0).setDepth(301);
     this.actBtn   = this.add.rectangle(0, 0, 192, 40, 0x2a1e10, 1)
-      .setStrokeStyle(1, 0xc8a050, 0.70).setScrollFactor(SF).setOrigin(0.5).setDepth(301)
+      .setStrokeStyle(1, 0xc8a050, 0.70).setOrigin(0.5).setDepth(301)
       .setInteractive({ useHandCursor: true });
     this.actLabel = this.add.text(0, 0, '', {
       fontFamily: 'monospace', fontSize: '13px', color: '#ffe8c8',
-    }).setScrollFactor(SF).setOrigin(0.5).setDepth(302);
+    }).setOrigin(0.5).setDepth(302);
     this.actBtn.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.act(); });
 
     // Minimap label & click zone
     this.mmLbl  = this.add.text(0, 0, 'ARIDUN', {
       fontFamily: 'monospace', fontSize: '9px', color: '#7a6030',
-    }).setScrollFactor(SF).setOrigin(0.5, 0).setDepth(510);
+    }).setOrigin(0.5, 0).setDepth(510);
     this.mmZone = this.add.rectangle(0, 0, MM_W, MM_H, 0xffffff, 0)
-      .setScrollFactor(SF).setDepth(511).setInteractive({ useHandCursor: true });
+      .setDepth(511).setInteractive({ useHandCursor: true });
     this.mmZone.on('pointerdown', (p) => {
       const mmX = p.x - (this._mmX || 0);
       const mmY = p.y - (this._mmY || 0);
@@ -618,11 +629,11 @@ export default class WorldMapScene extends Phaser.Scene {
     // Music button
     const on0 = this.game.audio ? this.game.audio.enabled : false;
     this._musicCircle = this.add.circle(0, 0, 20, 0xffffff, 0.10)
-      .setStrokeStyle(2, 0xc8a050, 0.50).setScrollFactor(SF).setDepth(300)
+      .setStrokeStyle(2, 0xc8a050, 0.50).setDepth(300)
       .setAlpha(on0 ? 1 : 0.5).setInteractive({ useHandCursor: true });
     this._musicLbl = this.add.text(0, 0, on0 ? '♪' : '♪̷', {
       fontFamily: 'monospace', fontSize: '18px', color: '#ffe8c8',
-    }).setScrollFactor(SF).setOrigin(0.5).setDepth(301);
+    }).setOrigin(0.5).setDepth(301);
     this._musicCircle.on('pointerdown', (p, x, y, e) => {
       e?.stopPropagation();
       if (this.ambient) {
@@ -632,6 +643,42 @@ export default class WorldMapScene extends Phaser.Scene {
         this._musicLbl.setText(on ? '♪' : '♪̷');
       }
     });
+  }
+
+  // ── Camera split ─────────────────────────────────────────────────────────
+  // Must be called after _buildNodes() and _buildChrome() so all objects exist.
+
+  _setupCameras() {
+    const { width: W, height: H } = this.cameras.main;
+
+    // uiCam — overlay camera, zoom always 1, never scrolls.
+    // Phaser's camera.ignore() also gates input hit-testing for that camera,
+    // so UI buttons correctly resolve against uiCam's fixed transform.
+    this.uiCam = this.cameras.add(0, 0, W, H);
+    this.uiCam.transparent = true; // no solid background — composites on top of main
+
+    // World-space objects: scrolls and zooms with cameras.main
+    const worldObjs = [
+      this._tileL, this._tileC, this._tileR,
+      this.routesG, this.nodeSymG, this.selRing,
+      ...(this._regionLabels || []),
+      ...this.nodeObjs.flatMap(({ copies }) =>
+        copies.flatMap(c => [c.glow, c.zone, c.label])),
+    ];
+
+    // Screen-space UI chrome: fixed size, rendered by uiCam only
+    const uiObjs = [
+      this.minimapG, this.infoBgG,
+      this.titleTxt, this.subtitleTxt, this.backBtn, this.hintTxt, this._zoomTxt,
+      this.infoName, this.infoStatus, this.infoDesc,
+      this.actBtn, this.actLabel,
+      this.mmLbl, this.mmZone,
+      this._musicCircle, this._musicLbl,
+    ];
+
+    // Each camera renders — and accepts input for — only its own layer
+    this.cameras.main.ignore(uiObjs);
+    this.uiCam.ignore(worldObjs);
   }
 
   // ── Audio ─────────────────────────────────────────────────────────────────
@@ -752,12 +799,14 @@ export default class WorldMapScene extends Phaser.Scene {
   goHome() {
     // Always return to the Communications room — that's where the map is accessed from.
     this.cameras.main.fadeOut(400, 6, 4, 12);
+    this.uiCam?.fadeOut(400, 6, 4, 12);
     this.cameras.main.once('camerafadeoutcomplete', () =>
       this.scene.start('ResidencyScene', { startRoom: 'comms' }));
   }
 
   goTo(scene) {
     this.cameras.main.fadeOut(400, 6, 4, 12);
+    this.uiCam?.fadeOut(400, 6, 4, 12);
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(scene));
   }
 
