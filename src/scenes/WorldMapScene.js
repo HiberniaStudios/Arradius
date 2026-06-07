@@ -286,18 +286,8 @@ export default class WorldMapScene extends Phaser.Scene {
       g.lineBetween(x0 + 4, ty, x0 + 14, ty); g.lineBetween(x0 + W - 4, ty, x0 + W - 14, ty);
     }
 
-    // East-west edge fade — very subtle, just enough to blend the tile seam.
-    // Each tile edge gets a 1.5% width fade; adjacent tiles' fades overlap
-    // at the seam and cancel each other's hard edge.
-    const fadeW = W * 0.015;
-    for (let i = 0; i < 16; i++) {
-      const t = i / 16;
-      const a = (1 - t) * 0.18;
-      const w = (1 - t) * fadeW;
-      g.fillStyle(0x060402, a);
-      g.fillRect(x0,           0, w, H); // left edge
-      g.fillRect(x0 + W - w,   0, w, H); // right edge
-    }
+    // No edge fade — the cartographic border lines at x=0 and x=W already
+    // provide a natural visual seam that reads as a map frame, not a glitch.
   }
 
   _makeRegionLabels() {
@@ -455,7 +445,7 @@ export default class WorldMapScene extends Phaser.Scene {
   _setupCamera() {
     // No setBounds — we manage wrapping manually in update()
     const cam = this.cameras.main;
-    cam.zoom = 0.55; // start zoomed out a bit to see context
+    cam.zoom = 0.82; // comfortable starting zoom — shows region context without feeling tiny
     // Centre on Saltspire
     this._setCamWorld(NODES[0].wx, NODES[0].wy);
   }
