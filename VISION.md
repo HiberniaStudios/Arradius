@@ -142,6 +142,31 @@ the Shadmen need to build with. Restoration is visible at every scale too: bloom
 glow returning to dark rockbeds, surface life reappearing, Warren walls that can
 be worked again. This is what the ecology mechanic measures and rewards.
 
+**Sustainable yield — the core tension.** The Shadmen's traditional Aurun
+collection is not simply "extraction is bad." Followed at the right pace, a
+route replenishes — the bloom returns, the ecology holds, the rock stays healthy.
+The Shadmen have learned this yield through generations of practice: empirical
+knowledge, not mysticism, the same way traditional fishing communities understood
+stock health long before anyone gave it a formal name.
+
+Over-collection — even from wake sites, even without drilling — thins the bloom
+chemistry before it can recover. Stress the route enough and the Sleeper shifts.
+Once it shifts, the bloom follows it, and the old site begins to die. The process
+is slower than Vorrin's drilling but the endpoint is the same.
+
+Vorrin's crime is not merely that they extract — it is that they have no
+incentive to care about sustainable yield. They are on Aridun to meet a Korinth
+contract, not to steward a world. They will strip it and leave. This is the
+tragedy of the commons: maximum short-term extraction is rational for an actor
+who will not bear the long-term cost.
+
+The player's ecology game is finding the sustainable yield for each route —
+balancing the war's resource needs against the ecology's carrying capacity. Too
+little and the campaign cannot be funded. Too much and the player is doing
+Vorrin's work at a slower pace. The Shadmen know where the line is for each
+route they've worked. Whether Eren trusts that knowledge — and whether the war's
+pressure forces him past it anyway — is where the mechanic gets its teeth.
+
 Beneath the hard rockbed is a deeper geological layer — older, softer, more
 friable; compressed over vast timescales but yielding under enough force. The
 hard surface layer is the ceiling of this world. The Sleepers live below it
