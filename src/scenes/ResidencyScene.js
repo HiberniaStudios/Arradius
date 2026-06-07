@@ -207,8 +207,14 @@ export default class ResidencyScene extends Phaser.Scene {
     super('ResidencyScene');
   }
 
+  init(data) {
+    // Accept an optional startRoom from scenes that navigate back here
+    // (e.g. WorldMapScene returns to 'comms').
+    this._startRoom = (data && data.startRoom) || 'hall';
+  }
+
   create() {
-    this.current = 'hall';
+    this.current = this._startRoom || 'hall';
     this.sayIndex = 0;
     this.dynamic = [];
     this.dialogueObjects = [];
@@ -1483,6 +1489,34 @@ export default class ResidencyScene extends Phaser.Scene {
       .setDisplaySize(pr * 3.0, pr * 3.0).setDepth(base + 4);
 
     const sweep = this.add.graphics().setDepth(base + 5);
+
+    // Hover label — "Study the map  →"
+    const mapLabel = this.add
+      .text(x, y + R + 14, 'Study the map  →', {
+        fontFamily: 'Georgia, serif', fontSize: '14px', color: '#aee4ff',
+      })
+      .setOrigin(0.5, 0).setDepth(base + 6).setAlpha(0);
+
+    // Transparent circular hit zone over the whole disc.
+    const mapZone = this.add
+      .circle(x, y, R, 0xffffff, 0)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(base + 7);
+
+    mapZone.on('pointerover', () => {
+      glow.setAlpha((overlay ? 0.12 : 0.22) + 0.14);
+      this.tweens.add({ targets: mapLabel, alpha: 1, duration: 200 });
+    });
+    mapZone.on('pointerout', () => {
+      glow.setAlpha(overlay ? 0.12 : 0.22);
+      this.tweens.add({ targets: mapLabel, alpha: 0, duration: 200 });
+    });
+    mapZone.on('pointerdown', (p, lx, ly, e) => {
+      e?.stopPropagation();
+      this.goTo('WorldMapScene');
+    });
+
+    this.dynamic.push(mapLabel, mapZone);
     this.commsAnim = { planet, mask, ov, glow, sweep, x, y, R, pr, overlay, angle: -Math.PI / 2 };
   }
 
