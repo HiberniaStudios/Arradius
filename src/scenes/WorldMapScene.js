@@ -447,7 +447,8 @@ export default class WorldMapScene extends Phaser.Scene {
   _setupCamera() {
     // No setBounds — we manage wrapping manually in update()
     const cam = this.cameras.main;
-    cam.zoom = 1.20; // street-level zoom — nodes readable, scroll out to see planet
+    // Start at 1.2 but never below the full-screen floor
+    cam.zoom = Math.max(1.20, cam.height / WORLD_H);
     // Centre on Saltspire
     this._setCamWorld(NODES[0].wx, NODES[0].wy);
   }
@@ -499,32 +500,34 @@ export default class WorldMapScene extends Phaser.Scene {
 
   _setupDrag() {
     let startX = 0, startY = 0, camX = 0, camY = 0;
+    let pointerHeld = false; // MUST be true (button down) before any panning
 
     this.input.on('pointerdown', (p) => {
+      pointerHeld = true;
+      this.isDrag = false;
       startX = p.x; startY = p.y;
       camX   = this.cameras.main.scrollX;
       camY   = this.cameras.main.scrollY;
-      this.isDrag = false;
     });
 
     this.input.on('pointermove', (p) => {
-      const cam = this.cameras.main;
-      const dx  = p.x - startX;
-      const dy  = p.y - startY;
+      if (!pointerHeld) return; // no button held → no pan, ever
+      const dx = p.x - startX;
+      const dy = p.y - startY;
       if (!this.isDrag && Math.sqrt(dx * dx + dy * dy) < DRAG_THR) return;
       this.isDrag = true;
 
-      // Grab-and-drag: the world point you clicked stays under the cursor.
-      // Drag in any direction and the map follows — like sliding a paper map.
+      const cam = this.cameras.main;
       const wdx = dx / cam.zoom;
       const wdy = dy / cam.zoom;
-
+      // Grab-and-drag: the world follows the cursor (like sliding a paper map).
       cam.scrollX = ((camX - wdx) % WORLD_W + WORLD_W) % WORLD_W;
       cam.scrollY = Phaser.Math.Clamp(camY - wdy, 0,
         Math.max(0, WORLD_H - cam.height / cam.zoom));
     });
 
     this.input.on('pointerup', () => {
+      pointerHeld = false;
       this.time.delayedCall(20, () => { this.isDrag = false; });
     });
   }
