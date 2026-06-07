@@ -655,7 +655,7 @@ export default class ResidencyScene extends Phaser.Scene {
    *  and a great circular star-map screen with a control console at right.
    *  Procedural shape reference for the painted art to come. */
   sceneComms(g, width, height) {
-    const floorY = Math.round(height * 0.60);
+    const floorY = Math.round(height * 0.67);
     const cx = width / 2;
 
     // Back wall — warm sandstone, washed warmer toward the crystal (left).
@@ -696,12 +696,12 @@ export default class ResidencyScene extends Phaser.Scene {
     this.banner(g, Math.round(width * 0.165), Math.round(height * 0.10), Math.round(height * 0.34), 1.05);
     this.commsCrystal(g, width * 0.05, height * 0.36, height * 0.36);
 
-    // RIGHT — the great circular star-map screen + console.
+    // RIGHT — the great circular star-map screen, with a control console below.
     const sx = Math.round(width * 0.70);
-    const sy = Math.round(height * 0.34);
-    const R = Math.round(height * 0.27);
-    this.commsConsole(g, sx, floorY, R);
+    const sy = Math.round(height * 0.31);
+    const R = Math.round(height * 0.245);
     this.commsScreen(g, sx, sy, R);
+    this.commsConsole(g, sx, sy + R, floorY, R);
   }
 
   commsPilaster(g, x, floorY) {
@@ -795,7 +795,9 @@ export default class ResidencyScene extends Phaser.Scene {
     ov.lineStyle(2.5, 0x2e1d0c, 0.55); ov.strokeCircle(x, y, pr - 1);                     // dark rim
     this.addGlow(x, y, pr * 3.2, 0xffb24a, 0.22);                                         // atmosphere
 
-    const sweep = this.add.graphics().setDepth(-84);
+    // Sweep sits between the screen (-90) and the planet (-86) so the planet
+    // occludes it — the beam appears to pass behind Arradius.
+    const sweep = this.add.graphics().setDepth(-88);
     this.commsAnim = { planet, mask, ov, sweep, x, y, R, pr, angle: -Math.PI / 2 };
   }
 
@@ -821,25 +823,46 @@ export default class ResidencyScene extends Phaser.Scene {
     g.lineBetween(a.x, a.y, a.x + Math.cos(a.angle) * r, a.y + Math.sin(a.angle) * r);
   }
 
-  commsConsole(g, x, floorY, R) {
-    const pw = R * 1.5;
-    const ch = Math.round(R * 0.42);
-    const top = floorY - ch;
-    g.fillStyle(0x3a2c1c, 1);                                  // angled console body
+  /** Control console beneath the star-map. topY = the screen's bottom edge. */
+  commsConsole(g, x, topY, floorY, R) {
+    const deskTop = topY + Math.round(R * 0.10);
+    const ch = floorY - deskTop;
+    const topHW = R * 0.5;   // back (upper) half-width
+    const botHW = R * 0.9;   // front (lower) half-width
+    // Floor shadow.
+    g.fillStyle(0x120c06, 0.4);
+    g.fillEllipse(x, floorY + 3, botHW * 2.3, Math.max(6, ch * 0.32));
+    // Support neck up to the screen frame.
+    g.fillStyle(0x2e2114, 1);
+    g.fillRect(x - R * 0.1, topY, R * 0.2, deskTop - topY + 2);
+    // Angled desk body (narrow at back, wide at front).
+    g.fillStyle(0x3a2c1c, 1);
     g.fillPoints([
-      { x: x - pw * 0.36, y: top }, { x: x + pw * 0.36, y: top },
-      { x: x + pw * 0.5, y: floorY }, { x: x - pw * 0.5, y: floorY },
+      { x: x - topHW, y: deskTop }, { x: x + topHW, y: deskTop },
+      { x: x + botHW, y: floorY }, { x: x - botHW, y: floorY },
     ], true);
-    g.fillStyle(0x5a4632, 1);                                  // lit top lip
-    g.fillRect(x - pw * 0.36, top, pw * 0.72, 4);
-    [-1, 0, 1].forEach((i) => {                                // three amber panels
-      const px = x + i * pw * 0.24;
-      const w = pw * 0.2, hh = ch * 0.5;
-      g.fillStyle(0x14100a, 1); g.fillRect(px - w / 2, top + 6, w, hh);
-      g.fillStyle(0xc8922a, 0.8);
-      for (let r = 0; r < 3; r++) g.fillRect(px - w / 2 + 3, top + 9 + r * (hh / 3), w - 6, 1.5);
-      g.fillStyle(0xffd24a, 0.9); g.fillCircle(px + w / 2 - 4, top + 9, 1.6);
-    });
+    g.fillStyle(0x5a4632, 1); g.fillRect(x - topHW, deskTop, topHW * 2, 3); // lit lip
+    g.fillStyle(0x241a10, 1);                                              // front shadow band
+    g.fillPoints([
+      { x: x - botHW, y: floorY - ch * 0.16 }, { x: x + botHW, y: floorY - ch * 0.16 },
+      { x: x + botHW, y: floorY }, { x: x - botHW, y: floorY },
+    ], true);
+    // Recessed control board with three amber readout clusters.
+    const bw = topHW * 1.7;
+    const by0 = deskTop + Math.round(ch * 0.2);
+    const bh = Math.round(ch * 0.52);
+    g.fillStyle(0x0e0a06, 1); g.fillRect(x - bw / 2, by0, bw, bh);
+    g.fillStyle(0x2a1e12, 1); g.fillRect(x - bw / 2, by0 - 2, bw, 2);
+    for (let c = 0; c < 3; c += 1) {
+      const cxp = x - bw / 2 + (bw * (c + 0.5)) / 3;
+      const cw = bw / 3 - 6;
+      g.fillStyle(0xc8922a, 0.85);
+      [0, 1, 2].forEach((r) =>
+        g.fillRect(cxp - cw / 2, by0 + 6 + (r * (bh - 12)) / 3, cw * (0.55 + 0.45 * ((c + r) % 2)), 1.6));
+      g.fillStyle(c === 1 ? 0x6ad0ff : 0xffd24a, 0.9);
+      g.fillCircle(cxp + cw / 2 - 1, by0 + 5, 1.8);
+    }
+    this.addGlow(x, by0 + bh * 0.4, R * 1.3, 0xc8922a, 0.13);
   }
 
   column(g, x, top, floorY, depth = 0, scale = 1, litDir = 1) {
