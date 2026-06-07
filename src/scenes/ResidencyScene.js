@@ -32,8 +32,6 @@ const LOCATIONS = {
       '”Calder has kept faith with Aridun for sixty years. Korinth will hear that argument — I will make them hear it.”',
       '”Watch Halix. Watch our own halls. Not every danger wears Vorrin\'s colours.”',
     ],
-    // The throne hall is the deeper hub; the private/sacred rooms lie past it.
-    exits: ['veil', 'solar', 'quarters'],
   },
   comms: {
     name: 'The Communications Room',
@@ -42,10 +40,9 @@ const LOCATIONS = {
     feature: 'comms',
     flavor: 'The intelligence feeds run day and night. Halix watches everything.',
     say: [
-      '"Vorrin\'s boring rigs moved north-east overnight. Three new sites on the Keth rockbed. Korinth has not acknowledged our formal objection."',
-      '"Every position has a counter, my lord. I am already three moves ahead of this one."',
+      '”Vorrin\'s boring rigs moved north-east overnight. Three new sites on the Keth rockbed. Korinth has not acknowledged our formal objection.”',
+      '”Every position has a counter, my lord. I am already three moves ahead of this one.”',
     ],
-    exits: ['war'],
     actions: [{ label: 'Study the map', scene: 'WorldMapScene' }],
   },
   war: {
@@ -113,18 +110,20 @@ const LOCATIONS = {
 // player walks the palace by clicking doors, not picking from a menu. Edit this
 // to re-route the map; `forward` is the central arch, `left`/`right` the side
 // doors, `back` the way you came.
+// Single source of truth for spatial adjacency. renderRoomBar derives its
+// navigation choices from this table only — no shortcuts to non-adjacent rooms.
+// 'back' is the way you came; all other keys are forward/side exits.
 const EXITS = {
-  // Four wings open off the entrance hall; the throne (Court) lies beyond the arch.
-  hall: { left: 'yard', right: 'infirmary', forward: 'court' }, // procedural fallback (3 exits; comms+deck only via PNG)
-  court: { back: 'hall' },
-  yard: { back: 'hall' },
+  hall:      { left: 'yard', right: 'infirmary', forward: 'court' }, // comms+deck via PNG door hotspots
+  court:     { back: 'hall', left: 'veil', right: 'solar', forward: 'quarters' },
+  yard:      { back: 'hall' },
   infirmary: { back: 'hall' },
-  comms: { back: 'hall', forward: 'war' },
-  war:   { back: 'comms' },
-  deck:  { back: 'hall' },
-  veil:     { back: 'court' },   // sacred sanctum — past the throne
-  solar:    { back: 'court' },   // Sela's sitting room — past the throne
-  quarters: { back: 'court' },   // private apartments — past the throne
+  comms:     { back: 'hall', forward: 'war' },
+  war:       { back: 'comms' },
+  deck:      { back: 'hall' },
+  veil:      { back: 'court' },
+  solar:     { back: 'court' },
+  quarters:  { back: 'court' },
 };
 
 export default class ResidencyScene extends Phaser.Scene {
@@ -494,10 +493,15 @@ export default class ResidencyScene extends Phaser.Scene {
     (loc.actions || []).forEach((a) =>
       choices.push({ label: a.label, onClick: () => this.goTo(a.scene) })
     );
-    (loc.exits || []).forEach((key) =>
-      choices.push({ label: `${LOCATIONS[key].name}  ›`, onClick: () => this.travelTo(key) })
-    );
-    const back = (EXITS[this.current] && EXITS[this.current].back) || 'hall';
+    // Forward/side exits come exclusively from the EXITS adjacency table.
+    const roomExits = EXITS[this.current] || {};
+    ['forward', 'left', 'right', 'leftInner', 'rightInner'].forEach((dir) => {
+      if (roomExits[dir]) {
+        const key = roomExits[dir];
+        choices.push({ label: `${LOCATIONS[key].name}  ›`, onClick: () => this.travelTo(key) });
+      }
+    });
+    const back = roomExits.back || 'hall';
     choices.push({ label: `‹ ${LOCATIONS[back].name}`, onClick: () => this.travelTo(back) });
 
     const itemH = Math.min(28, (bh - 8) / Math.max(choices.length, 1));
@@ -608,24 +612,29 @@ export default class ResidencyScene extends Phaser.Scene {
       court: -90, comms: -100, veil: 10, solar: 80,
       infirmary: -80, yard: 80,
     };
+    // Some rooms draw their floor at a different fraction than the global 0.60.
+    const floorFracs = { comms: 0.67 };
+    const actualFloorY = floorFracs[loc.feature]
+      ? Math.round(this.scale.height * floorFracs[loc.feature])
+      : floorY;
     const offX = offsets[loc.feature] ?? 0;
     const fx = cx + offX;
-    const s = Phaser.Math.Clamp(floorY / 360, 0.8, 1.4);
+    const s = Phaser.Math.Clamp(actualFloorY / 360, 0.8, 1.4);
 
     const g = this.add.graphics().setDepth(10);
-    this.drawCharacterFigure(g, fx, floorY, loc.accent, s);
+    this.drawCharacterFigure(g, fx, actualFloorY, loc.accent, s);
     this.dynamic.push(g);
 
     const figH = 110 * s;
     const zone = this.add
-      .zone(fx, floorY - figH / 2, 60 * s, figH)
+      .zone(fx, actualFloorY - figH / 2, 60 * s, figH)
       .setInteractive({ useHandCursor: true })
       .setDepth(11);
 
     let tooltip = null;
     zone.on('pointerover', () => {
       tooltip = this.add
-        .text(fx, floorY - figH - 6, loc.who, {
+        .text(fx, actualFloorY - figH - 6, loc.who, {
           fontFamily: 'monospace',
           fontSize: '12px',
           color: CREAM,
