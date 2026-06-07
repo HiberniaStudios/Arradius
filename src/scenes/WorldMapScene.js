@@ -41,7 +41,7 @@ const NODES = [
     key: 'saltspire', name: 'Saltspire', faction: 'calder', type: 'city',
     wx: 580, wy: 920,
     desc: 'The capital of Aridun. Seat of House Calder — your Residency.',
-    action: 'home', label: 'Return to the Residency',
+    action: 'home', label: '‹ Return to Communications',
   },
   {
     key: 'hollow', name: "Tamir's Hollow", faction: 'shadmen', type: 'hollow',
@@ -570,7 +570,7 @@ export default class WorldMapScene extends Phaser.Scene {
       fontSize: '13px', color: '#b09070',
     }).setOrigin(0.5, 0).setScrollFactor(SF).setDepth(300);
 
-    this.backBtn = this.add.text(0, 0, '‹ Residency', {
+    this.backBtn = this.add.text(0, 0, '‹ Communications', {
       fontFamily: 'monospace', fontSize: '14px', color: '#ffe8c8',
       backgroundColor: '#1a1010', padding: { x: 10, y: 6 },
     }).setScrollFactor(SF).setDepth(300).setInteractive({ useHandCursor: true });
@@ -755,7 +755,12 @@ export default class WorldMapScene extends Phaser.Scene {
     });
   }
 
-  goHome() { this.goTo('ResidencyScene'); }
+  goHome() {
+    // Always return to the Communications room — that's where the map is accessed from.
+    this.cameras.main.fadeOut(400, 6, 4, 12);
+    this.cameras.main.once('camerafadeoutcomplete', () =>
+      this.scene.start('ResidencyScene', { startRoom: 'comms' }));
+  }
 
   goTo(scene) {
     this.cameras.main.fadeOut(400, 6, 4, 12);

@@ -207,8 +207,14 @@ export default class ResidencyScene extends Phaser.Scene {
     super('ResidencyScene');
   }
 
+  init(data) {
+    // Accept an optional startRoom from scenes that navigate back here
+    // (e.g. WorldMapScene returns to 'comms').
+    this._startRoom = (data && data.startRoom) || 'hall';
+  }
+
   create() {
-    this.current = 'hall';
+    this.current = this._startRoom || 'hall';
     this.sayIndex = 0;
     this.dynamic = [];
     this.dialogueObjects = [];
