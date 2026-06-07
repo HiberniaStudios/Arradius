@@ -134,8 +134,8 @@ const EXITS = {
 
 const CODEX_LORE = [
   {
-    id: 'aridun', title: 'Aridun',
-    body: 'Aridun is not a sand world. It is a rock world. Vast platforms of ancient hard rockbed cover most of its surface — flat, dramatic, permanent. The dune seas fill the low ground between formations; they are almost cosmetic by comparison. What matters is the rock.\n\nAurun blooms surface through porous sections of rock face, not through sand. To find blooms, you read the rock. Below the hard surface lies a softer friable layer — the Sleeper domain. The Shadmen carve their Hollows into the hard layer, touching the deep layer only at thinned junction points.\n\nHouse Calder has held this world for two generations. The decree that takes it has just arrived.',
+    id: 'aridun', title: 'Aridun · Arradius',
+    body: 'This world carries two names, and which you use says whose side you\'re on.\n\nArradius — the Imperial registry name. What appears on Korinth\'s charts, on the fief decree, on House Vorrin\'s drilling licences. A designation, a source of Aurun, an administrative unit in someone else\'s ledger.\n\nAridun — what the Shadmen call it. What those born here call it. A name that predates any Korinthian charter by generations. House Calder learned to use both.\n\nThe world itself is not a sand world. It is a rock world. Vast platforms of ancient hard rockbed cover most of its surface — flat, dramatic, permanent. The dune seas fill the low ground between formations; they are almost cosmetic by comparison. What matters is the rock.\n\nAurun blooms surface through porous sections of rock face, not through sand. To find blooms, you read the rock. Below the hard surface lies a softer friable layer — the Sleeper domain. The Shadmen carve their Hollows into the hard layer, touching the deep layer only at thinned junction points.',
   },
   {
     id: 'sleepers', title: 'The Sleepers',
