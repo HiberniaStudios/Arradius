@@ -227,16 +227,27 @@ each knowing the other understood both halves of it.
 She bore Eren knowing exactly what she was doing, and has carried that knowledge
 every day since.
 
-**Her specific knowledge:** The Veil has mapped Sleeper migration routes for over
-a century. Sela knows that Vorrin's extraction method — drilling directly into
-Aurun bloom sites, pulling before the Sleeper has moved on — permanently disrupts
-the route. The Sleepers don't return to disrupted ground. The bloom follows the
-Sleeper. The northern routes through Aridun — the ones that pass beneath Tamir's
-Hollow and three other Shadmen communities — will be gone within a generation of
-Vorrin extraction at full industrial scale. The blooms dry up. The northern
-Hollows become uninhabitable. This is not distant or abstract: it has a specific
-geography, a specific timeline, and specific people it destroys. Sela is possibly
-the only person in Saltspire who can see the full shape of it.
+**Her specific knowledge:** The destruction operates on two timescales and Sela
+understands both. The immediate crisis: Vorrin's boring equipment drills through
+the hard rockbed plains to reach the Aurun concentration below. The rockbed is
+load-bearing for the Hollows carved into it. When a formation is drilled, the
+structural integrity of nearby Hollow chambers is compromised; the narrower
+Warren connections between Hollows collapse first. Shadmen communities built into
+those formations are destroyed. People are dying in the collapses now. Vorrin
+knows. Whether the deaths are acceptable collateral damage or a convenient means
+of clearing the rock for more drilling sites is something House Korinth has not
+asked about.
+
+The generational crisis: drilling into active bloom sites — before the Sleeper
+has finished its passage — permanently breaks the deep channel. The Sleepers
+don't return to disrupted ground. The bloom follows the Sleeper. The Veil has
+mapped the northern routes for over a century; Sela can project the timeline with
+precision. The northern rockbed communities — including Tamir's Hollow — will be
+uninhabitable within a generation as the blooms go dark and the Sleeper network
+contracts south.
+
+Sela is the only person in Saltspire who holds both timescales together. The
+court sees a political dispute. She sees an active killing and its long shadow.
 
 **Her room (the Solar):** A private sitting room adjacent to the Court.
 Distinct from Ysolde's Sanctum — where Ysolde's room is ceremony and shadow,
@@ -391,14 +402,19 @@ The systems are modelled on Cryo's _Dune_, refit to Aridun:
 - **Ecology** — green the desert over time; a visible, consequential, slow
   transformation of the world.
 - **Aurun & sensitivity** — Aurun is a secretion left by the Sleepers in their
-  passage channels; it is not mined but followed — collected from the rock in a
-  Sleeper's wake, never taken from an active site. Vorrin's extraction drills
-  into active bloom sites before the Sleeper has finished, which permanently
-  disrupts the route. Aurun has material properties (structural, luminescent)
-  that make it valuable to Korinth's civilization — it is not a narcotic or
+  passage channels; it is not mined but followed — collected from the rockbed
+  surface in a Sleeper's wake, never extracted from an active site. The Shadmen
+  know the routes and the timing; following requires both. Vorrin bypasses this
+  entirely: heavy boring equipment driven through the hard rockbed reaches the
+  Aurun deposits below — faster, industrial, destructive. The drilling collapses
+  the Hollows and Warrens carved into the same rock, killing the communities
+  inside. It also breaks the deep Sleeper channels, which don't reform; the
+  routes contract, the blooms follow south, the northern rockbeds die over
+  generations. Aurun itself has material properties (structural, luminescent)
+  that make it valuable to Korinth's civilization — not a narcotic or
   life-extender. Contact with raw Aurun in the deep passages deepens Eren's
-  Veil-inherited sensitivity to Aridun's patterns — the ability was latent in
-  him by birth; the Aurun exposure sharpens it into something he can use.
+  Veil-inherited sensitivity to Aridun's patterns — latent in him by birth; the
+  exposure sharpens it into something he can use.
 - **Side-scrolling expeditions** — _our addition_: the travel and Warren-delving
   between all of the above, played on foot, where the world is felt.
 
@@ -560,8 +576,13 @@ A three-house triangle, in Herbert's tradition:
 
 - **House Korinth** — the Imperial throne. Distant, decadent, and addicted
   to Aurun. Owns the registry name _Arradius_.
-- **House Vorrin** — the cruel, industrial house working Aridun for Aurun.
-  Quietly favoured by the throne.
+- **House Vorrin** — the industrial house working Aridun for Aurun. Quietly
+  favoured by the throne. Their method: heavy boring equipment driven through the
+  hard rockbed plains to reach Aurun deposits below. The rockbed is structural —
+  the Shadmen build their Hollows into it. Vorrin's drilling destabilises
+  formations, collapses Warrens, destroys communities. Shadmen are dying in the
+  collapses. Whether this is accepted collateral damage or a convenient feature
+  is a question House Korinth has not asked.
 - **House Calder** — Eren's house, newly handed Aridun and walking into a trap.
   The hero's house, caught between the throne and the Vorrin.
 
