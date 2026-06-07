@@ -22,7 +22,7 @@ const BACKDROPS = { hall: 'hallBg', comms: 'commsBg' };
 
 const LOCATIONS = {
   hall: {
-    name: 'The Residency',
+    name: 'The Grand Hallway',
     flavor:
       'The great hall of House Calder at Saltspire. Lamplight and slow dust. Your house has held this world for two generations — and the decree that takes it has just arrived.',
     feature: 'hall',
@@ -36,8 +36,6 @@ const LOCATIONS = {
       '”Calder has kept faith with Aridun for sixty years. Korinth will hear that argument — I will make them hear it.”',
       '”Watch Halix. Watch our own halls. Not every danger wears Vorrin\'s colours.”',
     ],
-    // The throne hall is the deeper hub; the private/sacred rooms lie past it.
-    exits: ['veil', 'solar', 'quarters'],
   },
   comms: {
     name: 'The Communications Room',
@@ -46,10 +44,9 @@ const LOCATIONS = {
     feature: 'comms',
     flavor: 'The intelligence feeds run day and night. Halix watches everything.',
     say: [
-      '"Vorrin\'s boring rigs moved north-east overnight. Three new sites on the Keth rockbed. Korinth has not acknowledged our formal objection."',
-      '"Every position has a counter, my lord. I am already three moves ahead of this one."',
+      '”Vorrin\'s boring rigs moved north-east overnight. Three new sites on the Keth rockbed. Korinth has not acknowledged our formal objection.”',
+      '”Every position has a counter, my lord. I am already three moves ahead of this one.”',
     ],
-    exits: ['war'],
     actions: [{ label: 'Study the map', scene: 'WorldMapScene' }],
   },
   war: {
@@ -117,18 +114,92 @@ const LOCATIONS = {
 // player walks the palace by clicking doors, not picking from a menu. Edit this
 // to re-route the map; `forward` is the central arch, `left`/`right` the side
 // doors, `back` the way you came.
+// Single source of truth for spatial adjacency. renderRoomBar derives its
+// navigation choices from this table only — no shortcuts to non-adjacent rooms.
+// 'back' is the way you came; all other keys are forward/side exits.
 const EXITS = {
-  // Four wings open off the entrance hall; the throne (Court) lies beyond the arch.
-  hall: { left: 'yard', right: 'infirmary', forward: 'court' }, // procedural fallback (3 exits; comms+deck only via PNG)
-  court: { back: 'hall' },
-  yard: { back: 'hall' },
+  hall:      { left: 'yard', right: 'infirmary', forward: 'court' }, // comms+deck via PNG door hotspots
+  court:     { back: 'hall', left: 'veil', right: 'solar', forward: 'quarters' },
+  yard:      { back: 'hall' },
   infirmary: { back: 'hall' },
-  comms: { back: 'hall', forward: 'war' },
-  war:   { back: 'comms' },
-  deck:  { back: 'hall' },
-  veil:     { back: 'court' },   // sacred sanctum — past the throne
-  solar:    { back: 'court' },   // Sela's sitting room — past the throne
-  quarters: { back: 'court' },   // private apartments — past the throne
+  comms:     { back: 'hall', forward: 'war' },
+  war:       { back: 'comms' },
+  deck:      { back: 'hall' },
+  veil:      { back: 'court' },
+  solar:     { back: 'court' },
+  quarters:  { back: 'court' },
+};
+
+// ─── Codex data ───────────────────────────────────────────────────────────────
+
+const CODEX_LORE = [
+  {
+    id: 'aridun', title: 'Aridun',
+    body: 'Aridun is not a sand world. It is a rock world. Vast platforms of ancient hard rockbed cover most of its surface — flat, dramatic, permanent. The dune seas fill the low ground between formations; they are almost cosmetic by comparison. What matters is the rock.\n\nAurun blooms surface through porous sections of rock face, not through sand. To find blooms, you read the rock. Below the hard surface lies a softer friable layer — the Sleeper domain. The Shadmen carve their Hollows into the hard layer, touching the deep layer only at thinned junction points.\n\nHouse Calder has held this world for two generations. The decree that takes it has just arrived.',
+  },
+  {
+    id: 'sleepers', title: 'The Sleepers',
+    body: 'Great creatures of the deep rock. They move through the softer friable layer beneath the rockbed, displacing rather than boring — the stone yields to them.\n\nWhat they leave behind is a network of void passages, traced with Aurun residue. The network is the ecology: it carries moisture to the surface, structures the food web, maintains the mechanical integrity of the rock above. Destroy the network and you destroy the world.',
+  },
+  {
+    id: 'aurun', title: 'Aurun',
+    body: 'A substance deposited by the Sleepers in their passage channels — accumulating in the deep rock over generations of repeated transit, and surfacing as a luminescent bloom through porous sections of the rockbed after a Sleeper has passed. Structural and luminescent. Valuable to Korinth\'s civilization as a material — not a narcotic, not a life-extender. A resource, and a consequential one.\n\nThe Shadmen collect the surface bloom from the rockbed in a Sleeper\'s wake — reading the routes, timing the seasons, respecting the rate at which each bloom can recover. Collect too fast, even from the wake, and the bloom thins before it replenishes; stress a route enough and the Sleeper shifts. Once it shifts, the bloom follows it and the old site begins to die. This is the knowledge the Shadmen hold.\n\nVorrin bypasses it entirely. Their boring equipment drives through the hard rockbed to reach the concentrated deep deposits directly — faster, industrial, and permanently destructive. The drilling collapses Sleeper channels and kills the ecology at every scale simultaneously.\n\nContact with the raw, concentrated form in the deep passages is rare outside the channels themselves. Those exposed to it describe a sharpening — a sensitivity to the deep rock\'s movements. The Veil studies this carefully.',
+  },
+  {
+    id: 'seir', title: 'The Seir',
+    body: 'An ancient text — ecological record or prophecy, depending on who is reading it. Its core claim: that when the northern blooms fail and the deep channels close, one who walks both the surface world and the rock-world will open the third path.\n\nTwo camps contest what this means. The believers hold that the text describes a specific person — a lord\'s heir, born of Aridun, already present. The skeptics say it describes a quality and a moment, not an individual, and that pinning it to the noble heir who needs the Shadmen most is exactly the mistake desperation produces.\n\nMother Ysolde reads it as prophecy. The "third path" — between extraction and preservation — has not yet been named by either side.',
+  },
+  {
+    id: 'calder', title: 'House Calder',
+    body: 'Granted the Aridun fief sixty years ago — a consolidation prize when the empire needed a reliable presence in a difficult seat.\n\nThe grandfather made first contact with the Shadmen and established a relationship of cautious respect. Two generations have held the world carefully: no mass extraction, no drilling, Aurun gathered as it comes. The fief has now been revoked in favour of House Vorrin.',
+  },
+  {
+    id: 'vorrin', title: 'House Vorrin',
+    body: 'The new grantees. They arrived with boring rigs and have been drilling directly into the hard rockbed — the fastest route to Aurun deposits.\n\nThe drilling collapses Sleeper passages immediately, destroying travel networks built over generations and, in some cases, killing Shadmen who depend on them. The ecology cannot recover at this pace.',
+  },
+  {
+    id: 'shadmen', title: 'The Shadmen',
+    body: 'The indigenous people of the rockbed. They build their communities — Hollows — within the hard stone, navigating via Sleeper-adjacent passages. Their material culture is shaped by the rock: they know it as living infrastructure, not raw resource.\n\nFirst contact with House Calder was made two generations ago. The relationship has been careful and, on both sides, sustained. Vorrin\'s drilling threatens everything they built.',
+  },
+  {
+    id: 'korinth', title: 'Korinth',
+    body: 'The empire that granted and has now revoked the Aridun fief. Its interests are material and distant.\n\nThe formal Calder objection to Vorrin\'s drilling methods has not been acknowledged. Korinth does not appear to be listening.',
+  },
+  {
+    id: 'saltspire', title: 'Saltspire',
+    body: 'The capital city of Aridun and the seat of House Calder\'s rule. Built into a coastal rockbed formation — carved from the same ancient hard stone that the boring rigs are now beginning to reach from below.\n\nWithin Saltspire sits the Residency: the palace and administrative heart of House Calder, its rooms cut from living rock. The great hallway, the court, the communications room, the Veil\'s sanctum, the Corsair deck — all the same stone.',
+  },
+  {
+    id: 'veil', title: 'The Veil',
+    body: 'Older than House Calder\'s presence on Aridun. Not a galactic order with a programme — the Veil are Aridun\'s keepers of long memory: Sleeper migration patterns, deep water tables, the ecology of the Aurun blooms. They watch what the houses treat as a resource and the Shadmen treat as home, and record what both miss.\n\nTheir discipline is reading deep pattern — the ecological and geological rhythms that run beneath the politics. The Seir is their primary text. They have a presence within House Calder\'s court at Saltspire, and their reach extends further than their numbers suggest.\n\nMother Ysolde is their elder and their patience. Sela is their urgency.',
+  },
+];
+
+const CODEX_CHARACTERS = {
+  'Lord Aldric': {
+    title: 'Lord Aldric Calder',
+    body: 'Second generation of Calder on Aridun. His father made the Shadmen contact out of necessity — you cannot govern this world without understanding it. Aldric inherited that arrangement and maintained it, but as policy rather than relationship. He kept the agreements, paid fair prices for Shadmen guidance, filed formal objections to Vorrin\'s early encroachments through proper channels.\n\nHe is not naive about power — he understands it acutely — but he believes its legitimate exercise should be answered in kind. The Korinth decree has confounded him. Not because he doesn\'t understand politics, but because he genuinely believes sixty years of Calder stewardship speaks for itself. He hasn\'t fully grasped that Korinth isn\'t listening to records anymore.',
+  },
+  'Halix': {
+    title: 'Halix',
+    body: 'A Reckoner — trained in a specific discipline: that sufficient information, correctly analysed, resolves into the right course of action. He does not operate on intuition. He came to House Calder with references that checked out and a skill that proved itself quickly. Where he came from before is in his file.\n\nHis intelligence picture of Aridun is the most complete in the Residency — Vorrin drilling schedules, Pale Legion patrol rotations, Shadmen route maps — not because he has special gifts but because he is systematic in a way most people find exhausting.',
+  },
+  'Mother Ysolde': {
+    title: 'Mother Ysolde',
+    body: 'She was at Saltspire before Aldric was lord. She was there when his father held the seat. She is the oldest person in the Residency by some margin and does not draw attention to this.\n\nThe Veil\'s discipline is record-keeping — ecological observation, Sleeper migration patterns, deep water tables, the slow signals in the rock — accumulated across generations. Ysolde holds more time-series data on Aridun\'s deep patterns than anyone alive. She does not call this prophecy; she calls it reading. She reads the Seir the same way: not as mysticism but as a precise account of observable conditions, written by someone who observed them. She speaks rarely. When she does, she has finished thinking.',
+  },
+  'Sela': {
+    title: 'Sela',
+    body: 'She is not from the court. She came to Saltspire. She grew up in the deep desert — not Shadmen, but close enough to their world to read the rock the way people read things they grew up inside rather than learned. She knows Sleeper routes that are not on any map because you cannot map them; they shift.\n\nShe has been in the Residency long enough to understand its rhythms but has never fully belonged to it. She is of the Veil — their urgency, where Ysolde is their patience — which means she holds a longer view of what is happening to Aridun than anyone else in this building, and finds it harder than any of them to sit still.',
+  },
+  'Master Orlin': {
+    title: 'Master Orlin',
+    body: 'A decade in the Residency, treating the same household. He knows the bodies of House Calder\'s court the way a physician learns people over years — who carries tension in the neck, who doesn\'t sleep well, who has the particular mineral dryness in their skin that comes from time in the deep desert.\n\nHe knows Aridun\'s medicine specifically: what the rock environment does to people, how the dry altitude affects healing, how Aurun exposure — rare, but not unknown in a house like this — presents. He is good at his work and careful with it, and the household likes him for both.',
+  },
+  'Brannic': {
+    title: 'Brannic',
+    body: 'Aridun-born, not Shadmen. His father was a garrison soldier in Saltspire. He grew up in the palace\'s service wing and learned his trade under the previous Bladewarden — a more traditional soldier who hadn\'t fully adapted to what fighting on Aridun actually means.\n\nBrannic has spent eight years correcting for that. He knows the Saltguard\'s limits on this terrain and has built something closer to intelligence relationships with Shadmen contacts — not alliance, but the kind of mutual understanding that requires years and honesty about what each side needs. He considers this the most militarily important thing he has done since taking the post.',
+  },
 };
 
 export default class ResidencyScene extends Phaser.Scene {
@@ -140,6 +211,12 @@ export default class ResidencyScene extends Phaser.Scene {
     this.current = 'hall';
     this.sayIndex = 0;
     this.dynamic = [];
+    this.dialogueObjects = [];
+    this.dialogueActive = false;
+    this.codexOpen = false;
+    this.codexObjects = [];
+    this.codexSection = 'world';
+    this.codexEntryId = CODEX_LORE[0].id;
 
     // Persistent layers.
     this.wall = this.add
@@ -188,6 +265,8 @@ export default class ResidencyScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off('resize', this.onResize, this);
       this.destroyCommsAnim();
+      this.exitDialogue();
+      this.closeCodex();
     });
   }
 
@@ -278,6 +357,8 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
   onResize(gameSize) {
+    this.exitDialogue();
+    this.closeCodex();
     this.layout(gameSize.width, gameSize.height);
   }
 
@@ -297,6 +378,14 @@ export default class ResidencyScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const loc = LOCATIONS[this.current];
     const floorY = Math.round(height * 0.60); // full-canvas floor line (procedural rooms)
+
+    // Track which characters the player has encountered (for the Codex).
+    if (loc.who) {
+      const met = this.registry.get('metCharacters') || [];
+      if (!met.includes(loc.who)) {
+        this.registry.set('metCharacters', [...met, loc.who]);
+      }
+    }
 
     // Painted scene — EVERY room fills the full canvas, for one consistent frame.
     this.bd.clear();
@@ -322,14 +411,13 @@ export default class ResidencyScene extends Phaser.Scene {
       this.drawScene(loc, width, floorY);
     }
 
-    // One shared translucent panel everywhere: a slim caption strip for the hall
-    // (door navigation), a taller panel elsewhere for portrait/dialogue/actions.
-    const slim = loc.feature === 'hall';
-    const bt = Math.round(height * (slim ? 0.86 : 0.74));
+    // Slim bar for all screens — character interaction is via in-scene sprites.
+    const bt = Math.round(height * 0.86);
     this.drawPanel(width, height, bt);
     this.createDoorZones();
-    if (slim) this.renderHallCaption(loc, width, height, bt);
+    if (loc.feature === 'hall') this.renderHallCaption(loc, width, height, bt);
     else this.renderRoomBar(loc, width, height, bt);
+    if (loc.who) this.addCharacterSprites(loc, width, floorY);
   }
 
   /** The shared translucent UI panel — identical style on every screen. */
@@ -407,6 +495,8 @@ export default class ResidencyScene extends Phaser.Scene {
   /** Walk through a door — a brief fade for a sense of moving rooms. */
   travelTo(key) {
     if (this.time.now < this.inputReadyAt || this.travelling) return;
+    this.exitDialogue();
+    this.closeCodex();
     this.travelling = true;
     this.cameras.main.fadeOut(200, 6, 4, 12);
     this.cameras.main.once('camerafadeoutcomplete', () => {
@@ -434,94 +524,126 @@ export default class ResidencyScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(102);
     this.dynamic.push(this.captionText);
-    this.drawCodex(width - 36, barTop + (height - barTop) / 2);
+    this.drawCodex(width - 58, barTop + (height - barTop) / 2);
   }
 
 
-  // --- Room bar (portrait + dialogue + text menu) ---------------------------
+  // --- Room bar (identity left · interactions centre · navigation right) ----
 
   renderRoomBar(loc, width, height, barTop) {
     const bh = height - barTop;
     const cy = barTop + bh / 2;
-    let textLeft = 20;
 
-    // Portrait, if the room has a character.
+    // LEFT — character coin disc + name, or plain room name.
+    const identW = 172;
     if (loc.who) {
-      this.drawPortrait(60, cy, loc.accent, loc.who);
-      textLeft = 116;
+      const dx = 42;
+      const dg = this.add.graphics().setDepth(103);
+      dg.fillStyle(0x0e0a18, 1);
+      dg.fillCircle(dx, cy, 28);
+      dg.lineStyle(2, loc.accent, 0.6);
+      dg.strokeCircle(dx, cy, 28);
+      dg.fillStyle(loc.accent, 0.18);
+      dg.fillCircle(dx, cy, 24);
+      const faceCol = Phaser.Display.Color.IntegerToColor(loc.accent).darken(30).color;
+      dg.fillStyle(faceCol, 1);
+      dg.fillCircle(dx, cy - 8, 10);
+      dg.fillStyle(0x1b1228, 1);
+      dg.fillRoundedRect(dx - 13, cy + 2, 26, 20, { tl: 9, tr: 9, bl: 0, br: 0 });
+      this.dynamic.push(dg);
+
+      const discZone = this.add
+        .circle(dx, cy, 30).setInteractive({ useHandCursor: true }).setDepth(104);
+      discZone.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.enterDialogue(loc); });
+      this.dynamic.push(discZone);
+
+      const nameTxt = this.add
+        .text(80, cy - 8, loc.who, {
+          fontFamily: 'Georgia, serif', fontSize: '14px',
+          color: Phaser.Display.Color.IntegerToColor(loc.accent).rgba,
+        })
+        .setOrigin(0, 0.5).setDepth(104).setInteractive({ useHandCursor: true });
+      nameTxt.on('pointerover', () => nameTxt.setColor('#f0e0c0'));
+      nameTxt.on('pointerout', () => nameTxt.setColor(Phaser.Display.Color.IntegerToColor(loc.accent).rgba));
+      nameTxt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.enterDialogue(loc); });
+      this.dynamic.push(nameTxt);
+
+      this.dynamic.push(this.add
+        .text(80, cy + 8, loc.name, { fontFamily: 'monospace', fontSize: '11px', color: '#5a4a3a' })
+        .setOrigin(0, 0.5).setDepth(104));
+    } else {
+      this.dynamic.push(this.add
+        .text(20, cy, loc.name, { fontFamily: 'Georgia, serif', fontSize: '15px', color: CREAM })
+        .setOrigin(0, 0.5).setDepth(104));
     }
 
-    // Room name.
-    const nameColor = Phaser.Display.Color.IntegerToColor(loc.accent || 0xf0e3d0).rgba;
-    const nameText = this.add
-      .text(textLeft, barTop + 14, loc.name, {
-        fontFamily: 'Georgia, serif',
-        fontSize: '18px',
-        color: nameColor,
-      })
-      .setDepth(102);
-    this.dynamic.push(nameText);
+    // Column boundaries.
+    const codexCX = width - 58;
+    const navRight = codexCX - 46;
+    const navW = 210;
+    const navLeft = navRight - navW;
+    const div1X = identW;           // identity | interactions
+    const div2X = navLeft - 10;     // interactions | navigation
 
-    // Choices: speak, scene-actions, onward doors, back.
-    const choices = [];
-    if (loc.who && loc.say && loc.say.length > 1) {
-      choices.push({
-        label: `Speak with ${loc.who}`,
-        onClick: () => {
-          this.sayIndex = (this.sayIndex + 1) % loc.say.length;
-          this.renderLocation();
-        },
-      });
-    }
-    (loc.actions || []).forEach((a) =>
-      choices.push({ label: a.label, onClick: () => this.goTo(a.scene) })
-    );
-    (loc.exits || []).forEach((key) =>
-      choices.push({ label: `${LOCATIONS[key].name}  ›`, onClick: () => this.travelTo(key) })
-    );
-    const back = (EXITS[this.current] && EXITS[this.current].back) || 'hall';
-    choices.push({ label: `‹ ${LOCATIONS[back].name}`, onClick: () => this.travelTo(back) });
-
-    // Right panel: codex icon + text menu list, separated from content by a thin rule.
-    const codexCX = width - 36;
-    const menuRight = codexCX - 46;
-    const menuLeft = menuRight - 195;
-    const divX = menuLeft - 10;
-
-    // Thin gold rule.
     const divG = this.add.graphics().setDepth(102);
     divG.lineStyle(1, GOLD, 0.22);
-    divG.lineBetween(divX, barTop + 12, divX, height - 12);
+    divG.lineBetween(div1X, barTop + 8, div1X, height - 8);
+    divG.lineBetween(div2X, barTop + 8, div2X, height - 8);
     this.dynamic.push(divG);
 
-    // Dialogue / flavour — wraps up to the rule.
-    const line = loc.who ? (loc.say ? loc.say[this.sayIndex] : '') : loc.flavor || '';
-    const lineText = this.add
-      .text(textLeft, barTop + 40, line, {
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '14px',
-        color: '#c8b8d0',
-        wordWrap: { width: divX - textLeft - 18 },
-      })
-      .setDepth(102);
-    this.dynamic.push(lineText);
+    // CENTRE — interactions: talk + scene actions, centred in the zone.
+    const interactions = [];
+    if (loc.who) {
+      interactions.push({ label: `Talk to ${loc.who}`, onClick: () => this.enterDialogue(loc) });
+    }
+    (loc.actions || []).forEach((a) =>
+      interactions.push({ label: a.label, onClick: () => this.goTo(a.scene) })
+    );
+    if (interactions.length > 0) {
+      const centerX = div1X + (div2X - div1X) / 2;
+      const iItemH = Math.min(32, (bh - 8) / interactions.length);
+      const iTotalH = interactions.length * iItemH;
+      const iStartY = barTop + (bh - iTotalH) / 2;
+      interactions.forEach((c, i) => {
+        this.makeInteractionOption(centerX, iStartY + i * iItemH + iItemH / 2, c.label, c.onClick, loc.accent);
+      });
+    }
 
-    // Text option list.
-    const itemH = 28;
-    const totalH = choices.length * itemH;
-    const menuStartY = barTop + (bh - totalH) / 2;
-    choices.forEach((c, i) => {
-      this.makeTextOption(
-        menuLeft,
-        menuStartY + i * itemH + itemH / 2,
-        c.label,
-        c.onClick,
-        loc.accent
-      );
+    // RIGHT — navigation exits, derived from EXITS adjacency table only.
+    const navExits = [];
+    const roomExits = EXITS[this.current] || {};
+    ['forward', 'left', 'right', 'leftInner', 'rightInner'].forEach((dir) => {
+      if (roomExits[dir]) {
+        const key = roomExits[dir];
+        navExits.push({ label: `${LOCATIONS[key].name}  ›`, onClick: () => this.travelTo(key) });
+      }
+    });
+    const back = roomExits.back || 'hall';
+    navExits.push({ label: `‹ ${LOCATIONS[back].name}`, onClick: () => this.travelTo(back) });
+
+    const nItemH = Math.min(28, (bh - 8) / navExits.length);
+    const nTotalH = navExits.length * nItemH;
+    const nStartY = barTop + (bh - nTotalH) / 2;
+    navExits.forEach((c, i) => {
+      this.makeTextOption(navLeft, nStartY + i * nItemH + nItemH / 2, c.label, c.onClick, loc.accent);
     });
 
-    // Codex book — far right, stub for lore access.
     this.drawCodex(codexCX, cy);
+  }
+
+  makeInteractionOption(cx, cy, label, onClick, accent) {
+    const accentHex = accent ? Phaser.Display.Color.IntegerToColor(accent).rgba : GOLD_S;
+    const txt = this.add
+      .text(cx, cy, label, {
+        fontFamily: 'Georgia, serif',
+        fontSize: '15px',
+        color: accentHex,
+      })
+      .setOrigin(0.5, 0.5).setDepth(104).setInteractive({ useHandCursor: true });
+    txt.on('pointerover', () => txt.setColor('#f0e0c0'));
+    txt.on('pointerout', () => txt.setColor(accentHex));
+    txt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); onClick(); });
+    this.dynamic.push(txt);
   }
 
   makeTextOption(x, y, label, onClick, accent) {
@@ -570,20 +692,20 @@ export default class ResidencyScene extends Phaser.Scene {
 
     const draw = (hover) => {
       g.clear();
-      g.fillStyle(0x1e120a, 1);
+      g.fillStyle(hover ? 0x5a3418 : 0x3e2210, 1);              // cover
       g.fillRect(cx - w / 2, cy - h / 2, w, h);
-      g.lineStyle(1.5, hover ? GOLD : 0x7a5a22, hover ? 0.85 : 0.45);
+      g.lineStyle(2, hover ? GOLD : 0xd4922e, 1);               // border — full opacity
       g.strokeRect(cx - w / 2, cy - h / 2, w, h);
-      g.fillStyle(0x3a2010, 1);
-      g.fillRect(cx - w / 2, cy - h / 2, 5, h);                 // spine
-      g.lineStyle(1, 0xc8922a, hover ? 0.5 : 0.22);
+      g.fillStyle(hover ? 0x7a4820 : 0x5c3216, 1);              // spine
+      g.fillRect(cx - w / 2, cy - h / 2, 5, h);
+      g.lineStyle(1, 0xe0a840, hover ? 0.9 : 0.7);              // spine highlight
       g.lineBetween(cx - w / 2 + 5, cy - h / 2 + 3, cx - w / 2 + 5, cy + h / 2 - 3);
-      g.lineStyle(1, hover ? 0x8a7a5a : 0x3a2e1e, 0.7);         // page lines
+      g.lineStyle(1, hover ? 0xe0d0a0 : 0xa89060, 0.9);         // page lines
       [-9, -2, 5, 12].forEach((dy) => {
         g.lineBetween(cx - w / 2 + 8, cy + dy, cx + w / 2 - 3, cy + dy);
       });
-      const aa = hover ? 0.8 : 0.4;
-      g.fillStyle(hover ? GOLD : 0x7a5a22, aa);                  // corner accents
+      const aa = hover ? 1 : 0.85;
+      g.fillStyle(hover ? GOLD : 0xd4922e, aa);                  // corner accents
       g.fillRect(cx + w / 2 - 6, cy - h / 2, 6, 1.5);
       g.fillRect(cx + w / 2 - 1.5, cy - h / 2, 1.5, 6);
       g.fillRect(cx + w / 2 - 6, cy + h / 2 - 1.5, 6, 1.5);
@@ -596,7 +718,7 @@ export default class ResidencyScene extends Phaser.Scene {
       .text(cx, cy + h / 2 + 5, 'CODEX', {
         fontFamily: 'monospace',
         fontSize: '9px',
-        color: '#5a4a2a',
+        color: '#c8922a',
       })
       .setOrigin(0.5, 0)
       .setDepth(103);
@@ -606,11 +728,452 @@ export default class ResidencyScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .setDepth(106);
 
-    zone.on('pointerover', () => { draw(true); lbl.setColor('#c8a84a'); });
-    zone.on('pointerout', () => { draw(false); lbl.setColor('#5a4a2a'); });
-    zone.on('pointerdown', (p, lx, ly, e) => { e?.stopPropagation(); });
+    zone.on('pointerover', () => { draw(true); lbl.setColor('#f0d060'); });
+    zone.on('pointerout', () => { draw(false); lbl.setColor('#c8922a'); });
+    zone.on('pointerdown', (p, lx, ly, e) => { e?.stopPropagation(); this.openCodex(); });
 
     this.dynamic.push(g, lbl, zone);
+  }
+
+  // --- Codex overlay --------------------------------------------------------
+
+  openCodex() {
+    if (this.codexOpen) { this.closeCodex(); return; }
+    this.exitDialogue();
+    this.codexOpen = true;
+    this.codexObjects = [];
+    if (!this.codexSection) this.codexSection = 'world';
+    if (!this.codexEntryId) this.codexEntryId = CODEX_LORE[0].id;
+    this.renderCodexPanel();
+  }
+
+  closeCodex() {
+    if (!this.codexOpen) return;
+    (this.codexObjects || []).forEach((o) => o.destroy());
+    this.codexObjects = [];
+    this.codexOpen = false;
+  }
+
+  renderCodexPanel() {
+    (this.codexObjects || []).forEach((o) => o.destroy());
+    this.codexObjects = [];
+    const C = this.codexObjects;
+    const { width, height } = this.scale;
+
+    const pw = Math.round(width * 0.86);
+    const ph = Math.round(height * 0.84);
+    const px = Math.round((width - pw) / 2);
+    const py = Math.round((height - ph) / 2);
+    const headerH = 44;
+    const listW = 230;
+
+    // Scrim — full canvas, click outside panel to close.
+    const scrim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.72)
+      .setInteractive().setDepth(970);
+    scrim.on('pointerdown', () => this.closeCodex());
+    C.push(scrim);
+
+    // Main panel background.
+    const bg = this.add.graphics().setDepth(971);
+    bg.fillStyle(0x080512, 1);
+    bg.fillRect(px, py, pw, ph);
+    bg.lineStyle(1.5, GOLD, 0.55);
+    bg.strokeRect(px, py, pw, ph);
+    bg.lineStyle(1, GOLD, 0.2);
+    bg.strokeRect(px + 4, py + 4, pw - 8, ph - 8);
+    C.push(bg);
+
+    // Header band.
+    const hdr = this.add.graphics().setDepth(972);
+    hdr.fillStyle(0x100c22, 1);
+    hdr.fillRect(px, py, pw, headerH);
+    hdr.lineStyle(1, GOLD, 0.3);
+    hdr.lineBetween(px, py + headerH, px + pw, py + headerH);
+    C.push(hdr);
+
+    C.push(this.add.text(px + pw / 2, py + headerH / 2, 'CODEX', {
+      fontFamily: 'monospace', fontSize: '16px', color: GOLD_S, letterSpacing: 8,
+    }).setOrigin(0.5).setDepth(973));
+
+    const closeTxt = this.add.text(px + pw - 14, py + headerH / 2, '✕', {
+      fontFamily: 'monospace', fontSize: '15px', color: '#6a5040',
+    }).setOrigin(1, 0.5).setDepth(973).setInteractive({ useHandCursor: true });
+    closeTxt.on('pointerover', () => closeTxt.setColor('#f0e0c0'));
+    closeTxt.on('pointerout', () => closeTxt.setColor('#6a5040'));
+    closeTxt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.closeCodex(); });
+    C.push(closeTxt);
+
+    // Left column background.
+    const contentY = py + headerH;
+    const colH = ph - headerH;
+    const listBg = this.add.graphics().setDepth(972);
+    listBg.fillStyle(0x060410, 1);
+    listBg.fillRect(px, contentY, listW, colH);
+    listBg.lineStyle(1, GOLD, 0.18);
+    listBg.lineBetween(px + listW, contentY, px + listW, py + ph);
+    C.push(listBg);
+
+    // Section tabs.
+    const TABS = [{ id: 'world', label: 'WORLD LORE' }, { id: 'people', label: 'PEOPLE' }];
+    const tabH = 36;
+    TABS.forEach((tab, i) => {
+      const tabY = contentY + i * tabH;
+      const sel = this.codexSection === tab.id;
+      if (sel) {
+        const hl = this.add.graphics().setDepth(972);
+        hl.fillStyle(0x1c1638, 1);
+        hl.fillRect(px, tabY, listW, tabH);
+        hl.lineStyle(2, GOLD, 0.45);
+        hl.lineBetween(px, tabY + tabH - 1, px + listW, tabY + tabH - 1);
+        C.push(hl);
+      }
+      const tabTxt = this.add.text(px + listW / 2, tabY + tabH / 2, tab.label, {
+        fontFamily: 'monospace', fontSize: '11px', color: sel ? GOLD_S : '#4a3a2a', letterSpacing: 2,
+      }).setOrigin(0.5).setDepth(973).setInteractive({ useHandCursor: true });
+      if (!sel) {
+        tabTxt.on('pointerover', () => tabTxt.setColor('#a08060'));
+        tabTxt.on('pointerout', () => tabTxt.setColor('#4a3a2a'));
+      }
+      tabTxt.on('pointerdown', (p, x, y, e) => {
+        e?.stopPropagation();
+        if (this.codexSection === tab.id) return;
+        this.codexSection = tab.id;
+        if (tab.id === 'world') {
+          this.codexEntryId = CODEX_LORE[0].id;
+        } else {
+          const met = this.registry.get('metCharacters') || [];
+          const first = met.find((n) => CODEX_CHARACTERS[n]);
+          this.codexEntryId = first || null;
+        }
+        this.renderCodexPanel();
+      });
+      C.push(tabTxt);
+
+      // Hairline divider between tabs.
+      if (i < TABS.length - 1) {
+        const td = this.add.graphics().setDepth(972);
+        td.lineStyle(1, 0x1e1830, 1);
+        td.lineBetween(px + 12, tabY + tabH, px + listW - 12, tabY + tabH);
+        C.push(td);
+      }
+    });
+
+    // Entry list.
+    const entries = this.codexSection === 'world'
+      ? CODEX_LORE.map((e) => ({ id: e.id, label: e.title }))
+      : (this.registry.get('metCharacters') || [])
+          .filter((n) => CODEX_CHARACTERS[n])
+          .map((n) => ({ id: n, label: CODEX_CHARACTERS[n].title }));
+
+    const listStartY = contentY + TABS.length * tabH + 6;
+    const entryH = 27;
+    entries.forEach((entry) => {
+      const ey = listStartY + entries.indexOf(entry) * entryH;
+      const sel = this.codexEntryId === entry.id;
+      if (sel) {
+        const ehl = this.add.graphics().setDepth(972);
+        ehl.fillStyle(0x1e1840, 1);
+        ehl.fillRect(px + 2, ey, listW - 4, entryH);
+        ehl.lineStyle(1, GOLD, 0.2);
+        ehl.lineBetween(px + 2, ey + entryH - 1, px + listW - 4, ey + entryH - 1);
+        C.push(ehl);
+      }
+      const eTxt = this.add.text(px + 14, ey + entryH / 2, entry.label, {
+        fontFamily: 'Georgia, serif', fontSize: '13px',
+        color: sel ? '#f0e0c0' : '#7a6a4a',
+      }).setOrigin(0, 0.5).setDepth(973).setInteractive({ useHandCursor: true });
+      if (!sel) {
+        eTxt.on('pointerover', () => eTxt.setColor('#c8b090'));
+        eTxt.on('pointerout', () => eTxt.setColor('#7a6a4a'));
+      }
+      eTxt.on('pointerdown', (p, x, y, e) => {
+        e?.stopPropagation();
+        if (this.codexEntryId === entry.id) return;
+        this.codexEntryId = entry.id;
+        this.renderCodexPanel();
+      });
+      C.push(eTxt);
+    });
+
+    // Empty-state message for people tab.
+    if (this.codexSection === 'people' && entries.length === 0) {
+      C.push(this.add.text(px + listW / 2, listStartY + 40, 'No one\nencountered yet.', {
+        fontFamily: 'Georgia, serif', fontSize: '12px', color: '#3a2e1e', align: 'center',
+      }).setOrigin(0.5, 0).setDepth(973));
+    }
+
+    // Right column — entry content.
+    const rightX = px + listW + 28;
+    const rightW = pw - listW - 44;
+    const rightY = contentY + 20;
+
+    let entry = null;
+    if (this.codexSection === 'world') {
+      entry = CODEX_LORE.find((e) => e.id === this.codexEntryId);
+      if (entry) entry = { title: entry.title, body: entry.body };
+    } else if (this.codexEntryId) {
+      const cd = CODEX_CHARACTERS[this.codexEntryId];
+      if (cd) entry = { title: cd.title, body: cd.body };
+    }
+
+    if (entry) {
+      C.push(this.add.text(rightX, rightY, entry.title, {
+        fontFamily: 'Georgia, serif', fontSize: '19px', color: GOLD_S,
+      }).setDepth(973));
+
+      const divG = this.add.graphics().setDepth(973);
+      divG.lineStyle(1, GOLD, 0.22);
+      divG.lineBetween(rightX, rightY + 30, rightX + rightW, rightY + 30);
+      C.push(divG);
+
+      C.push(this.add.text(rightX, rightY + 46, entry.body, {
+        fontFamily: 'Georgia, serif', fontSize: '14px', color: '#c0b0cc',
+        wordWrap: { width: rightW },
+        lineSpacing: 6,
+      }).setDepth(973));
+    } else if (this.codexSection === 'people') {
+      C.push(this.add.text(px + listW + (pw - listW) / 2, contentY + colH / 2, 'Select a name.', {
+        fontFamily: 'Georgia, serif', fontSize: '14px', color: '#3a2e1e',
+      }).setOrigin(0.5).setDepth(973));
+    }
+  }
+
+  // --- Character sprites in scene -------------------------------------------
+
+  addCharacterSprites(loc, width, floorY) {
+    if (!loc.who) return;
+    const cx = width / 2;
+    const offsets = {
+      court: -90, comms: -100, veil: 10, solar: 80,
+      infirmary: -80, yard: 80,
+    };
+    // Some rooms draw their floor at a different fraction than the global 0.60.
+    const floorFracs = { comms: 0.67 };
+    const actualFloorY = floorFracs[loc.feature]
+      ? Math.round(this.scale.height * floorFracs[loc.feature])
+      : floorY;
+    const offX = offsets[loc.feature] ?? 0;
+    const fx = cx + offX;
+    const s = Phaser.Math.Clamp(actualFloorY / 360, 0.8, 1.4);
+
+    const g = this.add.graphics().setDepth(10);
+    this.drawCharacterFigure(g, fx, actualFloorY, loc.accent, s);
+    this.dynamic.push(g);
+
+    const figH = 110 * s;
+    const zone = this.add
+      .zone(fx, actualFloorY - figH / 2, 60 * s, figH)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(11);
+
+    let tooltip = null;
+    zone.on('pointerover', () => {
+      tooltip = this.add
+        .text(fx, actualFloorY - figH - 6, loc.who, {
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          color: CREAM,
+          backgroundColor: '#0a0610',
+          padding: { x: 6, y: 3 },
+        })
+        .setOrigin(0.5, 1)
+        .setDepth(15);
+      this.dynamic.push(tooltip);
+    });
+    zone.on('pointerout', () => {
+      if (tooltip) { tooltip.destroy(); tooltip = null; }
+    });
+    zone.on('pointerdown', (p, x, y, e) => {
+      e?.stopPropagation();
+      if (tooltip) { tooltip.destroy(); tooltip = null; }
+      this.enterDialogue(loc);
+    });
+    this.dynamic.push(zone);
+  }
+
+  drawCharacterFigure(g, x, floorY, accent, s = 1) {
+    g.fillStyle(0x000000, 0.22);
+    g.fillEllipse(x, floorY + 2, 52 * s, 10 * s);
+    // Outer cloak.
+    g.fillStyle(0x1a1228, 1);
+    g.fillTriangle(x - 22 * s, floorY, x + 22 * s, floorY, x, floorY - 82 * s);
+    // Inner robe — accent tinted.
+    const inner = Phaser.Display.Color.IntegerToColor(accent).darken(45).color;
+    g.fillStyle(inner, 1);
+    g.fillTriangle(x - 13 * s, floorY - 6 * s, x + 13 * s, floorY - 6 * s, x, floorY - 74 * s);
+    // Shoulders.
+    g.fillStyle(0x2a1e38, 1);
+    g.fillEllipse(x, floorY - 76 * s, 46 * s, 18 * s);
+    // Head.
+    const faceCol = Phaser.Display.Color.IntegerToColor(accent).darken(30).color;
+    g.fillStyle(faceCol, 1);
+    g.fillCircle(x, floorY - 90 * s, 14 * s);
+    // Hood shadow.
+    g.fillStyle(0x0a0610, 0.65);
+    g.fillRoundedRect(x - 16 * s, floorY - 106 * s, 32 * s, 22 * s, 8 * s);
+    // Accent trim stripe.
+    g.fillStyle(accent, 0.45);
+    g.fillRect(x - 2 * s, floorY - 78 * s, 4 * s, 56 * s);
+    // Eyes.
+    g.fillStyle(0xffd080, 0.7);
+    g.fillCircle(x - 5 * s, floorY - 91 * s, 1.5 * s);
+    g.fillCircle(x + 5 * s, floorY - 91 * s, 1.5 * s);
+  }
+
+  // --- Dialogue overlay (Cryo Dune style) ------------------------------------
+
+  enterDialogue(loc) {
+    if (this.dialogueActive || this.time.now < this.inputReadyAt) return;
+    this.dialogueActive = true;
+    this.dialogueObjects = [];
+    this.sayIndex = 0;
+    this.renderDialogueOverlay(loc, this.scale.width, this.scale.height);
+  }
+
+  exitDialogue() {
+    if (!this.dialogueActive) return;
+    (this.dialogueObjects || []).forEach((o) => o.destroy());
+    this.dialogueObjects = [];
+    this.dialogueSpeechText = null;
+    this.dialogueActive = false;
+  }
+
+  renderDialogueOverlay(loc, width, height) {
+    const dTop = Math.round(height * 0.56);
+    const portW = 180;
+    const optH = 52;
+    const D = this.dialogueObjects;
+
+    // Scrim — dark base, intercepts clicks to scene below.
+    const scrim = this.add
+      .rectangle(width / 2, dTop + (height - dTop) / 2, width, height - dTop, 0x0a0610, 0.92)
+      .setInteractive()
+      .setDepth(950);
+    D.push(scrim);
+
+    // Portrait panel — left column.
+    const portBg = this.add.graphics().setDepth(951);
+    portBg.fillStyle(0x080510, 1);
+    portBg.fillRect(0, dTop, portW, height - dTop);
+    portBg.lineStyle(1, GOLD, 0.28);
+    portBg.lineBetween(portW, dTop + 8, portW, height - 8);
+    D.push(portBg);
+
+    // Gold top trim line.
+    const trim = this.add.graphics().setDepth(952);
+    trim.fillStyle(0xb07d4a, 0.5);
+    trim.fillRect(0, dTop - 2, width, 2);
+    trim.fillStyle(GOLD, 0.35);
+    trim.fillRect(0, dTop, width, 2);
+    D.push(trim);
+
+    // Large procedural portrait inside the left column.
+    const portCY = dTop + (height - optH - dTop) / 2;
+    this.drawDialoguePortrait(portW / 2, portCY, loc.accent, D);
+
+    // Character name below portrait.
+    const nameLbl = this.add
+      .text(portW / 2, height - optH - 12, loc.who, {
+        fontFamily: 'Georgia, serif', fontSize: '12px', color: '#c8a98f',
+      })
+      .setOrigin(0.5, 1).setDepth(962);
+    D.push(nameLbl);
+
+    // Speech bubble — right of portrait column.
+    const bubX1 = portW + 22;
+    const bubX2 = width - 18;
+    const bubY1 = dTop + 20;
+    const bubY2 = height - optH - 12;
+    const bubW = bubX2 - bubX1;
+    const bubH = bubY2 - bubY1;
+    const bubG = this.add.graphics().setDepth(960);
+    bubG.fillStyle(0x130e20, 1);
+    bubG.fillRoundedRect(bubX1, bubY1, bubW, bubH, 10);
+    bubG.lineStyle(1, GOLD, 0.28);
+    bubG.strokeRoundedRect(bubX1, bubY1, bubW, bubH, 10);
+    // Subtle inner tint on upper half.
+    bubG.fillStyle(0x1e1830, 0.45);
+    bubG.fillRoundedRect(bubX1 + 4, bubY1 + 4, bubW - 8, bubH * 0.42, 8);
+    D.push(bubG);
+
+    // Dialogue text.
+    const line = loc.say ? loc.say[this.sayIndex] : loc.flavor || '';
+    this.dialogueSpeechText = this.add
+      .text(bubX1 + 28, bubY1 + 26, line, {
+        fontFamily: 'Georgia, serif',
+        fontSize: '16px',
+        color: '#e0d0f0',
+        wordWrap: { width: bubW - 56 },
+        lineSpacing: 7,
+      })
+      .setDepth(961);
+    D.push(this.dialogueSpeechText);
+
+    // Options strip separator.
+    const optSep = this.add.graphics().setDepth(961);
+    optSep.lineStyle(1, GOLD, 0.18);
+    optSep.lineBetween(0, height - optH, width, height - optH);
+    D.push(optSep);
+
+    const optY = height - optH / 2;
+
+    // "Talk" — cycles through say[] lines.
+    if (loc.say && loc.say.length > 1) {
+      const talkTxt = this.add
+        .text(portW + 28, optY, `Talk to ${loc.who}`, {
+          fontFamily: 'Georgia, serif', fontSize: '14px', color: '#a09078',
+        })
+        .setOrigin(0, 0.5).setDepth(962).setInteractive({ useHandCursor: true });
+      talkTxt.on('pointerover', () => talkTxt.setColor('#f0e0c0'));
+      talkTxt.on('pointerout', () => talkTxt.setColor('#a09078'));
+      talkTxt.on('pointerdown', (p, x, y, e) => {
+        e?.stopPropagation();
+        this.sayIndex = (this.sayIndex + 1) % loc.say.length;
+        this.dialogueSpeechText.setText(loc.say[this.sayIndex]);
+      });
+      D.push(talkTxt);
+    }
+
+    // "Leave" — closes the overlay.
+    const leaveTxt = this.add
+      .text(width - 24, optY, 'Leave', {
+        fontFamily: 'Georgia, serif', fontSize: '14px', color: '#706050',
+      })
+      .setOrigin(1, 0.5).setDepth(962).setInteractive({ useHandCursor: true });
+    leaveTxt.on('pointerover', () => leaveTxt.setColor('#f0e0c0'));
+    leaveTxt.on('pointerout', () => leaveTxt.setColor('#706050'));
+    leaveTxt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.exitDialogue(); });
+    D.push(leaveTxt);
+  }
+
+  drawDialoguePortrait(cx, cy, accent, objs) {
+    const w = 136;
+    const h = 176;
+    const g = this.add.graphics().setDepth(962);
+    objs.push(g);
+    g.fillStyle(0x0e0a18, 1);
+    g.fillRect(cx - w / 2, cy - h / 2, w, h);
+    g.lineStyle(1.5, GOLD, 0.5);
+    g.strokeRect(cx - w / 2, cy - h / 2, w, h);
+    g.fillStyle(accent, 0.14);
+    g.fillRect(cx - w / 2 + 3, cy - h / 2 + 3, w - 6, h - 6);
+    // Bust.
+    const by = cy + 30;
+    g.fillStyle(0x1b1228, 1);
+    g.fillRoundedRect(cx - 46, by - 10, 92, 70, { tl: 32, tr: 32, bl: 0, br: 0 });
+    const faceCol = Phaser.Display.Color.IntegerToColor(accent).darken(40).color;
+    g.fillStyle(faceCol, 1);
+    g.fillCircle(cx, by - 36, 32);
+    // Hood.
+    g.fillStyle(0x140d20, 1);
+    g.fillRoundedRect(cx - 32, cy - h / 2 + 14, 64, 38, 14);
+    // Eyes.
+    g.fillStyle(0xffce86, 0.9);
+    g.fillCircle(cx - 10, by - 34, 3);
+    g.fillCircle(cx + 10, by - 34, 3);
+    // Accent collar detail.
+    g.fillStyle(accent, 0.65);
+    g.fillRect(cx - 26, by - 4, 52, 4);
   }
 
   // --- Portraits ------------------------------------------------------------
@@ -1580,7 +2143,7 @@ export default class ResidencyScene extends Phaser.Scene {
     this.registry.set('enteredResidency', true);
     this.registry.set('water', this.registry.get('water') ?? 100);
 
-    const main = first ? 'ARRADIUS' : 'The Residency';
+    const main = first ? 'ARRADIUS' : 'The Grand Hallway';
     const sub = first ? 'House Calder · Saltspire' : 'Saltspire';
     const t1 = this.add
       .text(width / 2, height * 0.3, main, {
