@@ -18,7 +18,7 @@ const USE_HALL_BG = true;
 
 const LOCATIONS = {
   hall: {
-    name: 'The Residency',
+    name: 'The Grand Hallway',
     flavor:
       'The great hall of House Calder at Saltspire. Lamplight and slow dust. Your house has held this world for two generations — and the decree that takes it has just arrived.',
     feature: 'hall',
@@ -131,7 +131,7 @@ const EXITS = {
 const CODEX_LORE = [
   {
     id: 'aridun', title: 'Aridun',
-    body: 'Two landscapes define Aridun: the rockbed plains — ancient, hard, vast — and the dune seas that move between them. Below the hard rockbed lies a softer friable layer. Below that, the Sleeper domain.\n\nHouse Calder has held this world for two generations. The decree that takes it has just arrived.',
+    body: 'Aridun is not a sand world. It is a rock world. Vast platforms of ancient hard rockbed cover most of its surface — flat, dramatic, permanent. The dune seas fill the low ground between formations; they are almost cosmetic by comparison. What matters is the rock.\n\nAurun blooms surface through porous sections of rock face, not through sand. To find blooms, you read the rock. Below the hard surface lies a softer friable layer — the Sleeper domain. The Shadmen carve their Hollows into the hard layer, touching the deep layer only at thinned junction points.\n\nHouse Calder has held this world for two generations. The decree that takes it has just arrived.',
   },
   {
     id: 'sleepers', title: 'The Sleepers',
@@ -139,11 +139,11 @@ const CODEX_LORE = [
   },
   {
     id: 'aurun', title: 'Aurun',
-    body: 'A luminescent material found in the wake of Sleeper passage. It cannot be mined or harvested in any conventional sense — attempts to extract it directly leave nothing.\n\nIt follows. Those who move with the deep patterns, who are recognised by whatever the Sleepers recognise, find it settling around them. House Calder\'s position here has been sustained, in part, because Aurun finds Calder hands.',
+    body: 'A luminescent material — structural, glowing — left as a bloom on the rockbed surface in a Sleeper\'s wake. It is not mined; it is followed. The Shadmen collect it from the rock surface after a Sleeper has passed, reading the routes and the seasons. Collection from an active site — before the Sleeper finishes its passage — damages the channel and thins the bloom before it can recover.\n\nVorrin bypasses this entirely. Their boring equipment drives through the hard rockbed to reach concentrated deposits below — faster, industrial, and destructive in ways that do not recover.\n\nContact with raw Aurun in the deep passages sharpens something latent in those the Sleepers seem to recognise. House Calder\'s position here has been sustained, in part, because Aurun finds Calder hands.',
   },
   {
     id: 'seir', title: 'The Seir',
-    body: 'An ancient text in the Shadmen tradition, contested in its interpretation. The Veil reads it as ecological prophecy — a precise account of what happens when the Sleeper network is disrupted, and what might restore it.\n\nThe "third path" it names between extraction and preservation has not yet been identified. Mother Ysolde holds that it does not arrive. It surfaces.',
+    body: 'An ancient text — ecological record or prophecy, depending on who is reading it. Its core claim: that when the northern blooms fail and the deep channels close, one who walks both the surface world and the rock-world will open the third path.\n\nTwo camps contest what this means. The believers hold that the text describes a specific person — a lord\'s heir, born of Aridun, already present. The skeptics say it describes a quality and a moment, not an individual, and that pinning it to the noble heir who needs the Shadmen most is exactly the mistake desperation produces.\n\nMother Ysolde reads it as prophecy. The "third path" — between extraction and preservation — has not yet been named by either side.',
   },
   {
     id: 'calder', title: 'House Calder',
@@ -163,7 +163,11 @@ const CODEX_LORE = [
   },
   {
     id: 'saltspire', title: 'Saltspire',
-    body: 'House Calder\'s seat on Aridun — a palace and administrative complex built into a coastal rockbed formation.\n\nThe great hall, the communications room, the Veil\'s sanctum, the Corsair deck: all carved from the same ancient stone that the boring rigs are now beginning to reach.',
+    body: 'The capital city of Aridun and the seat of House Calder\'s rule. Built into a coastal rockbed formation — carved from the same ancient hard stone that the boring rigs are now beginning to reach from below.\n\nWithin Saltspire sits the Residency: the palace and administrative heart of House Calder, its rooms cut from living rock. The great hallway, the court, the communications room, the Veil\'s sanctum, the Corsair deck — all the same stone.',
+  },
+  {
+    id: 'veil', title: 'The Veil',
+    body: 'Older than House Calder\'s presence on Aridun. Not a galactic order with a programme — the Veil are Aridun\'s keepers of long memory: Sleeper migration patterns, deep water tables, the ecology of the Aurun blooms. They watch what the houses treat as a resource and the Shadmen treat as home, and record what both miss.\n\nTheir discipline is reading deep pattern — the ecological and geological rhythms that run beneath the politics. The Seir is their primary text. They have a presence within House Calder\'s court at Saltspire, and their reach extends further than their numbers suggest.\n\nMother Ysolde is their elder and their patience. Sela is their urgency.',
   },
 ];
 
@@ -2099,7 +2103,7 @@ export default class ResidencyScene extends Phaser.Scene {
     this.registry.set('enteredResidency', true);
     this.registry.set('water', this.registry.get('water') ?? 100);
 
-    const main = first ? 'ARRADIUS' : 'The Residency';
+    const main = first ? 'ARRADIUS' : 'The Grand Hallway';
     const sub = first ? 'House Calder · Saltspire' : 'Saltspire';
     const t1 = this.add
       .text(width / 2, height * 0.3, main, {
