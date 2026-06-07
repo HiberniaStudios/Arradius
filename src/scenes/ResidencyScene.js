@@ -97,7 +97,7 @@ const LOCATIONS = {
 // doors, `back` the way you came.
 const EXITS = {
   // Four wings open off the entrance hall; the throne (Court) lies beyond the arch.
-  hall: { left: 'yard', right: 'infirmary', forward: 'court' }, // procedural fallback (2 doors)
+  hall: { left: 'yard', right: 'infirmary', forward: 'court' }, // procedural fallback (3 exits; comms+deck only via PNG)
   court: { back: 'hall' },
   yard: { back: 'hall' },
   infirmary: { back: 'hall' },

@@ -420,7 +420,7 @@ export default class AudioManager {
   wind(inst, { band = 550, Q = 0.7, level = 0.06, sweep = 300, sweepRate = 0.07, swellRate = 0.05 }) {
     const now = this.ctx.currentTime;
     const src = this.ctx.createBufferSource();
-    src.buffer = this.noiseBuffer;
+    src.buffer = this.pinkBuffer; // pink, not white — warmer air, less hiss
     src.loop = true;
     const filt = this.ctx.createBiquadFilter();
     filt.type = 'bandpass';
@@ -476,7 +476,7 @@ export default class AudioManager {
   murmur(inst, { center = 420, Q = 1.4, level = 0.05, gustRate = 0.18 }) {
     const now = this.ctx.currentTime;
     const src = this.ctx.createBufferSource();
-    src.buffer = this.noiseBuffer;
+    src.buffer = this.pinkBuffer; // pink, not white — murmur is warmer/less hissy
     src.loop = true;
     const filt = this.ctx.createBiquadFilter();
     filt.type = 'bandpass';
