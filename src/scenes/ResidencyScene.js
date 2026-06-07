@@ -294,8 +294,8 @@ export default class ResidencyScene extends Phaser.Scene {
       if (loc.feature === 'comms') {
         // Live rotating planet + sweep overlaid on the painted dish.
         this.commsScreenInfo = {
-          x: Math.round(width * 0.703), y: Math.round(height * 0.412),
-          R: Math.round(height * 0.205), prRatio: 0.3, overlay: true,
+          x: Math.round(width * 0.71), y: Math.round(height * 0.417),
+          R: Math.round(height * 0.21), prRatio: 0.29, overlay: true,
         };
         this.createCommsAnim();
       }
@@ -785,43 +785,53 @@ export default class ResidencyScene extends Phaser.Scene {
     this.commsScreenInfo = { x, y, R };
   }
 
-  /** Build the animated comms planet (scrolling desert sphere) + radar sweep.
-   *  `info.overlay` lifts depths above a painted PNG backdrop; otherwise the
-   *  stack sits just above the procedural screen drawn on `this.bd` (-90). */
+  /** Build the live comms planet + radar sweep.
+   *  - overlay (PNG backdrop): a TRANSPARENT cloud layer drifts over the painted
+   *    planet (which supplies texture + shading); no opaque sphere.
+   *  - procedural: an opaque rotating desert sphere with its own lighting.
+   *  The sweep emanates from the planet's edge, so it reads as passing behind it. */
   createCommsAnim() {
     const info = this.commsScreenInfo;
-    if (!info || !this.textures.exists('planetSurface')) return;
+    if (!info) return;
     const { x, y, R, overlay } = info;
     const pr = Math.round(R * (info.prRatio || 0.26));
-    const base = overlay ? -58 : -88;  // sweep depth; planet/overlay/glow sit above it
+    const base = overlay ? -58 : -88;
 
-    // Sweep — below the planet so the planet occludes it (beam passes "behind").
-    const sweep = this.add.graphics().setDepth(base);
-
-    // Scrolling surface, masked to a circle → a sphere rotating on its axis.
     const mask = this.add.graphics().setVisible(false);
     mask.fillStyle(0xffffff, 1).fillCircle(x, y, pr);
-    const planet = this.add
-      .tileSprite(x, y, pr * 2, pr * 2, 'planetSurface')
-      .setDepth(base + 2);
-    planet.tilePositionY = 14;
-    planet.setMask(mask.createGeometryMask());
 
-    // Fixed lighting/relief overlay (poles, terminator, lit limb) over the surface.
-    const ov = this.add.graphics().setDepth(base + 3);
-    ov.fillStyle(0xd9ab68, 0.36); ov.fillCircle(x - pr * 0.28, y - pr * 0.26, pr * 0.5);  // lit side
-    ov.fillStyle(0x241606, 0.34); ov.fillCircle(x + pr * 0.36, y + pr * 0.30, pr * 0.62); // terminator
-    ov.fillStyle(0xe8d8b0, 0.32); ov.fillEllipse(x, y - pr * 0.8, pr * 0.62, pr * 0.2);   // N polar cap
-    ov.fillStyle(0xe8d8b0, 0.2); ov.fillEllipse(x, y + pr * 0.82, pr * 0.5, pr * 0.16);   // S polar cap
-    ov.lineStyle(2, 0xe6bc7e, 0.5); ov.strokeCircle(x, y, pr * 0.95);                     // lit limb
-    ov.lineStyle(2.5, 0x2e1d0c, 0.55); ov.strokeCircle(x, y, pr - 1);                     // dark rim
+    let planet;
+    let ov = null;
+    if (overlay) {
+      if (!this.textures.exists('planetClouds')) return;
+      // Drifting clouds only — the painted planet shows through underneath.
+      planet = this.add
+        .tileSprite(x, y, pr * 2, pr * 2, 'planetClouds')
+        .setAlpha(0.7)
+        .setDepth(base + 2);
+      planet.setMask(mask.createGeometryMask());
+    } else {
+      if (!this.textures.exists('planetSurface')) return;
+      planet = this.add.tileSprite(x, y, pr * 2, pr * 2, 'planetSurface').setDepth(base + 2);
+      planet.tilePositionY = 14;
+      planet.setMask(mask.createGeometryMask());
+      ov = this.add.graphics().setDepth(base + 3);
+      ov.fillStyle(0xd9ab68, 0.36); ov.fillCircle(x - pr * 0.28, y - pr * 0.26, pr * 0.5);  // lit side
+      ov.fillStyle(0x241606, 0.34); ov.fillCircle(x + pr * 0.36, y + pr * 0.30, pr * 0.62); // terminator
+      ov.fillStyle(0xe8d8b0, 0.32); ov.fillEllipse(x, y - pr * 0.8, pr * 0.62, pr * 0.2);   // N polar cap
+      ov.fillStyle(0xe8d8b0, 0.2); ov.fillEllipse(x, y + pr * 0.82, pr * 0.5, pr * 0.16);   // S polar cap
+      ov.lineStyle(2, 0xe6bc7e, 0.5); ov.strokeCircle(x, y, pr * 0.95);                     // lit limb
+      ov.lineStyle(2.5, 0x2e1d0c, 0.55); ov.strokeCircle(x, y, pr - 1);                     // dark rim
+    }
 
-    // Atmosphere halo (own depth so it works over a PNG backdrop too).
+    // Subtle atmosphere halo (gentle over the painted planet).
     const glow = this.add.image(x, y, 'glow')
-      .setBlendMode(Phaser.BlendModes.ADD).setTint(0xffb24a).setAlpha(0.22)
-      .setDisplaySize(pr * 3.2, pr * 3.2).setDepth(base + 4);
+      .setBlendMode(Phaser.BlendModes.ADD).setTint(0xffb24a)
+      .setAlpha(overlay ? 0.12 : 0.22)
+      .setDisplaySize(pr * 3.0, pr * 3.0).setDepth(base + 4);
 
-    this.commsAnim = { planet, mask, ov, glow, sweep, x, y, R, pr, angle: -Math.PI / 2 };
+    const sweep = this.add.graphics().setDepth(base + 5);
+    this.commsAnim = { planet, mask, ov, glow, sweep, x, y, R, pr, overlay, angle: -Math.PI / 2 };
   }
 
   destroyCommsAnim() {
@@ -834,16 +844,23 @@ export default class ResidencyScene extends Phaser.Scene {
   update(time, delta) {
     const a = this.commsAnim;
     if (!a) return;
-    a.planet.tilePositionX += delta * 0.01;                 // rotate the surface
-    a.angle = (a.angle + delta * 0.0009) % (Math.PI * 2);   // sweep the radar
-    const r = a.R * 0.96;
+    a.planet.tilePositionX += delta * (a.overlay ? 0.005 : 0.01); // clouds drift / surface rotates
+    a.angle = (a.angle + delta * 0.0009) % (Math.PI * 2);
+    const inner = a.pr * 1.06;            // start at the planet's edge → "behind" it
+    const outer = a.R * 0.96;
+    const c = Math.cos(a.angle), s = Math.sin(a.angle);
     const g = a.sweep;
     g.clear();
-    g.fillStyle(0x7ad0ff, 0.08);                            // trailing wedge
-    g.slice(a.x, a.y, r, a.angle - 0.5, a.angle, false);
+    // Faint trailing wedge (annular sector from the planet edge to the dish edge).
+    g.fillStyle(0x7ad0ff, 0.07);
+    g.beginPath();
+    g.arc(a.x, a.y, outer, a.angle - 0.5, a.angle, false);
+    g.arc(a.x, a.y, inner, a.angle, a.angle - 0.5, true);
+    g.closePath();
     g.fillPath();
-    g.lineStyle(2, 0xaee4ff, 0.5);                          // leading line
-    g.lineBetween(a.x, a.y, a.x + Math.cos(a.angle) * r, a.y + Math.sin(a.angle) * r);
+    // Leading line from the planet edge outward.
+    g.lineStyle(2, 0xaee4ff, 0.5);
+    g.lineBetween(a.x + c * inner, a.y + s * inner, a.x + c * outer, a.y + s * outer);
   }
 
   /** Control console beneath the star-map. topY = the screen's bottom edge. */
