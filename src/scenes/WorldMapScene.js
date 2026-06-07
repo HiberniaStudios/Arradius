@@ -13,11 +13,12 @@ const MM_W = 220;
 const MM_H = Math.round(MM_W * WORLD_H / WORLD_W); // ≈ 110
 
 // Zoom limits
-// ZOOM_MIN is computed at runtime so the map always fills the viewport
-// (no black bars above/below). Horizontally the world tiles endlessly so
-// only the vertical constraint matters: zoom >= viewport_h / WORLD_H.
-const ZOOM_MAX = 2.0;
-const ZOOM_SPD = 0.0012; // per wheel delta unit
+// ZOOM_FLOOR: the game design height is 720. At zoom = 720/WORLD_H the
+// world fills the viewport exactly.  Add 8% margin so floating-point
+// rounding can never reveal a black bar above or below the terrain.
+const ZOOM_FLOOR = (720 / WORLD_H) * 1.08; // ≈ 0.38 at WORLD_H=2048
+const ZOOM_MAX   = 2.0;
+const ZOOM_SPD   = 0.0012;
 
 // Drag threshold (px) before we commit to a pan (not a click)
 const DRAG_THR = 7;
@@ -447,8 +448,7 @@ export default class WorldMapScene extends Phaser.Scene {
   _setupCamera() {
     // No setBounds — we manage wrapping manually in update()
     const cam = this.cameras.main;
-    // Start at 1.2 but never below the full-screen floor
-    cam.zoom = Math.max(1.20, cam.height / WORLD_H);
+    cam.zoom = Math.max(1.20, ZOOM_FLOOR);
     // Centre on Saltspire
     this._setCamWorld(NODES[0].wx, NODES[0].wy);
   }
@@ -467,8 +467,7 @@ export default class WorldMapScene extends Phaser.Scene {
   // scrollX wraps modulo WORLD_W; scrollY is clamped pole-to-pole.
   _wrapCamera() {
     const cam  = this.cameras.main;
-    // Enforce zoom floor (e.g. after a window resize changes the min)
-    if (cam.zoom < this._minZoom()) cam.zoom = this._minZoom();
+    if (cam.zoom < ZOOM_FLOOR) cam.zoom = ZOOM_FLOOR;
     const vh   = cam.height / cam.zoom;
     // Horizontal wrap — tiles endlessly, no clamping needed
     cam.scrollX = ((cam.scrollX % WORLD_W) + WORLD_W) % WORLD_W;
@@ -500,10 +499,8 @@ export default class WorldMapScene extends Phaser.Scene {
 
   _setupDrag() {
     let startX = 0, startY = 0, camX = 0, camY = 0;
-    let pointerHeld = false; // MUST be true (button down) before any panning
 
     this.input.on('pointerdown', (p) => {
-      pointerHeld = true;
       this.isDrag = false;
       startX = p.x; startY = p.y;
       camX   = this.cameras.main.scrollX;
@@ -511,23 +508,23 @@ export default class WorldMapScene extends Phaser.Scene {
     });
 
     this.input.on('pointermove', (p) => {
-      if (!pointerHeld) return; // no button held → no pan, ever
+      // p.isDown is Phaser's authoritative "any button is held" check —
+      // more reliable than a manually tracked flag.
+      if (!p.isDown) return;
+
       const dx = p.x - startX;
       const dy = p.y - startY;
       if (!this.isDrag && Math.sqrt(dx * dx + dy * dy) < DRAG_THR) return;
       this.isDrag = true;
 
       const cam = this.cameras.main;
-      const wdx = dx / cam.zoom;
-      const wdy = dy / cam.zoom;
       // Grab-and-drag: the world follows the cursor (like sliding a paper map).
-      cam.scrollX = ((camX - wdx) % WORLD_W + WORLD_W) % WORLD_W;
-      cam.scrollY = Phaser.Math.Clamp(camY - wdy, 0,
+      cam.scrollX = ((camX - dx / cam.zoom) % WORLD_W + WORLD_W) % WORLD_W;
+      cam.scrollY = Phaser.Math.Clamp(camY - dy / cam.zoom, 0,
         Math.max(0, WORLD_H - cam.height / cam.zoom));
     });
 
     this.input.on('pointerup', () => {
-      pointerHeld = false;
       this.time.delayedCall(20, () => { this.isDrag = false; });
     });
   }
@@ -538,7 +535,7 @@ export default class WorldMapScene extends Phaser.Scene {
     this.input.on('wheel', (pointer, objs, dx, dy) => {
       const cam    = this.cameras.main;
       const oldZ   = cam.zoom;
-      const newZ   = Phaser.Math.Clamp(oldZ * (1 - dy * ZOOM_SPD), this._minZoom(), ZOOM_MAX);
+      const newZ   = Phaser.Math.Clamp(oldZ * (1 - dy * ZOOM_SPD), ZOOM_FLOOR, ZOOM_MAX);
       if (newZ === oldZ) return;
 
       // Zoom toward the cursor
@@ -832,12 +829,6 @@ export default class WorldMapScene extends Phaser.Scene {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-
-  // Minimum zoom that keeps the world filling the full viewport height.
-  // Horizontal wraps endlessly so only the vertical edge matters.
-  _minZoom() {
-    return this.cameras.main.height / WORLD_H;
-  }
 
   escYAt(worldX) {
     const pts = this.escPts;
