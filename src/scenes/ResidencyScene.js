@@ -20,7 +20,7 @@ const LOCATIONS = {
   hall: {
     name: 'The Residency',
     flavor:
-      'The great hall of House Calder at Saltspire. Lamplight and slow dust, and the weight of a world just handed to your house.',
+      'The great hall of House Calder at Saltspire. Lamplight and slow dust. Your house has held this world for two generations — and the decree that takes it has just arrived.',
     feature: 'hall',
   },
   court: {
@@ -29,18 +29,30 @@ const LOCATIONS = {
     accent: 0xffd27a,
     feature: 'court',
     say: [
-      '“Arradius will test us, Eren. Hold to its people and we hold to the world.”',
-      '“Korinth did not gift us this fief out of love. Watch the dunes — and watch our own halls.”',
+      '”Calder has kept faith with Aridun for sixty years. Korinth will hear that argument — I will make them hear it.”',
+      '”Watch Halix. Watch our own halls. Not every danger wears Vorrin\'s colours.”',
     ],
     // The throne hall is the deeper hub; the private/sacred rooms lie past it.
-    exits: ['veil', 'quarters'],
+    exits: ['veil', 'solar', 'quarters'],
   },
   comms: {
     name: 'The Communications Room',
-    accent: 0x6aa0ff,
+    who: 'Halix',
+    accent: 0x8899bb,
     feature: 'comms',
-    flavor: 'The long-range array hums — a window onto all of Arradius, and the houses beyond.',
-    actions: [{ label: 'Open the channel', scene: 'WorldMapScene' }],
+    flavor: 'The intelligence feeds run day and night. Halix watches everything.',
+    say: [
+      '"Vorrin\'s boring rigs moved north-east overnight. Three new sites on the Keth rockbed. Korinth has not acknowledged our formal objection."',
+      '"Every position has a counter, my lord. I am already three moves ahead of this one."',
+    ],
+    exits: ['war'],
+    actions: [{ label: 'Study the map', scene: 'WorldMapScene' }],
+  },
+  war: {
+    name: "The Reckoner's Chamber",
+    accent: 0x8899bb,
+    feature: 'war',
+    flavor: 'Maps cover every surface. Vorrin drilling sites, Shadmen Hollow positions, Pale Legion movements. The room smells of cold logic.',
   },
   veil: {
     name: "The Veil's Sanctum",
@@ -49,7 +61,17 @@ const LOCATIONS = {
     feature: 'veil',
     say: [
       '“The threads tangle around you, child. I cannot yet see the knot.”',
-      '“When the Aurun takes you, do not look away. The Seir is born in that seeing.”',
+      '”When the Aurun finds you in the deep, let it settle. The Seir does not arrive — it surfaces.”',
+    ],
+  },
+  solar: {
+    name: 'The Solar',
+    who: 'Sela',
+    accent: 0xd4924a,
+    feature: 'solar',
+    say: [
+      '"The Sleepers moved east last night. I felt it. You learn to feel it, growing up here — and you have."',
+      '"There are things I\'ve been waiting for the right moment to tell you. I keep believing the moment will come. It will."',
     ],
   },
   infirmary: {
@@ -68,7 +90,7 @@ const LOCATIONS = {
     accent: 0xd0a070,
     feature: 'yard',
     say: [
-      '“Steel won’t win Arradius alone — but it’ll keep you breathing till the Shamen do.”',
+      '“Steel won\'t win Aridun alone — but it\'ll keep you breathing till the Shadmen do.”',
       '“Say the word and the Saltguard musters. We are yours.”',
     ],
   },
@@ -76,14 +98,14 @@ const LOCATIONS = {
     name: "Eren's Quarters",
     accent: 0x6fb0ff,
     feature: 'quarters',
-    flavor: 'Your own rooms. The Aurun-dreams come here, when they come.',
+    flavor: 'Your own rooms. The rock remembers things here, when the palace is quiet.',
   },
   deck: {
     name: 'The Corsair Deck',
     accent: 0xffce86,
     feature: 'deck',
     flavor: 'A corsair waits, wings folded against the dusk.',
-    actions: [{ label: 'Ride out into Arradius', scene: 'ExpeditionScene' }],
+    actions: [{ label: 'Ride out into Aridun', scene: 'ExpeditionScene' }],
   },
 };
 
@@ -97,9 +119,11 @@ const EXITS = {
   court: { back: 'hall' },
   yard: { back: 'hall' },
   infirmary: { back: 'hall' },
-  comms: { back: 'hall' },
-  deck: { back: 'hall' },
-  veil: { back: 'court' },       // the sacred sanctum — past the throne
+  comms: { back: 'hall', forward: 'war' },
+  war:   { back: 'comms' },
+  deck:  { back: 'hall' },
+  veil:     { back: 'court' },   // sacred sanctum — past the throne
+  solar:    { back: 'court' },   // Sela's sitting room — past the throne
   quarters: { back: 'court' },   // private apartments — past the throne
 };
 
@@ -392,7 +416,7 @@ export default class ResidencyScene extends Phaser.Scene {
   // --- Hall caption ---------------------------------------------------------
 
   renderHallCaption(loc, width, height, barTop) {
-    this.defaultCaption = 'Four halls open off the entrance — and the throne lies beyond the arch.';
+    this.defaultCaption = 'Four wings open off the entrance — the Court lies beyond the arch.';
     this.captionText = this.add
       .text(width / 2, barTop + (height - barTop) / 2, this.defaultCaption, {
         fontFamily: 'Georgia, serif',
