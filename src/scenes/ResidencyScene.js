@@ -676,20 +676,20 @@ export default class ResidencyScene extends Phaser.Scene {
 
     const draw = (hover) => {
       g.clear();
-      g.fillStyle(0x1e120a, 1);
+      g.fillStyle(hover ? 0x3a2010 : 0x2c1a0a, 1);              // cover — readable brown
       g.fillRect(cx - w / 2, cy - h / 2, w, h);
-      g.lineStyle(1.5, hover ? GOLD : 0x7a5a22, hover ? 0.85 : 0.45);
+      g.lineStyle(1.5, hover ? GOLD : 0xb07828, hover ? 0.9 : 0.75);
       g.strokeRect(cx - w / 2, cy - h / 2, w, h);
-      g.fillStyle(0x3a2010, 1);
-      g.fillRect(cx - w / 2, cy - h / 2, 5, h);                 // spine
-      g.lineStyle(1, 0xc8922a, hover ? 0.5 : 0.22);
+      g.fillStyle(hover ? 0x5a3018 : 0x4a2812, 1);              // spine
+      g.fillRect(cx - w / 2, cy - h / 2, 5, h);
+      g.lineStyle(1, 0xc8922a, hover ? 0.7 : 0.5);              // spine highlight
       g.lineBetween(cx - w / 2 + 5, cy - h / 2 + 3, cx - w / 2 + 5, cy + h / 2 - 3);
-      g.lineStyle(1, hover ? 0x8a7a5a : 0x3a2e1e, 0.7);         // page lines
+      g.lineStyle(1, hover ? 0xb0a080 : 0x6a5a3a, 0.8);         // page lines
       [-9, -2, 5, 12].forEach((dy) => {
         g.lineBetween(cx - w / 2 + 8, cy + dy, cx + w / 2 - 3, cy + dy);
       });
-      const aa = hover ? 0.8 : 0.4;
-      g.fillStyle(hover ? GOLD : 0x7a5a22, aa);                  // corner accents
+      const aa = hover ? 0.9 : 0.7;
+      g.fillStyle(hover ? GOLD : 0xb07828, aa);                  // corner accents
       g.fillRect(cx + w / 2 - 6, cy - h / 2, 6, 1.5);
       g.fillRect(cx + w / 2 - 1.5, cy - h / 2, 1.5, 6);
       g.fillRect(cx + w / 2 - 6, cy + h / 2 - 1.5, 6, 1.5);
@@ -702,7 +702,7 @@ export default class ResidencyScene extends Phaser.Scene {
       .text(cx, cy + h / 2 + 5, 'CODEX', {
         fontFamily: 'monospace',
         fontSize: '9px',
-        color: '#5a4a2a',
+        color: '#a07838',
       })
       .setOrigin(0.5, 0)
       .setDepth(103);
@@ -712,8 +712,8 @@ export default class ResidencyScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .setDepth(106);
 
-    zone.on('pointerover', () => { draw(true); lbl.setColor('#c8a84a'); });
-    zone.on('pointerout', () => { draw(false); lbl.setColor('#5a4a2a'); });
+    zone.on('pointerover', () => { draw(true); lbl.setColor('#f0c050'); });
+    zone.on('pointerout', () => { draw(false); lbl.setColor('#a07838'); });
     zone.on('pointerdown', (p, lx, ly, e) => { e?.stopPropagation(); this.openCodex(); });
 
     this.dynamic.push(g, lbl, zone);
