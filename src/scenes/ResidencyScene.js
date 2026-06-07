@@ -9,7 +9,7 @@ import { enablePainterly, togglePainterly } from '../shaders/KuwaharaPostFX.js';
 
 const GOLD = 0xc9a24a;
 const GOLD_S = '#c9a24a';
-const CREAM = '#e8d8c0';
+const CREAM = '#f2e6d0';
 
 // Experiment: use the painted PNG backdrop for the hall instead of the
 // procedural art. Set false to fall back to the fully procedural hall (which
@@ -424,19 +424,21 @@ export default class ResidencyScene extends Phaser.Scene {
   drawPanel(width, height, bt) {
     const b = this.bar;
     b.clear();
-    const grad = 6;
+    const ph = height - bt;
+    // Transparent purple overlay — room shows through with a purple tint.
+    const grad = 5;
     for (let i = 0; i < grad; i += 1) {
-      b.fillStyle(0x1a1030, 0.90 * ((i + 1) / grad));
-      b.fillRect(0, bt + ((height - bt) * i) / grad, width, (height - bt) / grad + 1);
+      b.fillStyle(0x2a1848, (0.35 + 0.40 * ((i + 1) / grad)));
+      b.fillRect(0, bt + (ph * i) / grad, width, ph / grad + 1);
     }
     // Sandstone + gold top trim.
-    b.fillStyle(0xb07d4a, 0.75);
+    b.fillStyle(0xb07d4a, 0.90);
     b.fillRect(0, bt, width, 2);
-    b.fillStyle(GOLD, 0.60);
-    b.fillRect(0, bt + 2, width, 1);
-    // Subtle gold corner brackets (echo of the old ornate bar, kept light).
-    const cs = 22;
     b.fillStyle(GOLD, 0.80);
+    b.fillRect(0, bt + 2, width, 1);
+    // Gold corner brackets.
+    const cs = 22;
+    b.fillStyle(GOLD, 0.90);
     b.fillRect(0, bt, cs, 2);
     b.fillRect(0, bt, 2, cs);
     b.fillRect(width - cs, bt, cs, 2);
@@ -559,12 +561,12 @@ export default class ResidencyScene extends Phaser.Scene {
 
       const nameTxt = this.add
         .text(80, cy - 8, loc.who, {
-          fontFamily: 'Georgia, serif', fontSize: '14px',
-          color: Phaser.Display.Color.IntegerToColor(loc.accent).rgba,
+          fontFamily: 'Georgia, serif', fontSize: '15px',
+          color: CREAM,
         })
         .setOrigin(0, 0.5).setDepth(104).setInteractive({ useHandCursor: true });
-      nameTxt.on('pointerover', () => nameTxt.setColor('#f0e0c0'));
-      nameTxt.on('pointerout', () => nameTxt.setColor(Phaser.Display.Color.IntegerToColor(loc.accent).rgba));
+      nameTxt.on('pointerover', () => nameTxt.setColor(GOLD_S));
+      nameTxt.on('pointerout', () => nameTxt.setColor(CREAM));
       nameTxt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.enterDialogue(loc); });
       this.dynamic.push(nameTxt);
 
@@ -654,7 +656,7 @@ export default class ResidencyScene extends Phaser.Scene {
       .text(x, y, '›', {
         fontFamily: 'monospace',
         fontSize: '14px',
-        color: accentHex,
+        color: GOLD_S,
       })
       .setOrigin(0, 0.5)
       .setDepth(104);
@@ -663,7 +665,7 @@ export default class ResidencyScene extends Phaser.Scene {
       .text(x + 16, y, label, {
         fontFamily: 'Georgia, serif',
         fontSize: '14px',
-        color: '#c8b898',
+        color: '#d8c4a0',
       })
       .setOrigin(0, 0.5)
       .setDepth(104);
@@ -675,7 +677,7 @@ export default class ResidencyScene extends Phaser.Scene {
       .setDepth(105);
 
     zone.on('pointerover', () => txt.setColor(CREAM));
-    zone.on('pointerout', () => txt.setColor('#c8b898'));
+    zone.on('pointerout', () => txt.setColor('#d8c4a0'));
     zone.on('pointerdown', (p, lx, ly, e) => {
       e?.stopPropagation();
       onClick();
