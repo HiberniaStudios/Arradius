@@ -174,27 +174,27 @@ const CODEX_LORE = [
 const CODEX_CHARACTERS = {
   'Lord Aldric': {
     title: 'Lord Aldric Calder',
-    body: 'Your father. Second generation of Calder on Aridun. He inherited a cautious relationship with the Shadmen and maintained it — more administrator than idealist, but consistent where consistency mattered.\n\nHe believes the fief revocation can be argued. Korinth granted this world on the strength of Calder stewardship; he intends to make that case, formally and on the record.',
+    body: 'Second generation of Calder on Aridun. His father made the Shadmen contact out of necessity — you cannot govern this world without understanding it. Aldric inherited that arrangement and maintained it, but as policy rather than relationship. He kept the agreements, paid fair prices for Shadmen guidance, filed formal objections to Vorrin\'s early encroachments through proper channels.\n\nHe is not naive about power — he understands it acutely — but he believes its legitimate exercise should be answered in kind. The Korinth decree has confounded him. Not because he doesn\'t understand politics, but because he genuinely believes sixty years of Calder stewardship speaks for itself. He hasn\'t fully grasped that Korinth isn\'t listening to records anymore.',
   },
   'Halix': {
     title: 'Halix',
-    body: 'The house intelligencer. He keeps the feeds: Vorrin drilling sites, Pale Legion patrol routes, Shadmen Hollow positions, shipping manifests, communication intercepts. The picture he holds of Aridun at any moment is more complete than anyone else\'s in the Residency.\n\nHe is methodical and unsentimental. He has been with the house for several years.',
+    body: 'A Reckoner — trained in a specific discipline: that sufficient information, correctly analysed, resolves into the right course of action. He does not operate on intuition. He came to House Calder with references that checked out and a skill that proved itself quickly. Where he came from before is in his file.\n\nHis intelligence picture of Aridun is the most complete in the Residency — Vorrin drilling schedules, Pale Legion patrol rotations, Shadmen route maps — not because he has special gifts but because he is systematic in a way most people find exhausting.',
   },
   'Mother Ysolde': {
     title: 'Mother Ysolde',
-    body: 'Keeper of the Veil\'s sanctum at Saltspire. The Veil is a discipline, not an order — readers of deep pattern, long memory, students of the Seir. Ysolde is its elder in the Residency.\n\nShe has been at Saltspire longer than Lord Aldric. She speaks rarely and at length when she does.',
+    body: 'She was at Saltspire before Aldric was lord. She was there when his father held the seat. She is the oldest person in the Residency by some margin and does not draw attention to this.\n\nThe Veil\'s discipline is record-keeping — ecological observation, Sleeper migration patterns, deep water tables, the slow signals in the rock — accumulated across generations. Ysolde holds more time-series data on Aridun\'s deep patterns than anyone alive. She does not call this prophecy; she calls it reading. She reads the Seir the same way: not as mysticism but as a precise account of observable conditions, written by someone who observed them. She speaks rarely. When she does, she has finished thinking.',
   },
   'Sela': {
     title: 'Sela',
-    body: 'She grew up on Aridun — not in Saltspire, but in the desert. She is of the Veil, though she carries it differently than Ysolde: less ceremony, more urgency.\n\nShe knows the rockbed and the Sleeper routes the way someone knows a landscape they were born reading. She feels the deep patterns. She says you do too.',
+    body: 'She is not from the court. She came to Saltspire. She grew up in the deep desert — not Shadmen, but close enough to their world to read the rock the way people read things they grew up inside rather than learned. She knows Sleeper routes that are not on any map because you cannot map them; they shift.\n\nShe has been in the Residency long enough to understand its rhythms but has never fully belonged to it. She is of the Veil — their urgency, where Ysolde is their patience — which means she holds a longer view of what is happening to Aridun than anyone else in this building, and finds it harder than any of them to sit still.',
   },
   'Master Orlin': {
     title: 'Master Orlin',
-    body: 'The house physician. He has served House Calder at Saltspire for over a decade. His reports are thorough and his manner careful — attentive to the house\'s wellbeing in the way his office requires.\n\nHe is well-liked by the household.',
+    body: 'A decade in the Residency, treating the same household. He knows the bodies of House Calder\'s court the way a physician learns people over years — who carries tension in the neck, who doesn\'t sleep well, who has the particular mineral dryness in their skin that comes from time in the deep desert.\n\nHe knows Aridun\'s medicine specifically: what the rock environment does to people, how the dry altitude affects healing, how Aurun exposure — rare, but not unknown in a house like this — presents. He is good at his work and careful with it, and the household likes him for both.',
   },
   'Brannic': {
     title: 'Brannic',
-    body: 'Bladewarden of House Calder, commander of the Saltguard. He trained under the previous Bladewarden and has held the post for eight years.\n\nDirect in speech and thorough in practice. He understands that the military situation on Aridun is not a straightforward one and says so without drama.',
+    body: 'Aridun-born, not Shadmen. His father was a garrison soldier in Saltspire. He grew up in the palace\'s service wing and learned his trade under the previous Bladewarden — a more traditional soldier who hadn\'t fully adapted to what fighting on Aridun actually means.\n\nBrannic has spent eight years correcting for that. He knows the Saltguard\'s limits on this terrain and has built something closer to intelligence relationships with Shadmen contacts — not alliance, but the kind of mutual understanding that requires years and honesty about what each side needs. He considers this the most militarily important thing he has done since taking the post.',
   },
 };
 
