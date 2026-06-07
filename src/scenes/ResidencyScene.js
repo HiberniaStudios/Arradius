@@ -1484,17 +1484,6 @@ export default class ResidencyScene extends Phaser.Scene {
 
     const sweep = this.add.graphics().setDepth(base + 5);
 
-    // Interactive highlight ring — drawn on hover, invisible at rest.
-    const hoverRing = this.add.graphics().setDepth(base + 6);
-    const drawHoverRing = (on) => {
-      hoverRing.clear();
-      if (!on) return;
-      hoverRing.lineStyle(2, 0xaee4ff, 0.55);
-      hoverRing.strokeCircle(x, y, R * 0.97);
-      hoverRing.lineStyle(1, 0xaee4ff, 0.25);
-      hoverRing.strokeCircle(x, y, R * 0.90);
-    };
-
     // Hover label — "Study the map  →"
     const mapLabel = this.add
       .text(x, y + R + 14, 'Study the map  →', {
@@ -1509,12 +1498,10 @@ export default class ResidencyScene extends Phaser.Scene {
       .setDepth(base + 7);
 
     mapZone.on('pointerover', () => {
-      drawHoverRing(true);
       glow.setAlpha((overlay ? 0.12 : 0.22) + 0.14);
       this.tweens.add({ targets: mapLabel, alpha: 1, duration: 200 });
     });
     mapZone.on('pointerout', () => {
-      drawHoverRing(false);
       glow.setAlpha(overlay ? 0.12 : 0.22);
       this.tweens.add({ targets: mapLabel, alpha: 0, duration: 200 });
     });
@@ -1523,7 +1510,7 @@ export default class ResidencyScene extends Phaser.Scene {
       this.goTo('WorldMapScene');
     });
 
-    this.dynamic.push(hoverRing, mapLabel, mapZone);
+    this.dynamic.push(mapLabel, mapZone);
     this.commsAnim = { planet, mask, ov, glow, sweep, x, y, R, pr, overlay, angle: -Math.PI / 2 };
   }
 
