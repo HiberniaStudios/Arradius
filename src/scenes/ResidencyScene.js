@@ -16,6 +16,10 @@ const CREAM = '#e8d8c0';
 // is left completely intact). Auto-falls back if the texture failed to load.
 const USE_HALL_BG = true;
 
+// Painted backdrops by room feature → BootScene texture key. Rooms without an
+// entry fall back to procedural art.
+const BACKDROPS = { hall: 'hallBg', comms: 'commsBg' };
+
 const LOCATIONS = {
   hall: {
     name: 'The Residency',
@@ -282,12 +286,14 @@ export default class ResidencyScene extends Phaser.Scene {
 
     // Painted scene — EVERY room fills the full canvas, for one consistent frame.
     this.bd.clear();
-    const useBg = USE_HALL_BG && loc.feature === 'hall' && this.textures.exists('hallBg');
+    const bgKey = USE_HALL_BG ? BACKDROPS[loc.feature] : null;
+    const useBg = bgKey && this.textures.exists(bgKey);
     if (useBg) {
-      this.showHallBackground(width, height);
+      this.showBackdrop(bgKey, width, height);
+      if (loc.feature === 'hall') this.setHallHotspots(width, height);
     } else if (loc.feature === 'comms') {
       if (this.hallBgImg) this.hallBgImg.setVisible(false);
-      this.sceneComms(this.bd, width, height);
+      this.sceneComms(this.bd, width, height); // procedural fallback
       this.createCommsAnim();
     } else {
       if (this.hallBgImg) this.hallBgImg.setVisible(false);
@@ -329,14 +335,16 @@ export default class ResidencyScene extends Phaser.Scene {
 
   // --- Painted backdrop (experimental) --------------------------------------
 
-  /** Draw the full-canvas PNG backdrop and place door hotspots over its doorways. */
-  showHallBackground(width, height) {
+  /** Show a full-canvas painted backdrop for the current room (one shared image). */
+  showBackdrop(key, width, height) {
     if (!this.hallBgImg) {
-      this.hallBgImg = this.add.image(0, 0, 'hallBg').setOrigin(0, 0).setDepth(-60);
+      this.hallBgImg = this.add.image(0, 0, key).setOrigin(0, 0).setDepth(-60);
     }
-    this.hallBgImg.setVisible(true).setDisplaySize(width, height); // 16:9 → 16:9, no stretch
+    this.hallBgImg.setTexture(key).setVisible(true).setDisplaySize(width, height); // 16:9 → 16:9
+  }
 
-    // Four side archways + the throne arch, as fractions of the full canvas.
+  /** Door hotspots over the painted hall's four archways + throne arch. */
+  setHallHotspots(width, height) {
     // Outer arches → everyday wings; inner arches (by the statues) → action rooms.
     const door = (x, y, w, h, key) => ({
       x: width * x, y: height * y, w: width * w, h: height * h,
