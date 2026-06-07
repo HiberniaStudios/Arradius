@@ -13,11 +13,13 @@ const MM_W = 220;
 const MM_H = Math.round(MM_W * WORLD_H / WORLD_W); // ≈ 110
 
 // Zoom limits
-// ZOOM_FLOOR: the game design height is 720. At zoom = 720/WORLD_H the
-// world fills the viewport exactly.  Add 8% margin so floating-point
-// rounding can never reveal a black bar above or below the terrain.
-const ZOOM_FLOOR = (720 / WORLD_H) * 1.08; // ≈ 0.38 at WORLD_H=2048
-const ZOOM_MAX   = 2.0;
+// The zoom FLOOR is computed dynamically from the LIVE camera height (see
+// _zoomFloor()), not a fixed constant: Scale.RESIZE makes the viewport the
+// whole window, so a hardcoded 720-based floor left a navy gap above/below the
+// terrain on any window taller than 720. ZOOM_MARGIN over-fills slightly so
+// floating-point rounding can never reveal a black bar.
+const ZOOM_MARGIN = 1.08;
+const ZOOM_MAX    = 2.0;
 const ZOOM_SPD   = 0.0012;
 
 // Drag threshold (px) before we commit to a pan (not a click)
@@ -107,6 +109,9 @@ export default class WorldMapScene extends Phaser.Scene {
     this.scale.on('resize', () => {
       const { width: W, height: H } = this.cameras.main;
       this.uiCam?.setSize(W, H);
+      // A taller window raises the floor — re-clamp zoom + reposition so the
+      // terrain keeps filling the viewport with no gap.
+      this._wrapCamera();
       this._layout();
     }, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
@@ -455,10 +460,20 @@ export default class WorldMapScene extends Phaser.Scene {
 
   // ── Camera ────────────────────────────────────────────────────────────────
 
+  // Minimum zoom at which the world covers the viewport HEIGHT. Width wraps
+  // (3 tiles), so it's always covered — only height can leave a gap. Tracks the
+  // live camera height so it stays correct at any window size under RESIZE.
+  _zoomFloor() {
+    return (this.cameras.main.height / WORLD_H) * ZOOM_MARGIN;
+  }
+
   _setupCamera() {
     // No setBounds — we manage wrapping manually in update()
     const cam = this.cameras.main;
-    cam.zoom = Math.max(1.20, ZOOM_FLOOR);
+    // Map void colour: any momentary uncovered sliver blends with the terrain's
+    // dark sky instead of flashing the navy scene background.
+    cam.setBackgroundColor(0x0a0806);
+    cam.zoom = Math.max(1.20, this._zoomFloor());
     // Centre on Saltspire
     this._setCamWorld(NODES[0].wx, NODES[0].wy);
   }
@@ -477,7 +492,8 @@ export default class WorldMapScene extends Phaser.Scene {
   // scrollX wraps modulo WORLD_W; scrollY is clamped pole-to-pole.
   _wrapCamera() {
     const cam  = this.cameras.main;
-    if (cam.zoom < ZOOM_FLOOR) cam.zoom = ZOOM_FLOOR;
+    const zf   = this._zoomFloor();
+    if (cam.zoom < zf) cam.zoom = zf;
     const vh   = cam.height / cam.zoom;
     // Horizontal wrap — tiles endlessly, no clamping needed
     cam.scrollX = ((cam.scrollX % WORLD_W) + WORLD_W) % WORLD_W;
@@ -545,7 +561,7 @@ export default class WorldMapScene extends Phaser.Scene {
     this.input.on('wheel', (pointer, objs, dx, dy) => {
       const cam    = this.cameras.main;
       const oldZ   = cam.zoom;
-      const newZ   = Phaser.Math.Clamp(oldZ * (1 - dy * ZOOM_SPD), ZOOM_FLOOR, ZOOM_MAX);
+      const newZ   = Phaser.Math.Clamp(oldZ * (1 - dy * ZOOM_SPD), this._zoomFloor(), ZOOM_MAX);
       if (newZ === oldZ) return;
 
       // Zoom toward the cursor
