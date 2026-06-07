@@ -445,7 +445,7 @@ export default class WorldMapScene extends Phaser.Scene {
   _setupCamera() {
     // No setBounds — we manage wrapping manually in update()
     const cam = this.cameras.main;
-    cam.zoom = 0.82; // comfortable starting zoom — shows region context without feeling tiny
+    cam.zoom = 1.20; // street-level zoom — nodes readable, scroll out to see planet
     // Centre on Saltspire
     this._setCamWorld(NODES[0].wx, NODES[0].wy);
   }
@@ -510,13 +510,13 @@ export default class WorldMapScene extends Phaser.Scene {
       if (!this.isDrag && Math.sqrt(dx * dx + dy * dy) < DRAG_THR) return;
       this.isDrag = true;
 
-      // Joystick-style pan: drag right → see more of the right side.
-      // Divide by zoom so panning feels consistent at all zoom levels.
+      // Grab-and-drag: the world point you clicked stays under the cursor.
+      // Drag in any direction and the map follows — like sliding a paper map.
       const wdx = dx / cam.zoom;
       const wdy = dy / cam.zoom;
 
-      cam.scrollX = ((camX + wdx) % WORLD_W + WORLD_W) % WORLD_W;
-      cam.scrollY = Phaser.Math.Clamp(camY + wdy, 0,
+      cam.scrollX = ((camX - wdx) % WORLD_W + WORLD_W) % WORLD_W;
+      cam.scrollY = Phaser.Math.Clamp(camY - wdy, 0,
         Math.max(0, WORLD_H - cam.height / cam.zoom));
     });
 
