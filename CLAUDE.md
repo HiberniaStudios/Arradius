@@ -95,6 +95,9 @@ master ─┬─ musicGain    (continuous score — drone chord + pad + sub, "br
   fades in; `setEnabled`/`toggle` fade the master without tearing down.
 - **State:** `setMusicState('residency'|'expedition')` transposes/filters the
   bed; `setAmbience(roomKey)` crossfades to a room's recipe.
+- **All noise voices use `pinkBuffer`** (`wind`, `murmur`, `roomTone`) — pink
+  noise is warmer/less hissy than white; the switch came from the research doc
+  (Part 3, item 4).
 - **Per-room sound** lives in the `RECIPES` map at the bottom (`hall`, `court`,
   `comms`, `veil`, `infirmary`, `yard`, `quarters`, `deck`, `map`,
   `expedition`), built from voice helpers (`wind`, `roomTone`, `murmur`,

@@ -5,10 +5,12 @@ and [Vite](https://vitejs.dev/), deployed to **Cloudflare Pages**. Influenced by
 the 1992 Cryo/Virgin _Dune_ — mood, music, and a desert world — in an original
 universe. See [`VISION.md`](./VISION.md) for the creative direction.
 
-This is the **first painterly slice**: a hooded walk across the dunes of Aridun
-toward a Hollow, gathering Aurun, under a dusk sky with an ambient soundbed. It
-still runs with no binary assets — every texture and sound is generated at
-runtime, so you can clone, install, and play immediately.
+The current build contains the **Residency hub** (the painted palace of House
+Calder, navigated point-and-click through eight rooms with portrait dialogue),
+the **World Map** (the strategic overview of Arradius), and the **Expedition**
+side-scroller (a hooded walk across the dunes toward Tamir's Hollow). It still
+runs with no binary assets — every texture and sound is generated at runtime, so
+you can clone, install, and play immediately.
 
 ## Quick start
 
@@ -19,9 +21,10 @@ npm run build    # production build into ./dist
 npm run preview  # preview the production build locally
 ```
 
-Controls: **← →** or **A / D** to move, **↑** / **Space** to jump (or the
-on-screen buttons on touch devices). Gather Aurun; head right toward the Hollow.
-Tap once to start the music; **♪** (top-right) toggles it.
+Click once anywhere to start the music; **♪** (top-right) toggles it. Navigate
+the Residency by clicking doorways. From the Corsair Deck, ride out to the
+Expedition side-scroller: **← →** / **A D** to move, **↑** / **Space** to jump.
+Reach the Hollow to return home. **K** toggles the painterly (Kuwahara) filter.
 
 ## Project structure
 
