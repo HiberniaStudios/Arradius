@@ -397,7 +397,7 @@ export default class ResidencyScene extends Phaser.Scene {
       if (loc.feature === 'comms') {
         // Live rotating planet + sweep overlaid on the painted dish.
         this.commsScreenInfo = {
-          x: Math.round(width * 0.71), y: Math.round(height * 0.417),
+          x: Math.round(width * 0.72), y: Math.round(height * 0.400),
           R: Math.round(height * 0.21), prRatio: 0.29, overlay: true,
         };
         this.createCommsAnim();
@@ -1498,7 +1498,7 @@ export default class ResidencyScene extends Phaser.Scene {
     a.planet.tilePositionX += delta * (a.overlay ? 0.005 : 0.01); // clouds drift / surface rotates
     a.angle = (a.angle + delta * 0.0009) % (Math.PI * 2);
     const inner = a.pr * 1.06;            // start at the planet's edge → "behind" it
-    const outer = a.R * 0.96;
+    const outer = a.R * 1.12;
     const c = Math.cos(a.angle), s = Math.sin(a.angle);
     const g = a.sweep;
     g.clear();
@@ -1510,7 +1510,7 @@ export default class ResidencyScene extends Phaser.Scene {
     g.closePath();
     g.fillPath();
     // Leading line from the planet edge outward.
-    g.lineStyle(2, 0xaee4ff, 0.5);
+    g.lineStyle(2.3, 0xaee4ff, 0.7);
     g.lineBetween(a.x + c * inner, a.y + s * inner, a.x + c * outer, a.y + s * outer);
   }
 
