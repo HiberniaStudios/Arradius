@@ -106,16 +106,42 @@ finally **Vorrinhold** itself.
 
 _Locked, but editable as we progress._
 
+### World geography
+
+Aridun is not a sand world. It is a rock world with sand in the spaces between.
+
+The surface is divided between two terrains. **Dune seas** — shifting sand fields
+that fill the low ground between formations. Exposed, featureless from above,
+dangerous to cross. What you see from Saltspire's walls; where Corsairs fly.
+**Rockbed plains** — vast platforms of ancient hard rock, flat and dramatic,
+visually completely distinct from the dunes. Weathered formations rise from them.
+The rock is permanent; the dunes are almost cosmetic by comparison.
+
+The Shadmen build into the rockbed. Their Hollows are carved into rock massifs —
+entrances that read as natural geology to anyone who doesn't know what they're
+looking for. Aurun blooms surface through porous sections of the rock face, not
+through sand; to find blooms, you read the rock, not the dune.
+
+Beneath the hard rockbed is a deeper geological layer — older, softer, more
+friable; compressed over vast timescales but yielding under enough force. The
+hard surface layer is the ceiling of this world. The Sleepers live below it
+entirely. The Hollows the Shadmen inhabit sit at the boundary — carved down into
+the hard layer, touching the deep layer only at certain thinned or fractured
+points. Those points are the sacred junctions of the Shadmen's underground
+geography.
+
 ### Places
 
 - **Saltspire** — the capital city of Aridun, seat of House Calder's rule.
 - **the Residency** — the Palace within Saltspire; your hub.
-- **Hollows** — the Shadmen's settlements (our "sietch"); sacred deep refuges.
-- **Warrens** — the tunnel networks within and between Hollows; the underground
+- **Hollows** — the Shadmen's settlements; carved into hard rockbed formations,
+  accessible through concealed rock-face entrances. Their lower chambers connect
+  to the Sleeper deep layer at thinned junction points.
+- **Warrens** — the passage networks within and between Hollows; the underground
   side-scrolling levels.
 - **Vorrinhold** _(working)_ — House Vorrin's stronghold; the campaign's final
   objective. Take it to end the war.
-- **Tamir's Hollow** — the first Hollow Eren wins; home of the Shadmen chief Tamir.
+- **Tamir's Hollow** — the first Hollow Eren reaches; home of the Shadmen chief Tamir.
 - **Ashmaw** — a House Vorrin watchpost; an early target on the road to Vorrinhold.
 
 ### The court of House Calder
@@ -355,19 +381,24 @@ The systems are modelled on Cryo's _Dune_, refit to Aridun:
   the map of Aridun fills in as you go.
 - **Recruit the Shadmen** — find tribes, earn their trust, bring them to House
   Calder's cause.
-- **Assign tribes to tasks** — **Aurun harvesting**, **military** training, or
-  **ecology** (greening). Tribes have aptitudes and loyalties.
+- **Assign tribes to tasks** — **Aurun following** (reading Sleeper routes,
+  collecting bloom wake), **military** training, or **ecology** (greening).
+  Tribes have aptitudes and loyalties.
 - **Resource economy** — **Aurun** (wealth, tribute, power), **water** (life and
   the truest currency), troops, and equipment.
 - **Territorial war** — push **House Vorrin** out of Aridun region by region;
   take their holds.
 - **Ecology** — green the desert over time; a visible, consequential, slow
   transformation of the world.
-- **Prescience & abilities** — Aurun is a secretion of the Sleepers, not a
-  plant or mineral. Aurun-exposure deepens Eren's Veil-inherited sensitivity;
-  the visions awaken him as the **Seir**. Prescience is Veil training + Aridun
-  proximity, not a drug effect — Eren's inheritance from Sela made him
-  susceptible; the Aurun opens what was already there.
+- **Aurun & sensitivity** — Aurun is a secretion left by the Sleepers in their
+  passage channels; it is not mined but followed — collected from the rock in a
+  Sleeper's wake, never taken from an active site. Vorrin's extraction drills
+  into active bloom sites before the Sleeper has finished, which permanently
+  disrupts the route. Aurun has material properties (structural, luminescent)
+  that make it valuable to Korinth's civilization — it is not a narcotic or
+  life-extender. Contact with raw Aurun in the deep passages deepens Eren's
+  Veil-inherited sensitivity to Aridun's patterns — the ability was latent in
+  him by birth; the Aurun exposure sharpens it into something he can use.
 - **Side-scrolling expeditions** — _our addition_: the travel and Warren-delving
   between all of the above, played on foot, where the world is felt.
 
@@ -378,11 +409,19 @@ The Residency is the base; Eren rides out himself. Travel is also spectacle:
 - **Corsairs** — winged craft for crossing Aridun (our ornithopter). The means
   of map travel and the staging of side-scroll flight set-pieces: threading
   canyons and spires, outrunning storms and Vorrin patrols.
-- **Sleeper-riding** — the Shadmen rite and the Seir's late-game power. A
-  **Caller** drums the sand to summon a Sleeper; ride-hooks hold the ridge of its
-  back. To ride is to cross the deep at speed — and, turned on a
-  fort, to bring the desert itself down on House Vorrin. The first ride is the
-  rite that marks the Seir.
+- **Sleeper passage** — the Shadmen do not ride the Sleepers; they travel with
+  them. The Sleepers move through the soft deep layer below the rockbed,
+  displacing it as they pass and leaving temporary channels — vast lit corridors
+  of warm rock, their walls glowing with Aurun traces — that remain navigable for
+  hours before the rock settles back. A **Caller** reads vibration patterns in
+  the rock to locate a moving Sleeper; the Shadmen then enter the passage channel
+  in its wake and move with it through the deep. The creatures are indifferent to
+  the travellers behind them — not hostile, not welcoming. They simply move.
+  Eren's **first encounter** is from a connecting cavern: he watches a Sleeper
+  pass in a perpendicular channel, sees only a cross-section of something vast
+  and dark, the Aurun lighting the rock behind it. He enters the passage it
+  leaves. That decision — stepping into the warm glowing channel before it
+  closes — is the rite that marks the Seir.
 
 _Creative licence: the **mechanics** follow Dune '92, but the **story** is our
 own. This is the working spine — bend it freely._
@@ -403,12 +442,15 @@ open road — and **Lord Aldric** falls. Not by treachery from within; by a wind
 a cold mind chose not to close. House Calder holds the Residency; **Eren** takes
 command, and turns to the Shadmen and the desert for the strength to answer.
 
-**Act II — The Seir Awakens.** From the Residency, Eren wins the Shadmen Hollow by
-Hollow and raises a resistance — the **Veiled Knives**. His own expeditions into
-the Warrens expose him to raw Aurun; the visions deepen until the prophecy fits
-him: he is the **Seir**. The realm game opens fully — harvest, ecology, war — and
-the greening of Aridun begins as he turns the desert and its **Sleepers** against
-Vorrin, taking their forts one by one.
+**Act II — The Seir Awakens.** From the Residency, Eren wins the Shadmen Hollow
+by Hollow and raises a resistance — the **Veiled Knives**. His own expeditions
+into the deep rock expose him to raw Aurun; his pattern-reading sharpens into
+something closer to foresight. The Shadmen who believe in him call him the
+**Seir** — one who walks both the surface world and the rock-world. Half don't.
+The prophecy is a contested reading of an ecological text, not a proclamation,
+and Eren cannot be certain it describes him. The realm game opens fully —
+Aurun-following, ecology, war — and the greening of Aridun begins as he turns
+the deep rock and its Sleepers against Vorrin, taking their forts one by one.
 
 **Act III — The Reckoning.** The fort campaign culminates in the assault on
 **Vorrinhold**, and the hand of House Korinth behind it is revealed. The cost of
@@ -429,14 +471,14 @@ consciousness, Fremen loyalty, spice mining, army, ecology).
 
 | # | Event | Mode | Unlocks |
 | --- | --- | --- | --- |
-| 1 | **The Poisoned Gift** _(intro)_ — House Calder is granted Aridun | Residency | The Residency hub + the world map |
+| 1 | **The Fief Revoked** _(intro)_ — Korinth's decree arrives; House Vorrin moves in | Residency | The Residency hub + the world map |
 | 2 | **First Contact** — Eren rides a Corsair out to the first Hollow and meets **Tamir** and the Shadmen | Side-scroll (Corsair + on foot) | Tribe recruitment |
 | 3 | **Word of Aurun** — court and Shadmen reveal what Aurun is and why the Imperium hungers | Residency | The Aurun economy / harvesting |
 | 4 | **The Road Ambush** — Vorrin strikes on the open road; Lord Aldric falls; Eren takes command | Residency | The war footing — the fort campaign begins |
-| 5 | **Aurun Exposure** — deep in the Warrens, raw Aurun marks Eren; his eyes change; the first vision | Side-scroll | Prescience (foresee enemy moves / hidden paths) |
+| 5 | **First Passage** — Eren enters the deep rock; watches a Sleeper pass in the dark; enters the channel it leaves; raw Aurun exposure sharpens his pattern-reading | Side-scroll | Deep-rock traversal; sensitivity (read terrain, probable outcomes) |
 | 6 | **Winning the Tribes** — earn Shadmen loyalty, Hollow by Hollow | Map + visits | The **Veiled Knives** and broader map reach |
-| 7 | **The Harvest & the Greening** — Aurun mining and the ecology project come online | Residency | Economy scaling + slow world transformation |
-| 8 | **The Seir Awakens** _(vision + first Sleeper-ride)_ — prescience deepens; Eren rides his first Sleeper | Side-scroll | The **Sleepers** as mount and weapon; late-game power |
+| 7 | **The Following & the Greening** — Aurun route-following and the ecology project come online | Residency | Economy scaling + slow world transformation |
+| 8 | **The Seir Awakens** _(the contested name)_ — Eren enters a Sleeper's channel with a Shadmen guide; some call him the Seir; the skeptics still disagree | Side-scroll | Sleeper channels as late-game traversal; the prophecy question sharpens |
 | 9 | **The Fort Campaign** — take Vorrin's holds region by region | Map | Map expansion; the noose tightens |
 | 10 | **The Reckoning** _(finale)_ — assault **Vorrinhold**; Korinth's hand revealed | Map + finale | The ending fork: greened or scorched Aridun |
 
@@ -606,12 +648,15 @@ when they are needed.
 
 ### Needed before Act II is designed
 
-**5. The Seir prophecy — content and two camps.**
-What does the prophecy actually say or claim? What does the Seir bring —
-ecological salvation, the end of the houses' grip on Aridun, something stranger?
-The Shadmen skeptic's position needs something specific to push against. Define
-the text of the prophecy (or at least its central claim) and the precise point
-on which the two camps within the Shadmen disagree.
+**5. The Seir prophecy — text and two camps.**
+The prophecy is an ecological text describing signs of crisis (northern blooms
+failing, deep channels closing) and states: *"one who walks both the surface
+world and the rock-world will open the third path."* What the two camps disagree
+on: the believers read Eren as the described person; the skeptics say the text
+describes a quality and a moment, not a specific individual, and pinning it to
+the noble heir who needs them most is exactly the mistake desperation produces.
+Needed: the precise wording of the core claim, and what "the third path" might
+mean — since neither side currently knows, and that unknown is load-bearing.
 
 **6. Tamir — voice and personality.**
 Beyond "chief who believes in Eren." He knows Sela's lineage and has made a
