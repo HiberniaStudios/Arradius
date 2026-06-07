@@ -142,12 +142,27 @@ the Shadmen need to build with. Restoration is visible at every scale too: bloom
 glow returning to dark rockbeds, surface life reappearing, Warren walls that can
 be worked again. This is what the ecology mechanic measures and rewards.
 
+**The full ecology chain.** The Sleeper channels are not just Aurun deposits —
+they are breeding habitat. The warmth, chemistry, and pressure conditions left in
+a Sleeper's wake are what the deep-rock creatures _(to be named)_ require for
+their breeding cycle. They time themselves to the Sleeper passages. The Shadmen
+know this too — it is part of why their collection practices are seasonal. Certain
+passages are off-limits in certain periods, because something else is using them.
+
+The full chain: *Sleeper passes → channel warms, Aurun deposits → bloom surfaces
+on rockbed → surface organisms gather → deep creatures breed in the warm channel
+below → Shadmen collect from the wake, around the breeding cycle → route stays
+healthy → Sleeper returns.* Break any link and the rest degrades. Vorrin's
+drilling breaks multiple links at once — destroys the channel structure, kills
+the breeding habitat, prevents the bloom, removes the surface life. All
+simultaneously. All permanent.
+
 **Sustainable yield — the core tension.** The Shadmen's traditional Aurun
-collection is not simply "extraction is bad." Followed at the right pace, a
-route replenishes — the bloom returns, the ecology holds, the rock stays healthy.
-The Shadmen have learned this yield through generations of practice: empirical
-knowledge, not mysticism, the same way traditional fishing communities understood
-stock health long before anyone gave it a formal name.
+collection is not simply "extraction is bad." Followed at the right pace and in
+the right season, a route replenishes — the bloom returns, the breeding cycle
+completes, the ecology holds. The Shadmen have learned this through generations
+of practice: empirical knowledge, not mysticism, the same way traditional fishing
+communities understood stock health long before anyone gave it a formal name.
 
 Over-collection — even from wake sites, even without drilling — thins the bloom
 chemistry before it can recover. Stress the route enough and the Sleeper shifts.
