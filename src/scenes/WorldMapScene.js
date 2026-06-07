@@ -13,7 +13,9 @@ const MM_W = 220;
 const MM_H = Math.round(MM_W * WORLD_H / WORLD_W); // ≈ 110
 
 // Zoom limits
-const ZOOM_MIN = 0.22;   // pull all the way out → see full planet width
+// ZOOM_MIN is computed at runtime so the map always fills the viewport
+// (no black bars above/below). Horizontally the world tiles endlessly so
+// only the vertical constraint matters: zoom >= viewport_h / WORLD_H.
 const ZOOM_MAX = 2.0;
 const ZOOM_SPD = 0.0012; // per wheel delta unit
 
@@ -463,11 +465,13 @@ export default class WorldMapScene extends Phaser.Scene {
   // Clamp / wrap the camera so it always looks at a valid slice of the tiled world.
   // scrollX wraps modulo WORLD_W; scrollY is clamped pole-to-pole.
   _wrapCamera() {
-    const cam = this.cameras.main;
-    const vh  = cam.height / cam.zoom;
-    // Horizontal wrap
+    const cam  = this.cameras.main;
+    // Enforce zoom floor (e.g. after a window resize changes the min)
+    if (cam.zoom < this._minZoom()) cam.zoom = this._minZoom();
+    const vh   = cam.height / cam.zoom;
+    // Horizontal wrap — tiles endlessly, no clamping needed
     cam.scrollX = ((cam.scrollX % WORLD_W) + WORLD_W) % WORLD_W;
-    // Vertical clamp
+    // Vertical clamp — poles are hard edges
     cam.scrollY = Phaser.Math.Clamp(cam.scrollY, 0, Math.max(0, WORLD_H - vh));
   }
 
@@ -531,7 +535,7 @@ export default class WorldMapScene extends Phaser.Scene {
     this.input.on('wheel', (pointer, objs, dx, dy) => {
       const cam    = this.cameras.main;
       const oldZ   = cam.zoom;
-      const newZ   = Phaser.Math.Clamp(oldZ * (1 - dy * ZOOM_SPD), ZOOM_MIN, ZOOM_MAX);
+      const newZ   = Phaser.Math.Clamp(oldZ * (1 - dy * ZOOM_SPD), this._minZoom(), ZOOM_MAX);
       if (newZ === oldZ) return;
 
       // Zoom toward the cursor
@@ -825,6 +829,12 @@ export default class WorldMapScene extends Phaser.Scene {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+
+  // Minimum zoom that keeps the world filling the full viewport height.
+  // Horizontal wraps endlessly so only the vertical edge matters.
+  _minZoom() {
+    return this.cameras.main.height / WORLD_H;
+  }
 
   escYAt(worldX) {
     const pts = this.escPts;
