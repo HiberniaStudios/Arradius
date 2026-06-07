@@ -16,6 +16,10 @@ const CREAM = '#e8d8c0';
 // is left completely intact). Auto-falls back if the texture failed to load.
 const USE_HALL_BG = true;
 
+// Painted backdrops by room feature → BootScene texture key. Rooms without an
+// entry fall back to procedural art.
+const BACKDROPS = { hall: 'hallBg', comms: 'commsBg' };
+
 const LOCATIONS = {
   hall: {
     name: 'The Residency',
@@ -282,12 +286,22 @@ export default class ResidencyScene extends Phaser.Scene {
 
     // Painted scene — EVERY room fills the full canvas, for one consistent frame.
     this.bd.clear();
-    const useBg = USE_HALL_BG && loc.feature === 'hall' && this.textures.exists('hallBg');
+    const bgKey = USE_HALL_BG ? BACKDROPS[loc.feature] : null;
+    const useBg = bgKey && this.textures.exists(bgKey);
     if (useBg) {
-      this.showHallBackground(width, height);
+      this.showBackdrop(bgKey, width, height);
+      if (loc.feature === 'hall') this.setHallHotspots(width, height);
+      if (loc.feature === 'comms') {
+        // Live rotating planet + sweep overlaid on the painted dish.
+        this.commsScreenInfo = {
+          x: Math.round(width * 0.703), y: Math.round(height * 0.412),
+          R: Math.round(height * 0.205), prRatio: 0.3, overlay: true,
+        };
+        this.createCommsAnim();
+      }
     } else if (loc.feature === 'comms') {
       if (this.hallBgImg) this.hallBgImg.setVisible(false);
-      this.sceneComms(this.bd, width, height);
+      this.sceneComms(this.bd, width, height); // procedural fallback
       this.createCommsAnim();
     } else {
       if (this.hallBgImg) this.hallBgImg.setVisible(false);
@@ -329,14 +343,16 @@ export default class ResidencyScene extends Phaser.Scene {
 
   // --- Painted backdrop (experimental) --------------------------------------
 
-  /** Draw the full-canvas PNG backdrop and place door hotspots over its doorways. */
-  showHallBackground(width, height) {
+  /** Show a full-canvas painted backdrop for the current room (one shared image). */
+  showBackdrop(key, width, height) {
     if (!this.hallBgImg) {
-      this.hallBgImg = this.add.image(0, 0, 'hallBg').setOrigin(0, 0).setDepth(-60);
+      this.hallBgImg = this.add.image(0, 0, key).setOrigin(0, 0).setDepth(-60);
     }
-    this.hallBgImg.setVisible(true).setDisplaySize(width, height); // 16:9 → 16:9, no stretch
+    this.hallBgImg.setTexture(key).setVisible(true).setDisplaySize(width, height); // 16:9 → 16:9
+  }
 
-    // Four side archways + the throne arch, as fractions of the full canvas.
+  /** Door hotspots over the painted hall's four archways + throne arch. */
+  setHallHotspots(width, height) {
     // Outer arches → everyday wings; inner arches (by the statues) → action rooms.
     const door = (x, y, w, h, key) => ({
       x: width * x, y: height * y, w: width * w, h: height * h,
@@ -769,42 +785,49 @@ export default class ResidencyScene extends Phaser.Scene {
     this.commsScreenInfo = { x, y, R };
   }
 
-  /** Build the animated comms planet (scrolling desert sphere) + radar sweep. */
+  /** Build the animated comms planet (scrolling desert sphere) + radar sweep.
+   *  `info.overlay` lifts depths above a painted PNG backdrop; otherwise the
+   *  stack sits just above the procedural screen drawn on `this.bd` (-90). */
   createCommsAnim() {
     const info = this.commsScreenInfo;
     if (!info || !this.textures.exists('planetSurface')) return;
-    const { x, y, R } = info;
-    const pr = Math.round(R * 0.26);
+    const { x, y, R, overlay } = info;
+    const pr = Math.round(R * (info.prRatio || 0.26));
+    const base = overlay ? -58 : -88;  // sweep depth; planet/overlay/glow sit above it
 
-    // Scrolling surface, masked to a circle → a rotating sphere.
+    // Sweep — below the planet so the planet occludes it (beam passes "behind").
+    const sweep = this.add.graphics().setDepth(base);
+
+    // Scrolling surface, masked to a circle → a sphere rotating on its axis.
     const mask = this.add.graphics().setVisible(false);
     mask.fillStyle(0xffffff, 1).fillCircle(x, y, pr);
     const planet = this.add
       .tileSprite(x, y, pr * 2, pr * 2, 'planetSurface')
-      .setDepth(-86);
+      .setDepth(base + 2);
     planet.tilePositionY = 14;
     planet.setMask(mask.createGeometryMask());
 
     // Fixed lighting/relief overlay (poles, terminator, lit limb) over the surface.
-    const ov = this.add.graphics().setDepth(-85);
+    const ov = this.add.graphics().setDepth(base + 3);
     ov.fillStyle(0xd9ab68, 0.36); ov.fillCircle(x - pr * 0.28, y - pr * 0.26, pr * 0.5);  // lit side
     ov.fillStyle(0x241606, 0.34); ov.fillCircle(x + pr * 0.36, y + pr * 0.30, pr * 0.62); // terminator
     ov.fillStyle(0xe8d8b0, 0.32); ov.fillEllipse(x, y - pr * 0.8, pr * 0.62, pr * 0.2);   // N polar cap
     ov.fillStyle(0xe8d8b0, 0.2); ov.fillEllipse(x, y + pr * 0.82, pr * 0.5, pr * 0.16);   // S polar cap
     ov.lineStyle(2, 0xe6bc7e, 0.5); ov.strokeCircle(x, y, pr * 0.95);                     // lit limb
     ov.lineStyle(2.5, 0x2e1d0c, 0.55); ov.strokeCircle(x, y, pr - 1);                     // dark rim
-    this.addGlow(x, y, pr * 3.2, 0xffb24a, 0.22);                                         // atmosphere
 
-    // Sweep sits between the screen (-90) and the planet (-86) so the planet
-    // occludes it — the beam appears to pass behind Arradius.
-    const sweep = this.add.graphics().setDepth(-88);
-    this.commsAnim = { planet, mask, ov, sweep, x, y, R, pr, angle: -Math.PI / 2 };
+    // Atmosphere halo (own depth so it works over a PNG backdrop too).
+    const glow = this.add.image(x, y, 'glow')
+      .setBlendMode(Phaser.BlendModes.ADD).setTint(0xffb24a).setAlpha(0.22)
+      .setDisplaySize(pr * 3.2, pr * 3.2).setDepth(base + 4);
+
+    this.commsAnim = { planet, mask, ov, glow, sweep, x, y, R, pr, angle: -Math.PI / 2 };
   }
 
   destroyCommsAnim() {
     const a = this.commsAnim;
     if (!a) return;
-    [a.planet, a.mask, a.ov, a.sweep].forEach((o) => o && o.destroy());
+    [a.planet, a.mask, a.ov, a.glow, a.sweep].forEach((o) => o && o.destroy());
     this.commsAnim = null;
   }
 
