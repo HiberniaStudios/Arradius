@@ -174,27 +174,27 @@ const CODEX_LORE = [
 const CODEX_CHARACTERS = {
   'Lord Aldric': {
     title: 'Lord Aldric Calder',
-    body: 'Your father. Second generation of Calder on Aridun, and the one who deepened the Shadmen relationship beyond his own father\'s first contact into something closer to alliance.\n\nHe believes the fief revocation can be argued — that Korinth will hear reason. He intends to be heard. He is also watching Halix. He has not yet told you what he suspects.',
+    body: 'Your father. Second generation of Calder on Aridun. He inherited a cautious relationship with the Shadmen and maintained it — more administrator than idealist, but consistent where consistency mattered.\n\nHe believes the fief revocation can be argued. Korinth granted this world on the strength of Calder stewardship; he intends to make that case, formally and on the record.',
   },
   'Halix': {
     title: 'Halix',
-    body: 'The house intelligencer. His provenance is uncertain; the account varies depending on who tells it.\n\nHe monitors Vorrin drilling sites, Pale Legion movements, Shadmen Hollow positions, and a dozen other feeds. He claims to be three moves ahead of any position. Your father watches him. His loyalty to the house is not in doubt; his loyalty to individual members of it is a more interesting question.',
+    body: 'The house intelligencer. He keeps the feeds: Vorrin drilling sites, Pale Legion patrol routes, Shadmen Hollow positions, shipping manifests, communication intercepts. The picture he holds of Aridun at any moment is more complete than anyone else\'s in the Residency.\n\nHe is methodical and unsentimental. He has been with the house for several years.',
   },
   'Mother Ysolde': {
     title: 'Mother Ysolde',
-    body: 'Keeper of the Veil\'s sanctum at Saltspire. The Veil is not an order so much as a discipline — readers of deep pattern, students of the Seir.\n\nYsolde has been at Saltspire longer than Lord Aldric. She reads the Seir as prophecy and believes what is coming has already begun to move through the deep rock.',
+    body: 'Keeper of the Veil\'s sanctum at Saltspire. The Veil is a discipline, not an order — readers of deep pattern, long memory, students of the Seir. Ysolde is its elder in the Residency.\n\nShe has been at Saltspire longer than Lord Aldric. She speaks rarely and at length when she does.',
   },
   'Sela': {
     title: 'Sela',
-    body: 'She grew up on Aridun. She has lived here long enough that she feels the Sleepers move — a sensitivity she says you share, if you have learned to listen for it.\n\nShe has been waiting for the right moment to tell you something. She believes the moment will come.',
+    body: 'She grew up on Aridun — not in Saltspire, but in the desert. She is of the Veil, though she carries it differently than Ysolde: less ceremony, more urgency.\n\nShe knows the rockbed and the Sleeper routes the way someone knows a landscape they were born reading. She feels the deep patterns. She says you do too.',
   },
   'Master Orlin': {
     title: 'Master Orlin',
-    body: 'The house physician. His reports are invariably good; the house is invariably in good health.\n\nHe smiles, and bows, and holds the smile a moment too long. Lord Aldric is aware.',
+    body: 'The house physician. He has served House Calder at Saltspire for over a decade. His reports are thorough and his manner careful — attentive to the house\'s wellbeing in the way his office requires.\n\nHe is well-liked by the household.',
   },
   'Brannic': {
     title: 'Brannic',
-    body: 'Bladewarden of House Calder, commander of the Saltguard — the house\'s standing force.\n\nPractical, loyal, direct. He knows steel alone will not hold Aridun and says so plainly. He is ready to muster when the word comes.',
+    body: 'Bladewarden of House Calder, commander of the Saltguard. He trained under the previous Bladewarden and has held the post for eight years.\n\nDirect in speech and thorough in practice. He understands that the military situation on Aridun is not a straightforward one and says so without drama.',
   },
 };
 
