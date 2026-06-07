@@ -136,6 +136,8 @@ export default class ResidencyScene extends Phaser.Scene {
     this.current = 'hall';
     this.sayIndex = 0;
     this.dynamic = [];
+    this.dialogueObjects = [];
+    this.dialogueActive = false;
 
     // Persistent layers.
     this.wall = this.add
@@ -184,6 +186,7 @@ export default class ResidencyScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off('resize', this.onResize, this);
       this.destroyCommsAnim();
+      this.exitDialogue();
     });
   }
 
@@ -274,6 +277,7 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
   onResize(gameSize) {
+    this.exitDialogue();
     this.layout(gameSize.width, gameSize.height);
   }
 
@@ -308,14 +312,13 @@ export default class ResidencyScene extends Phaser.Scene {
       this.drawScene(loc, width, floorY);
     }
 
-    // One shared translucent panel everywhere: a slim caption strip for the hall
-    // (door navigation), a taller panel elsewhere for portrait/dialogue/actions.
-    const slim = loc.feature === 'hall';
-    const bt = Math.round(height * (slim ? 0.86 : 0.74));
+    // Slim bar for all screens — character interaction is via in-scene sprites.
+    const bt = Math.round(height * 0.86);
     this.drawPanel(width, height, bt);
     this.createDoorZones();
-    if (slim) this.renderHallCaption(loc, width, height, bt);
+    if (loc.feature === 'hall') this.renderHallCaption(loc, width, height, bt);
     else this.renderRoomBar(loc, width, height, bt);
+    if (loc.who) this.addCharacterSprites(loc, width, floorY);
   }
 
   /** The shared translucent UI panel — identical style on every screen. */
@@ -391,6 +394,7 @@ export default class ResidencyScene extends Phaser.Scene {
   /** Walk through a door — a brief fade for a sense of moving rooms. */
   travelTo(key) {
     if (this.time.now < this.inputReadyAt || this.travelling) return;
+    this.exitDialogue();
     this.travelling = true;
     this.cameras.main.fadeOut(200, 6, 4, 12);
     this.cameras.main.once('camerafadeoutcomplete', () => {
@@ -422,41 +426,71 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
 
-  // --- Room bar (portrait + dialogue + text menu) ---------------------------
+  // --- Room bar (slim strip: character disc + navigation) -------------------
 
   renderRoomBar(loc, width, height, barTop) {
     const bh = height - barTop;
     const cy = barTop + bh / 2;
-    let textLeft = 20;
 
-    // Portrait, if the room has a character.
     if (loc.who) {
-      this.drawPortrait(60, cy, loc.accent, loc.who);
-      textLeft = 116;
+      // Coin portrait disc — click to open dialogue overlay.
+      const dx = 42;
+      const dg = this.add.graphics().setDepth(103);
+      dg.fillStyle(0x0e0a18, 1);
+      dg.fillCircle(dx, cy, 28);
+      dg.lineStyle(2, loc.accent, 0.6);
+      dg.strokeCircle(dx, cy, 28);
+      dg.fillStyle(loc.accent, 0.18);
+      dg.fillCircle(dx, cy, 24);
+      const faceCol = Phaser.Display.Color.IntegerToColor(loc.accent).darken(30).color;
+      dg.fillStyle(faceCol, 1);
+      dg.fillCircle(dx, cy - 8, 10);
+      dg.fillStyle(0x1b1228, 1);
+      dg.fillRoundedRect(dx - 13, cy + 2, 26, 20, { tl: 9, tr: 9, bl: 0, br: 0 });
+      this.dynamic.push(dg);
+
+      const discZone = this.add
+        .circle(dx, cy, 30)
+        .setInteractive({ useHandCursor: true })
+        .setDepth(104);
+      discZone.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.enterDialogue(loc); });
+      this.dynamic.push(discZone);
+
+      const nameTxt = this.add
+        .text(80, cy - 8, loc.who, {
+          fontFamily: 'Georgia, serif',
+          fontSize: '14px',
+          color: Phaser.Display.Color.IntegerToColor(loc.accent).rgba,
+        })
+        .setOrigin(0, 0.5).setDepth(104).setInteractive({ useHandCursor: true });
+      nameTxt.on('pointerover', () => nameTxt.setColor('#f0e0c0'));
+      nameTxt.on('pointerout', () => nameTxt.setColor(Phaser.Display.Color.IntegerToColor(loc.accent).rgba));
+      nameTxt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.enterDialogue(loc); });
+      this.dynamic.push(nameTxt);
+
+      const roomTxt = this.add
+        .text(80, cy + 8, loc.name, { fontFamily: 'monospace', fontSize: '11px', color: '#5a4a3a' })
+        .setOrigin(0, 0.5).setDepth(104);
+      this.dynamic.push(roomTxt);
+    } else {
+      const nm = this.add
+        .text(20, cy, loc.name, { fontFamily: 'Georgia, serif', fontSize: '15px', color: CREAM })
+        .setOrigin(0, 0.5).setDepth(104);
+      this.dynamic.push(nm);
     }
 
-    // Room name.
-    const nameColor = Phaser.Display.Color.IntegerToColor(loc.accent || 0xf0e3d0).rgba;
-    const nameText = this.add
-      .text(textLeft, barTop + 14, loc.name, {
-        fontFamily: 'Georgia, serif',
-        fontSize: '18px',
-        color: nameColor,
-      })
-      .setDepth(102);
-    this.dynamic.push(nameText);
+    // Right: navigation text options + Codex.
+    const codexCX = width - 36;
+    const menuRight = codexCX - 46;
+    const menuLeft = menuRight - 195;
+    const divX = menuLeft - 10;
 
-    // Choices: speak, scene-actions, onward doors, back.
+    const divG = this.add.graphics().setDepth(102);
+    divG.lineStyle(1, GOLD, 0.22);
+    divG.lineBetween(divX, barTop + 8, divX, height - 8);
+    this.dynamic.push(divG);
+
     const choices = [];
-    if (loc.who && loc.say && loc.say.length > 1) {
-      choices.push({
-        label: `Speak with ${loc.who}`,
-        onClick: () => {
-          this.sayIndex = (this.sayIndex + 1) % loc.say.length;
-          this.renderLocation();
-        },
-      });
-    }
     (loc.actions || []).forEach((a) =>
       choices.push({ label: a.label, onClick: () => this.goTo(a.scene) })
     );
@@ -466,45 +500,13 @@ export default class ResidencyScene extends Phaser.Scene {
     const back = (EXITS[this.current] && EXITS[this.current].back) || 'hall';
     choices.push({ label: `‹ ${LOCATIONS[back].name}`, onClick: () => this.travelTo(back) });
 
-    // Right panel: codex icon + text menu list, separated from content by a thin rule.
-    const codexCX = width - 36;
-    const menuRight = codexCX - 46;
-    const menuLeft = menuRight - 195;
-    const divX = menuLeft - 10;
-
-    // Thin gold rule.
-    const divG = this.add.graphics().setDepth(102);
-    divG.lineStyle(1, GOLD, 0.22);
-    divG.lineBetween(divX, barTop + 12, divX, height - 12);
-    this.dynamic.push(divG);
-
-    // Dialogue / flavour — wraps up to the rule.
-    const line = loc.who ? (loc.say ? loc.say[this.sayIndex] : '') : loc.flavor || '';
-    const lineText = this.add
-      .text(textLeft, barTop + 40, line, {
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '14px',
-        color: '#c8b8d0',
-        wordWrap: { width: divX - textLeft - 18 },
-      })
-      .setDepth(102);
-    this.dynamic.push(lineText);
-
-    // Text option list.
-    const itemH = 28;
+    const itemH = Math.min(28, (bh - 8) / Math.max(choices.length, 1));
     const totalH = choices.length * itemH;
     const menuStartY = barTop + (bh - totalH) / 2;
     choices.forEach((c, i) => {
-      this.makeTextOption(
-        menuLeft,
-        menuStartY + i * itemH + itemH / 2,
-        c.label,
-        c.onClick,
-        loc.accent
-      );
+      this.makeTextOption(menuLeft, menuStartY + i * itemH + itemH / 2, c.label, c.onClick, loc.accent);
     });
 
-    // Codex book — far right, stub for lore access.
     this.drawCodex(codexCX, cy);
   }
 
@@ -595,6 +597,239 @@ export default class ResidencyScene extends Phaser.Scene {
     zone.on('pointerdown', (p, lx, ly, e) => { e?.stopPropagation(); });
 
     this.dynamic.push(g, lbl, zone);
+  }
+
+  // --- Character sprites in scene -------------------------------------------
+
+  addCharacterSprites(loc, width, floorY) {
+    if (!loc.who) return;
+    const cx = width / 2;
+    const offsets = {
+      court: -90, comms: -100, veil: 10, solar: 80,
+      infirmary: -80, yard: 80,
+    };
+    const offX = offsets[loc.feature] ?? 0;
+    const fx = cx + offX;
+    const s = Phaser.Math.Clamp(floorY / 360, 0.8, 1.4);
+
+    const g = this.add.graphics().setDepth(10);
+    this.drawCharacterFigure(g, fx, floorY, loc.accent, s);
+    this.dynamic.push(g);
+
+    const figH = 110 * s;
+    const zone = this.add
+      .zone(fx, floorY - figH / 2, 60 * s, figH)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(11);
+
+    let tooltip = null;
+    zone.on('pointerover', () => {
+      tooltip = this.add
+        .text(fx, floorY - figH - 6, loc.who, {
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          color: CREAM,
+          backgroundColor: '#0a0610',
+          padding: { x: 6, y: 3 },
+        })
+        .setOrigin(0.5, 1)
+        .setDepth(15);
+      this.dynamic.push(tooltip);
+    });
+    zone.on('pointerout', () => {
+      if (tooltip) { tooltip.destroy(); tooltip = null; }
+    });
+    zone.on('pointerdown', (p, x, y, e) => {
+      e?.stopPropagation();
+      if (tooltip) { tooltip.destroy(); tooltip = null; }
+      this.enterDialogue(loc);
+    });
+    this.dynamic.push(zone);
+  }
+
+  drawCharacterFigure(g, x, floorY, accent, s = 1) {
+    g.fillStyle(0x000000, 0.22);
+    g.fillEllipse(x, floorY + 2, 52 * s, 10 * s);
+    // Outer cloak.
+    g.fillStyle(0x1a1228, 1);
+    g.fillTriangle(x - 22 * s, floorY, x + 22 * s, floorY, x, floorY - 82 * s);
+    // Inner robe — accent tinted.
+    const inner = Phaser.Display.Color.IntegerToColor(accent).darken(45).color;
+    g.fillStyle(inner, 1);
+    g.fillTriangle(x - 13 * s, floorY - 6 * s, x + 13 * s, floorY - 6 * s, x, floorY - 74 * s);
+    // Shoulders.
+    g.fillStyle(0x2a1e38, 1);
+    g.fillEllipse(x, floorY - 76 * s, 46 * s, 18 * s);
+    // Head.
+    const faceCol = Phaser.Display.Color.IntegerToColor(accent).darken(30).color;
+    g.fillStyle(faceCol, 1);
+    g.fillCircle(x, floorY - 90 * s, 14 * s);
+    // Hood shadow.
+    g.fillStyle(0x0a0610, 0.65);
+    g.fillRoundedRect(x - 16 * s, floorY - 106 * s, 32 * s, 22 * s, 8 * s);
+    // Accent trim stripe.
+    g.fillStyle(accent, 0.45);
+    g.fillRect(x - 2 * s, floorY - 78 * s, 4 * s, 56 * s);
+    // Eyes.
+    g.fillStyle(0xffd080, 0.7);
+    g.fillCircle(x - 5 * s, floorY - 91 * s, 1.5 * s);
+    g.fillCircle(x + 5 * s, floorY - 91 * s, 1.5 * s);
+  }
+
+  // --- Dialogue overlay (Cryo Dune style) ------------------------------------
+
+  enterDialogue(loc) {
+    if (this.dialogueActive || this.time.now < this.inputReadyAt) return;
+    this.dialogueActive = true;
+    this.dialogueObjects = [];
+    this.sayIndex = 0;
+    this.renderDialogueOverlay(loc, this.scale.width, this.scale.height);
+  }
+
+  exitDialogue() {
+    if (!this.dialogueActive) return;
+    (this.dialogueObjects || []).forEach((o) => o.destroy());
+    this.dialogueObjects = [];
+    this.dialogueSpeechText = null;
+    this.dialogueActive = false;
+  }
+
+  renderDialogueOverlay(loc, width, height) {
+    const dTop = Math.round(height * 0.56);
+    const portW = 180;
+    const optH = 52;
+    const D = this.dialogueObjects;
+
+    // Scrim — dark base, intercepts clicks to scene below.
+    const scrim = this.add
+      .rectangle(width / 2, dTop + (height - dTop) / 2, width, height - dTop, 0x0a0610, 0.92)
+      .setInteractive()
+      .setDepth(950);
+    D.push(scrim);
+
+    // Portrait panel — left column.
+    const portBg = this.add.graphics().setDepth(951);
+    portBg.fillStyle(0x080510, 1);
+    portBg.fillRect(0, dTop, portW, height - dTop);
+    portBg.lineStyle(1, GOLD, 0.28);
+    portBg.lineBetween(portW, dTop + 8, portW, height - 8);
+    D.push(portBg);
+
+    // Gold top trim line.
+    const trim = this.add.graphics().setDepth(952);
+    trim.fillStyle(0xb07d4a, 0.5);
+    trim.fillRect(0, dTop - 2, width, 2);
+    trim.fillStyle(GOLD, 0.35);
+    trim.fillRect(0, dTop, width, 2);
+    D.push(trim);
+
+    // Large procedural portrait inside the left column.
+    const portCY = dTop + (height - optH - dTop) / 2;
+    this.drawDialoguePortrait(portW / 2, portCY, loc.accent, D);
+
+    // Character name below portrait.
+    const nameLbl = this.add
+      .text(portW / 2, height - optH - 12, loc.who, {
+        fontFamily: 'Georgia, serif', fontSize: '12px', color: '#c8a98f',
+      })
+      .setOrigin(0.5, 1).setDepth(962);
+    D.push(nameLbl);
+
+    // Speech bubble — right of portrait column.
+    const bubX1 = portW + 22;
+    const bubX2 = width - 18;
+    const bubY1 = dTop + 20;
+    const bubY2 = height - optH - 12;
+    const bubW = bubX2 - bubX1;
+    const bubH = bubY2 - bubY1;
+    const bubG = this.add.graphics().setDepth(960);
+    bubG.fillStyle(0x130e20, 1);
+    bubG.fillRoundedRect(bubX1, bubY1, bubW, bubH, 10);
+    bubG.lineStyle(1, GOLD, 0.28);
+    bubG.strokeRoundedRect(bubX1, bubY1, bubW, bubH, 10);
+    // Subtle inner tint on upper half.
+    bubG.fillStyle(0x1e1830, 0.45);
+    bubG.fillRoundedRect(bubX1 + 4, bubY1 + 4, bubW - 8, bubH * 0.42, 8);
+    D.push(bubG);
+
+    // Dialogue text.
+    const line = loc.say ? loc.say[this.sayIndex] : loc.flavor || '';
+    this.dialogueSpeechText = this.add
+      .text(bubX1 + 28, bubY1 + 26, line, {
+        fontFamily: 'Georgia, serif',
+        fontSize: '16px',
+        color: '#e0d0f0',
+        wordWrap: { width: bubW - 56 },
+        lineSpacing: 7,
+      })
+      .setDepth(961);
+    D.push(this.dialogueSpeechText);
+
+    // Options strip separator.
+    const optSep = this.add.graphics().setDepth(961);
+    optSep.lineStyle(1, GOLD, 0.18);
+    optSep.lineBetween(0, height - optH, width, height - optH);
+    D.push(optSep);
+
+    const optY = height - optH / 2;
+
+    // "Talk" — cycles through say[] lines.
+    if (loc.say && loc.say.length > 1) {
+      const talkTxt = this.add
+        .text(portW + 28, optY, `Talk to ${loc.who}`, {
+          fontFamily: 'Georgia, serif', fontSize: '14px', color: '#a09078',
+        })
+        .setOrigin(0, 0.5).setDepth(962).setInteractive({ useHandCursor: true });
+      talkTxt.on('pointerover', () => talkTxt.setColor('#f0e0c0'));
+      talkTxt.on('pointerout', () => talkTxt.setColor('#a09078'));
+      talkTxt.on('pointerdown', (p, x, y, e) => {
+        e?.stopPropagation();
+        this.sayIndex = (this.sayIndex + 1) % loc.say.length;
+        this.dialogueSpeechText.setText(loc.say[this.sayIndex]);
+      });
+      D.push(talkTxt);
+    }
+
+    // "Leave" — closes the overlay.
+    const leaveTxt = this.add
+      .text(width - 24, optY, 'Leave', {
+        fontFamily: 'Georgia, serif', fontSize: '14px', color: '#706050',
+      })
+      .setOrigin(1, 0.5).setDepth(962).setInteractive({ useHandCursor: true });
+    leaveTxt.on('pointerover', () => leaveTxt.setColor('#f0e0c0'));
+    leaveTxt.on('pointerout', () => leaveTxt.setColor('#706050'));
+    leaveTxt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.exitDialogue(); });
+    D.push(leaveTxt);
+  }
+
+  drawDialoguePortrait(cx, cy, accent, objs) {
+    const w = 136;
+    const h = 176;
+    const g = this.add.graphics().setDepth(962);
+    objs.push(g);
+    g.fillStyle(0x0e0a18, 1);
+    g.fillRect(cx - w / 2, cy - h / 2, w, h);
+    g.lineStyle(1.5, GOLD, 0.5);
+    g.strokeRect(cx - w / 2, cy - h / 2, w, h);
+    g.fillStyle(accent, 0.14);
+    g.fillRect(cx - w / 2 + 3, cy - h / 2 + 3, w - 6, h - 6);
+    // Bust.
+    const by = cy + 30;
+    g.fillStyle(0x1b1228, 1);
+    g.fillRoundedRect(cx - 46, by - 10, 92, 70, { tl: 32, tr: 32, bl: 0, br: 0 });
+    const faceCol = Phaser.Display.Color.IntegerToColor(accent).darken(40).color;
+    g.fillStyle(faceCol, 1);
+    g.fillCircle(cx, by - 36, 32);
+    // Hood.
+    g.fillStyle(0x140d20, 1);
+    g.fillRoundedRect(cx - 32, cy - h / 2 + 14, 64, 38, 14);
+    // Eyes.
+    g.fillStyle(0xffce86, 0.9);
+    g.fillCircle(cx - 10, by - 34, 3);
+    g.fillCircle(cx + 10, by - 34, 3);
+    // Accent collar detail.
+    g.fillStyle(accent, 0.65);
+    g.fillRect(cx - 26, by - 4, 52, 4);
   }
 
   // --- Portraits ------------------------------------------------------------
