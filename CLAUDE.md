@@ -85,8 +85,10 @@ master ─┬─ musicGain    (continuous score — drone chord + pad + sub, "br
   6 s — calmer; used for air/room-tone/flute breath).
 - **The bed "breathes"** via three co-prime LFOs (≈67/97/139 s — long so swells
   feel like fabric, not sudden) summed over a low floor on `musicGain.gain`.
-- **`master` → safety `DynamicsCompressor` (limiter) → destination** catches
-  peak spikes (bright events into the long reverb) so they don't clip to crackle.
+- **Reverb is a MONO ~2.4 s convolution IR** (`makeImpulse`) — kept short/mono
+  because convolution is the heaviest, always-on node; a long stereo IR starved
+  the audio thread → crackle. The synthesised signal itself is clean (verified
+  by offline render: no clipping/clicks), so soundscape crackle = CPU, not DSP.
 - **Lifecycle:** `prepare()` pre-builds the context + buffers at scene-create
   (avoids first-gesture lag); `start()` (bound to the first `pointerdown`/
   `keydown`, because browsers block audio until a gesture) builds music and

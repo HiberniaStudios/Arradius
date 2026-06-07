@@ -76,21 +76,16 @@ export default class AudioManager {
 
     this.master = ctx.createGain();
     this.master.gain.value = 0; // ramped up in start()
-    // A gentle safety limiter on the very end of the chain. It sits idle for
-    // the quiet bed (threshold well above its level, so dynamics are untouched)
-    // and only clamps rare peaks — bright chimes/flute-breath piling into the
-    // long reverb — before they clip the output into crackle.
-    const limiter = ctx.createDynamicsCompressor();
-    limiter.threshold.value = -3;
-    limiter.knee.value = 0;
-    limiter.ratio.value = 20;
-    limiter.attack.value = 0.003;
-    limiter.release.value = 0.25;
-    this.master.connect(limiter).connect(ctx.destination);
+    this.master.connect(ctx.destination);
 
     // Shared grand-hall reverb — convolution with a decaying-noise impulse.
+    // Kept MONO and ~2.4s on purpose: convolution is by far the heaviest node
+    // in the graph and runs continuously in every room, so a long *stereo* IR
+    // was starving the audio thread → crackle. A mono 2.4s IR is ~70% cheaper
+    // and still a roomy stone hall. (Offline rendering shows the synthesised
+    // signal itself is clean — no clipping/clicks — so the fix is CPU, not DSP.)
     this.reverb = ctx.createConvolver();
-    this.reverb.buffer = this.makeImpulse(4.2, 3.0);
+    this.reverb.buffer = this.makeImpulse(2.4, 2.6);
     const revOut = ctx.createGain();
     revOut.gain.value = 0.9;
     this.reverb.connect(revOut).connect(this.master);
@@ -137,16 +132,14 @@ export default class AudioManager {
     }
   }
 
-  /** A decaying-noise impulse response → a large stone-hall reverb. */
+  /** A mono decaying-noise impulse response → a stone-hall reverb (CPU-light). */
   makeImpulse(dur, decay) {
     const ctx = this.ctx;
     const len = Math.floor(ctx.sampleRate * dur);
-    const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-    for (let ch = 0; ch < 2; ch += 1) {
-      const d = buf.getChannelData(ch);
-      for (let i = 0; i < len; i += 1) {
-        d[i] = (Math.random() * 2 - 1) * (1 - i / len) ** decay;
-      }
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i += 1) {
+      d[i] = (Math.random() * 2 - 1) * (1 - i / len) ** decay;
     }
     return buf;
   }
@@ -176,7 +169,9 @@ export default class AudioManager {
       if (!this.ambienceKey) this.setAmbience('hall');
       else this.setAmbience(this.ambienceKey, true);
     }
-    this.applyLevel(this.enabled ? this.level : 0, 1.6);
+    // Long, gentle fade-in so the bed *emerges* as you enter rather than
+    // landing as a heavy drone you then wait to mellow.
+    this.applyLevel(this.enabled ? this.level : 0, 6.0);
   }
 
   applyLevel(v, t) {
@@ -216,7 +211,7 @@ export default class AudioManager {
       osc.frequency.value = freq(n);
       osc.detune.value = (Math.random() - 0.5) * 6;
       const g = ctx.createGain();
-      g.gain.value = dGains[i] * 0.42;
+      g.gain.value = dGains[i] * 0.34; // lighter — was pressing too heavy
       const lfo = ctx.createOscillator();
       lfo.frequency.value = 0.03 + Math.random() * 0.05;
       const lg = ctx.createGain();
@@ -266,7 +261,7 @@ export default class AudioManager {
     sub.type = 'sine';
     sub.frequency.value = 30;
     const subG = ctx.createGain();
-    subG.gain.value = 0.12;
+    subG.gain.value = 0.085; // lighter sub — less of the "heavy" weight on entry
     const subLfo = ctx.createOscillator();
     subLfo.frequency.value = 0.025;
     const subLg = ctx.createGain();
@@ -276,7 +271,7 @@ export default class AudioManager {
     sub.start(now);
     subLfo.start(now);
     this.subGain = subG;
-    this.subBase = 0.12;
+    this.subBase = 0.085;
 
     // Breath: the whole harmonic bed swells and recedes — but driven by THREE
     // slow LFOs at CO-PRIME periods (19 / 29 / 41 s) summed over a low floor,
