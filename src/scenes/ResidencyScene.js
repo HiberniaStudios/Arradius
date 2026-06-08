@@ -16,6 +16,11 @@ const CREAM = '#e8d8c0';
 // is left completely intact). Auto-falls back if the texture failed to load.
 const USE_HALL_BG = true;
 
+// Painted backdrops by room feature → BootScene texture key. Rooms without an
+// entry fall back to procedural art.
+const BACKDROPS = { hall: 'hallBg', comms: 'commsBg', court: 'courtBg' };
+
+
 const LOCATIONS = {
   hall: {
     name: 'The Residency',
@@ -91,6 +96,18 @@ const LOCATIONS = {
       '“Say the word and the Saltguard musters. We are yours.”',
     ],
   },
+  living_hall: {
+    name: 'The Residential Wing',
+    accent: 0xc9a24a,
+    feature: 'living_hall',
+    flavor: 'A quiet corridor off the court. Eren\'s rooms to the left, Sela\'s Solar to the right.',
+  },
+  spirit_hall: {
+    name: 'The Inner Passage',
+    accent: 0xb98cff,
+    feature: 'spirit_hall',
+    flavor: 'The air changes here — cooler, older. The Veil\'s Sanctum opens to the left; the Reckoner\'s Chamber to the right.',
+  },
   quarters: {
     name: "Eren's Quarters",
     accent: 0x6fb0ff,
@@ -114,16 +131,20 @@ const LOCATIONS = {
 // navigation choices from this table only — no shortcuts to non-adjacent rooms.
 // 'back' is the way you came; all other keys are forward/side exits.
 const EXITS = {
-  hall:      { left: 'yard', right: 'infirmary', forward: 'court' }, // comms+deck via PNG door hotspots
-  court:     { back: 'hall', left: 'veil', right: 'solar', forward: 'quarters' },
-  yard:      { back: 'hall' },
-  infirmary: { back: 'hall' },
-  comms:     { back: 'hall', forward: 'war' },
-  war:       { back: 'comms' },
-  deck:      { back: 'hall' },
-  veil:      { back: 'court' },
-  solar:     { back: 'court' },
-  quarters:  { back: 'court' },
+  hall:        { left: 'yard', right: 'infirmary', forward: 'court' }, // comms+deck via PNG hotspots
+  court:       { back: 'hall',        left: 'living_hall', right: 'spirit_hall' },
+  // Living Wing corridor — Eren's Quarters left, The Solar right
+  living_hall: { back: 'court',       left: 'quarters',    right: 'solar' },
+  quarters:    { back: 'living_hall' },
+  solar:       { back: 'living_hall' },
+  // Spirit/Knowledge Wing corridor — Veil's Sanctum left, Reckoner's Chamber right
+  spirit_hall: { back: 'court',       left: 'veil',        right: 'war' },
+  veil:        { back: 'spirit_hall' },
+  war:         { back: 'spirit_hall' },
+  yard:        { back: 'hall' },
+  infirmary:   { back: 'hall' },
+  comms:       { back: 'hall' },   // Reckoner reached via Spirit Wing, not Comms
+  deck:        { back: 'hall' },
 };
 
 export default class ResidencyScene extends Phaser.Scene {
@@ -301,7 +322,19 @@ export default class ResidencyScene extends Phaser.Scene {
     this.bd.clear();
     const useBg = USE_HALL_BG && loc.feature === 'hall' && this.textures.exists('hallBg');
     if (useBg) {
-      this.showHallBackground(width, height);
+      this.showBackdrop(bgKey, width, height);
+      if (loc.feature === 'hall')        this.setHallHotspots(width, height);
+      if (loc.feature === 'court')       this.setCourtHotspots(width, height);
+      if (loc.feature === 'living_hall') this.setWingHotspots('quarters', 'solar');
+      if (loc.feature === 'spirit_hall') this.setWingHotspots('veil', 'war');
+      if (loc.feature === 'comms') {
+        // Live rotating planet + sweep overlaid on the painted dish.
+        this.commsScreenInfo = {
+          x: Math.round(width * 0.72), y: Math.round(height * 0.400),
+          R: Math.round(height * 0.21), prRatio: 0.29, overlay: true,
+        };
+        this.createCommsAnim();
+      }
     } else if (loc.feature === 'comms') {
       if (this.hallBgImg) this.hallBgImg.setVisible(false);
       this.sceneComms(this.bd, width, height);
@@ -367,22 +400,62 @@ export default class ResidencyScene extends Phaser.Scene {
     };
   }
 
+  /** Door hotspots over the painted court's two wing arches. */
+  setCourtHotspots(width, height) {
+    const door = (x, y, w, h, key) => ({
+      x: width * x, y: height * y, w: width * w, h: height * h,
+      key, label: LOCATIONS[key].name,
+    });
+    this.doorHotspots = {
+      left:  door(0.05, 0.23, 0.09, 0.57, 'living_hall'),
+      right: door(0.86, 0.23, 0.09, 0.57, 'spirit_hall'),
+    };
+  }
+
+  /** Generic left+right door hotspots for wing corridor rooms (before painted backdrops). */
+  setWingHotspots(leftKey, rightKey) {
+    const { width, height } = this.scale;
+    const door = (x, y, w, h, key) => ({
+      x: width * x, y: height * y, w: width * w, h: height * h,
+      key, label: LOCATIONS[key].name,
+    });
+    // Positions derived from sceneHallway geometry: bwW=0.22, dA=0.38, dB=0.60, vTop=0.18.
+    // bwL=0.39*width → TN.x=14.8%, TF.x=23.4% → left arch x≈14–24%.
+    // Right arch mirrors: x≈76–86%. Vertical: arch top≈13%, arch bottom≈57% of canvas height.
+    this.doorHotspots = {
+      left:  door(0.13, 0.13, 0.12, 0.44, leftKey),
+      right: door(0.75, 0.13, 0.12, 0.44, rightKey),
+    };
+  }
+
   // --- Spatial navigation (doors) -------------------------------------------
 
   /** Invisible interactive zones over each painted doorway. */
   createDoorZones() {
     Object.values(this.doorHotspots || {}).forEach((hs) => {
+      // Subtle warm highlight that fades in over the arch on hover.
+      const hl = this.add
+        .rectangle(hs.x + hs.w / 2, hs.y + hs.h / 2, hs.w, hs.h, 0xffcc66, 0)
+        .setDepth(58);
+
       const z = this.add
         .zone(hs.x + hs.w / 2, hs.y + hs.h / 2, hs.w, hs.h)
         .setInteractive({ useHandCursor: true })
         .setDepth(60);
-      z.on('pointerover', () => this.setCaption(`${hs.label}  ›`));
-      z.on('pointerout', () => this.setCaption(this.defaultCaption));
+
+      z.on('pointerover', () => {
+        hl.setAlpha(0.14);
+        this.setCaption(`${hs.label}  ›`);
+      });
+      z.on('pointerout', () => {
+        hl.setAlpha(0);
+        this.setCaption(this.defaultCaption);
+      });
       z.on('pointerdown', (p, x, y, e) => {
         e?.stopPropagation();
         this.travelTo(hs.key);
       });
-      this.dynamic.push(z);
+      this.dynamic.push(hl, z);
     });
   }
 
@@ -506,24 +579,39 @@ export default class ResidencyScene extends Phaser.Scene {
       });
     }
 
-    // RIGHT — navigation exits, derived from EXITS adjacency table only.
-    const navExits = [];
+    // RIGHT — hover label (filled by door pointerover) + single "Go back" link.
     const roomExits = EXITS[this.current] || {};
-    ['forward', 'left', 'right', 'leftInner', 'rightInner'].forEach((dir) => {
-      if (roomExits[dir]) {
-        const key = roomExits[dir];
-        navExits.push({ label: `${LOCATIONS[key].name}  ›`, onClick: () => this.travelTo(key) });
-      }
-    });
     const back = roomExits.back || 'hall';
-    navExits.push({ label: `‹ ${LOCATIONS[back].name}`, onClick: () => this.travelTo(back) });
+    const navCX = navLeft + navW / 2;
 
-    const nItemH = Math.min(28, (bh - 8) / navExits.length);
-    const nTotalH = navExits.length * nItemH;
-    const nStartY = barTop + (bh - nTotalH) / 2;
-    navExits.forEach((c, i) => {
-      this.makeTextOption(navLeft, nStartY + i * nItemH + nItemH / 2, c.label, c.onClick, loc.accent);
-    });
+    // Hover label — empty at rest, room name appears when cursor enters a door.
+    this.captionText = this.add
+      .text(navCX, barTop + bh * 0.30, '', {
+        fontFamily: 'Georgia, serif',
+        fontSize: '15px',
+        color: GOLD_S,
+        align: 'center',
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(104);
+    this.defaultCaption = '';
+    this.dynamic.push(this.captionText);
+
+    // Go back — the only persistent navigation item.
+    const backTxt = this.add
+      .text(navCX, barTop + bh * 0.70, `‹  ${LOCATIONS[back].name}`, {
+        fontFamily: 'Georgia, serif',
+        fontSize: '14px',
+        color: '#d8c4a0',
+        align: 'center',
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(104)
+      .setInteractive({ useHandCursor: true });
+    backTxt.on('pointerover', () => backTxt.setColor(CREAM));
+    backTxt.on('pointerout',  () => backTxt.setColor('#d8c4a0'));
+    backTxt.on('pointerdown', (p, x, y, e) => { e?.stopPropagation(); this.travelTo(back); });
+    this.dynamic.push(backTxt);
 
     this.drawCodex(codexCX, cy);
   }
@@ -917,6 +1005,18 @@ export default class ResidencyScene extends Phaser.Scene {
       this.sceneHall(g, width, floorY);
       return;
     }
+    if (loc.feature === 'court') {
+      this.sceneCourt(g, width, floorY);
+      return;
+    }
+    if (loc.feature === 'living_hall') {
+      this.sceneHallway(g, width, floorY, 'warm');
+      return;
+    }
+    if (loc.feature === 'spirit_hall') {
+      this.sceneHallway(g, width, floorY, 'cool');
+      return;
+    }
     this.sceneShell(g, width, floorY);
     const cx = width / 2;
     const s = Phaser.Math.Clamp(floorY / 360, 0.8, 1.7);
@@ -1008,6 +1108,234 @@ export default class ResidencyScene extends Phaser.Scene {
     // Frieze.
     g.fillStyle(GOLD, 0.7);
     g.fillRect(0, at - 8, width, 3);
+  }
+
+  // --- Connecting corridors (Living Wing / Inner Passage) --------------------
+
+  /**
+   * One-point-perspective corridor with a side arch on each wall.
+   * palette = 'warm' (Residential Wing — amber sandstone) |
+   *           'cool' (Inner Passage — dark slate/violet).
+   */
+  sceneHallway(g, width, floorY, palette) {
+    const warm = palette === 'warm';
+    const P = warm ? {
+      ceiling:    0x1a0c04,
+      sideLight:  0x7a4820,
+      sideDark:   0x562e14,
+      backWall:   0x3e2410,
+      floor:      0x221008,
+      floorStripe:0x3a1c0c,
+      archFace:   0x9c6a28,
+      archInner:  0x0c0602,
+      archGlow:   0xffb840,
+      torchGlow:  0xffaa44,
+      joint:      0x1a0c06,
+      accent:     0xc9a24a,
+      rimLight:   0xffcc80,
+    } : {
+      ceiling:    0x0c0a18,
+      sideLight:  0x26223c,
+      sideDark:   0x1a1830,
+      backWall:   0x141224,
+      floor:      0x0e0c18,
+      floorStripe:0x1a1828,
+      archFace:   0x3a346a,
+      archInner:  0x04030a,
+      archGlow:   0x9080cc,
+      torchGlow:  0x9988cc,
+      joint:      0x0c0a16,
+      accent:     0xb98cff,
+      rimLight:   0xc0b0ff,
+    };
+
+    const sceneBot = floorY;
+    const cx = width / 2;
+    // Narrow corridor — bwW drives how tight the perspective feels.
+    const bwW   = width * 0.22;
+    const bwL   = (width - bwW) / 2;
+    const bwR   = (width + bwW) / 2;
+    const bwTop = Math.round(floorY * 0.18);
+    const bwBot = Math.round(floorY * 0.86);
+
+    // Side-wall perspective mapper — same convention as sceneHall/sceneCourt.
+    const wallMap = (sign, d, v) => {
+      const fx = sign < 0 ? 0 : width;
+      const bx = sign < 0 ? bwL : bwR;
+      const x  = fx + (bx - fx) * d;
+      const ty = bwTop * d;
+      const by = sceneBot + (bwBot - sceneBot) * d;
+      return { x, y: ty + (by - ty) * v };
+    };
+
+    // ── Ceiling ───────────────────────────────────────────────────────────────
+    g.fillStyle(P.ceiling, 1);
+    g.fillPoints([
+      { x: 0, y: 0 }, { x: width, y: 0 },
+      { x: bwR, y: bwTop }, { x: bwL, y: bwTop },
+    ], true);
+    // Coffer ribs converging to vanishing point.
+    g.fillStyle(0x000000, 0.3);
+    for (let k = 1; k <= 4; k++) {
+      const fx = k * width / 5;
+      const bx = bwL + (bwR - bwL) * (k / 5);
+      g.fillPoints([
+        { x: fx - 2, y: 0 }, { x: fx + 2, y: 0 },
+        { x: bx + 1, y: bwTop }, { x: bx - 1, y: bwTop },
+      ], true);
+    }
+
+    // ── Side walls ────────────────────────────────────────────────────────────
+    g.fillStyle(P.sideLight, 1);
+    g.fillPoints([
+      { x: 0, y: 0 }, { x: 0, y: sceneBot },
+      { x: bwL, y: bwBot }, { x: bwL, y: bwTop },
+    ], true);
+    g.fillStyle(P.sideDark, 1);
+    g.fillPoints([
+      { x: width, y: 0 }, { x: width, y: sceneBot },
+      { x: bwR, y: bwBot }, { x: bwR, y: bwTop },
+    ], true);
+
+    // Stone-course banding on each wall.
+    g.lineStyle(1, P.joint, 0.22);
+    [-1, 1].forEach((sign) => {
+      [0.16, 0.34, 0.52, 0.70, 0.86].forEach((v) => {
+        const a = wallMap(sign, 0.03, v);
+        const b = wallMap(sign, 0.97, v);
+        g.lineBetween(a.x, a.y, b.x, b.y);
+      });
+    });
+
+    // ── Back wall ─────────────────────────────────────────────────────────────
+    g.fillStyle(P.backWall, 1);
+    g.fillRect(bwL, bwTop, bwW, bwBot - bwTop);
+    // Small window slit on back wall.
+    const slitW = bwW * 0.14;
+    const slitH = (bwBot - bwTop) * 0.28;
+    const slitX = cx - slitW / 2;
+    const slitY = bwTop + (bwBot - bwTop) * 0.18;
+    g.fillStyle(0x000000, 1);
+    g.fillRoundedRect(slitX, slitY, slitW, slitH, { tl: slitW / 2, tr: slitW / 2, bl: 0, br: 0 });
+    g.lineStyle(1.5, P.accent, 0.3);
+    g.strokeRoundedRect(slitX, slitY, slitW, slitH, { tl: slitW / 2, tr: slitW / 2, bl: 0, br: 0 });
+
+    // ── Floor ─────────────────────────────────────────────────────────────────
+    // Foreground fill — covers the strip from the near floor edge to canvas bottom.
+    g.fillStyle(P.floor, 1);
+    g.fillRect(0, sceneBot, width, this.scale.height - sceneBot);
+    // Perspective trapezoid — the floor receding toward the back wall.
+    g.fillPoints([
+      { x: 0, y: sceneBot }, { x: width, y: sceneBot },
+      { x: bwR, y: bwBot  }, { x: bwL, y: bwBot  },
+    ], true);
+    // Flagstone tile lines in perspective.
+    g.lineStyle(1, P.floorStripe, 0.5);
+    const fHW = (t) => width / 2 + (bwW / 2 - width / 2) * t;
+    const fY  = (t) => sceneBot + (bwBot - sceneBot) * t;
+    [0.25, 0.5, 0.75].forEach((t) => {
+      g.lineBetween(cx - fHW(t), fY(t), cx + fHW(t), fY(t));
+    });
+    // Floor edge.
+    g.fillStyle(P.floorStripe, 1);
+    g.fillRect(0, sceneBot, width, 3);
+
+    // ── Arch openings in side walls ───────────────────────────────────────────
+    // vTop=0.18 ensures the arch top sits low enough below the ceiling that the
+    // gothic peak (≈archW*0.60 above TN) stays within the canvas.  dA/dB were
+    // widened toward the wall midpoint so the arch width in screen-space is
+    // proportional to its height.  Both peak Y values are clamped to the wall
+    // ceiling at their respective depths to guarantee no overflow.
+    const dA  = 0.38;  // near depth of arch
+    const dB  = 0.60;  // far depth of arch
+    const sD  = 0.06;  // stone-frame margin (depth units each side) — thicker for visibility
+    const vTop = 0.18; // arch top v-fraction
+
+    [-1, 1].forEach((sign) => {
+      // Arch void corners.
+      const TN    = wallMap(sign, dA, vTop);
+      const TF    = wallMap(sign, dB, vTop);
+      const BN    = wallMap(sign, dA, 1.0);
+      const BF    = wallMap(sign, dB, 1.0);
+      const BNext = { x: BN.x, y: sceneBot };
+      const BFext = { x: BF.x, y: Math.min(BF.y + 4, sceneBot) };
+
+      // Outer stone-frame corners — wallMap-derived so they follow wall geometry.
+      const OTN = wallMap(sign, dA - sD, Math.max(0.02, vTop - 0.10));
+      const OTF = wallMap(sign, dB + sD, Math.max(0.02, vTop - 0.10));
+      const OBN = { x: wallMap(sign, dA - sD, 1.0).x, y: sceneBot };
+      const OBF = { x: wallMap(sign, dB + sD, 1.0).x, y: sceneBot };
+
+      const archW      = Math.abs(TF.x - TN.x);
+      const outerW     = Math.abs(OTF.x - OTN.x);
+      const peakX      = (TN.x  + TF.x)  / 2;
+      const outerPeakX = (OTN.x + OTF.x) / 2;
+      // Clamp both peaks to the wall ceiling at their respective depth — this is
+      // the root fix that prevents triangle overflow above the canvas.
+      const peakY      = Math.max(bwTop * dA       + 4, TN.y  - archW  * 0.60);
+      const outerPeakY = Math.max(bwTop * (dA - sD) + 4, OTN.y - outerW * 0.60);
+
+      // 1. Stone surround — outer frame quad + clamped gothic cap triangle.
+      g.fillStyle(P.archFace, 1);
+      g.fillPoints([OTN, OTF, OBF, OBN], true);
+      g.fillTriangle(OTN.x, OTN.y, OTF.x, OTF.y, outerPeakX, outerPeakY);
+
+      // 2. Dark void — perspective trapezoid to floor.
+      g.fillStyle(P.archInner, 1);
+      g.fillPoints([TN, TF, BFext, BNext], true);
+
+      // 3. Pointed gothic cap — dark triangle above the void opening.
+      g.fillTriangle(TN.x, TN.y, TF.x, TF.y, peakX, peakY);
+
+      // 4. Glow spilling from the opening.
+      this.addGlow(peakX, (TN.y + BN.y) / 2, archW * 2.2, P.archGlow, warm ? 0.13 : 0.09);
+
+      // 5. Gold trim — outer frame silhouette up to clamped peak and back down.
+      g.lineStyle(2, P.accent, 0.65);
+      g.beginPath();
+      g.moveTo(OBN.x, OBN.y);
+      g.lineTo(OTN.x, OTN.y);
+      g.lineTo(outerPeakX, outerPeakY);
+      g.lineTo(OTF.x, OTF.y);
+      g.lineTo(OBF.x, OBF.y);
+      g.strokePath();
+      // Inner arch edge.
+      g.lineStyle(1, P.accent, 0.38);
+      g.beginPath();
+      g.moveTo(BNext.x, BNext.y);
+      g.lineTo(TN.x, TN.y);
+      g.lineTo(peakX, peakY);
+      g.lineTo(TF.x, TF.y);
+      g.lineTo(BFext.x, BFext.y);
+      g.strokePath();
+
+      // Wall torch between the screen edge and the arch.
+      const torchD = dA * 0.48;
+      const tp = wallMap(sign, torchD, 0.30);
+      const ts = 1 - torchD * 0.5;
+      const tl = wallMap(sign, torchD - 0.06, 0.78);
+      const tr = wallMap(sign, torchD + 0.06, 0.78);
+      g.fillStyle(P.torchGlow, 0.08);
+      g.fillTriangle(tp.x, tp.y + 5 * ts, tl.x, tl.y, tr.x, tr.y);
+      g.fillStyle(0x241e18, 1);
+      g.fillRect(tp.x - 1.5 * ts, tp.y - 2 * ts, 3 * ts, 13 * ts);
+      g.fillStyle(0x3a3028, 1);
+      g.fillEllipse(tp.x, tp.y - 2 * ts, 11 * ts, 5 * ts);
+      const fy2 = tp.y - 6 * ts;
+      g.fillStyle(0xe2541a, 0.95); g.fillEllipse(tp.x, fy2 - 8 * ts, 10 * ts, 22 * ts);
+      g.fillStyle(0xff9a2a, 1);    g.fillEllipse(tp.x, fy2 - 9 * ts, 7 * ts, 15 * ts);
+      g.fillStyle(0xffd24a, 1);    g.fillEllipse(tp.x, fy2 - 9 * ts, 4 * ts, 10 * ts);
+      g.fillStyle(0xfff0c0, 1);    g.fillEllipse(tp.x, fy2 - 7 * ts, 2 * ts, 5 * ts);
+      this.addGlow(tp.x, fy2 - 7 * ts, 80 * ts, P.torchGlow, 0.5);
+    });
+
+    // Near-corner shadow vignette.
+    g.fillStyle(0x000000, 0.5);
+    g.fillTriangle(0, 0, 0, sceneBot, width * 0.07, sceneBot * 0.35);
+    g.fillTriangle(width, 0, width, sceneBot, width * 0.93, sceneBot * 0.35);
+
+    // Hanging ambient glow from above.
+    this.addGlow(cx, floorY * 0.18, width * 0.35, P.torchGlow, warm ? 0.25 : 0.15);
   }
 
   // --- Communications Room (bespoke) ----------------------------------------
@@ -1632,6 +1960,404 @@ export default class ResidencyScene extends Phaser.Scene {
     const bLen   = Math.round((bwBot - bwTop) * 0.46);
     this.banner(g, bGapL, bTopY, bLen, bScale);
     this.banner(g, bGapR, bTopY, bLen, bScale);
+  }
+
+  // --- Court (bespoke) --------------------------------------------------------
+
+  /** The Court — formal audience chamber of House Calder. One-point perspective
+   *  box (bwW ≈ 28 %) with sandstone walls, polished stone floor, a raised
+   *  three-step dais, and the High Seat. Not a king's throne — the working
+   *  judge's chair of a sixty-year house. */
+  sceneCourt(g, width, _floorY) {
+    const cx       = width / 2;
+    const height   = this.scale.height;
+    const sceneBot = Math.round(height * 0.72);
+
+    // ── Perspective box — narrow back wall → aggressive convergence → wide feel ──
+    // Reducing bwW from 0.28→0.17 is the primary width trick: the vanishing-point
+    // convergence becomes much more acute, suggesting a vast lateral space.
+    const bwW   = Math.round(width * 0.17);
+    const bwL   = cx - bwW / 2;
+    const bwR   = cx + bwW / 2;
+    const bwTop = Math.round(sceneBot * 0.09);
+    const bwBot = Math.round(sceneBot * 0.63);
+
+    // Wall-plane mapping — depth 0(viewer) → 1(back wall), v 0(ceil) → 1(floor).
+    // Identical pattern to sceneHall; used for stone banding, torches, arch openings.
+    const wallMap = (sign, d, v) => {
+      const fx = sign < 0 ? 0 : width;
+      const bx = sign < 0 ? bwL : bwR;
+      const x  = fx + (bx - fx) * d;
+      const ty = bwTop * d;
+      const by = sceneBot + (bwBot - sceneBot) * d;
+      return { x, y: ty + (by - ty) * v };
+    };
+
+    const hScale   = (d) => 1 - d * (1 - bwW / width);
+    const floorAtD = (d) => sceneBot + (bwBot - sceneBot) * d;
+    const ceilAtD  = (d) => bwTop * d;
+    const floorHW  = (t) => width / 2 + (bwW / 2 - width / 2) * t;
+    const floorYt  = (t) => sceneBot + (bwBot - sceneBot) * t;
+
+    const lerpC = (c1, c2, t) => {
+      const r  = ((c1 >> 16) & 255) + (((c2 >> 16) & 255) - ((c1 >> 16) & 255)) * t;
+      const gg = ((c1 >>  8) & 255) + (((c2 >>  8) & 255) - ((c1 >>  8) & 255)) * t;
+      const b  = ( c1        & 255) + (( c2        & 255) - ( c1        & 255)) * t;
+      return (Math.round(r) << 16) | (Math.round(gg) << 8) | Math.round(b);
+    };
+
+    // ── Ceiling — very dark, warm ─────────────────────────────────────────────
+    g.fillStyle(0x160c06, 1);
+    g.fillPoints([
+      { x: 0, y: 0 }, { x: width, y: 0 },
+      { x: bwR, y: bwTop }, { x: bwL, y: bwTop },
+    ], true);
+    // 9 converging coffer ribs — more ribs on wider ceiling span
+    g.fillStyle(0x0a0604, 0.55);
+    for (let k = 1; k <= 9; k++) {
+      const fx = k * width / 10;
+      const bx = bwL + bwW * (k / 10);
+      g.fillPoints([
+        { x: fx - 2, y: 0 }, { x: fx + 2, y: 0 },
+        { x: bx + 1, y: bwTop }, { x: bx - 1, y: bwTop },
+      ], true);
+    }
+    // Cornice band suggesting massive vault scale
+    g.fillStyle(0x2e1a0a, 1);
+    g.fillRect(0, bwTop - 3, width, 5);
+    g.fillStyle(GOLD, 0.22);
+    g.fillRect(0, bwTop - 3, width, 1);
+
+    // ── Side walls — wide visible surface with stone detail ───────────────────
+    g.fillStyle(0x3a2210, 1);      // left — cooler shadow
+    g.fillPoints([
+      { x: 0,   y: 0       }, { x: bwL, y: bwTop  },
+      { x: bwL, y: bwBot   }, { x: 0,   y: sceneBot },
+    ], true);
+    g.fillStyle(0x4a2c14, 1);      // right — warmer, slight lamp catch
+    g.fillPoints([
+      { x: width, y: 0       }, { x: width, y: sceneBot },
+      { x: bwR,   y: bwBot   }, { x: bwR,   y: bwTop   },
+    ], true);
+
+    // Wall detail: perspective stone courses + recessed panels + torches
+    [-1, 1].forEach((sign) => {
+      // Faint horizontal stone-course lines mapped in wall perspective
+      g.lineStyle(1, 0x1a0e06, 0.20);
+      [0.18, 0.36, 0.54, 0.72, 0.88].forEach((v) => {
+        const a = wallMap(sign, 0.02, v);
+        const b = wallMap(sign, 0.98, v);
+        g.lineBetween(a.x, a.y, b.x, b.y);
+      });
+
+      // Decorative recessed panel in the front bay (near the entrance columns)
+      const panelPts = [
+        wallMap(sign, 0.18, 0.18), wallMap(sign, 0.34, 0.18),
+        wallMap(sign, 0.34, 0.74), wallMap(sign, 0.18, 0.74),
+      ];
+      g.fillStyle(0x1e1008, 0.4);
+      g.fillPoints(panelPts, true);
+      g.lineStyle(1.5, GOLD, 0.28);
+      g.strokePoints(panelPts, true, true);
+      g.lineStyle(1, 0xc8822a, 0.18);
+      g.lineBetween(panelPts[0].x, panelPts[0].y, panelPts[1].x, panelPts[1].y);
+      g.lineBetween(panelPts[0].x, panelPts[0].y, panelPts[3].x, panelPts[3].y);
+
+      // Wall torches — two per side, mapped in perspective
+      [0.08, 0.44].forEach((d) => {
+        const p = wallMap(sign, d, 0.30);
+        const s = 1 - d * 0.45;
+        const cl = wallMap(sign, d - 0.05, 0.72), cr = wallMap(sign, d + 0.05, 0.72);
+        g.fillStyle(0xffcc66, 0.07);
+        g.fillTriangle(p.x, p.y + 4 * s, cl.x, cl.y, cr.x, cr.y);
+        g.fillStyle(0x241e18, 1);
+        g.fillRect(p.x - 1.5 * s, p.y - 2 * s, 3 * s, 14 * s);
+        g.fillStyle(0x3a3028, 1);
+        g.fillEllipse(p.x, p.y - 2 * s, 11 * s, 5 * s);
+        const fy = p.y - 5 * s;
+        g.fillStyle(0xe2541a, 0.95); g.fillEllipse(p.x, fy - 9 * s, 11 * s, 24 * s);
+        g.fillStyle(0xff9a2a, 1);    g.fillEllipse(p.x, fy - 10 * s, 7 * s, 17 * s);
+        g.fillStyle(0xffd24a, 1);    g.fillEllipse(p.x, fy - 10 * s, 4 * s, 11 * s);
+        g.fillStyle(0xfff0c0, 1);    g.fillEllipse(p.x, fy - 8 * s, 2 * s, 6 * s);
+        this.addGlow(p.x, fy - 8 * s, 82 * s, 0xffaa44, 0.45);
+      });
+    });
+
+    // ── Side arch openings — drawn on wall face BEFORE columns ────────────────
+    // Left wall carries two doors (the living quarters wing): Veil (mid-depth)
+    // and Eren's Quarters (deeper, past the far columns). Right wall has Solar.
+    // Having Quarters as a side door — not behind the throne — is correct:
+    // you don't walk through the lord's seat to reach the player's quarters.
+    const sideArch = (sign, dA, dB) => {
+      const map = (d, v) => wallMap(sign, d, v);
+      const vFloor = 0.99, vSpring = 0.58, vPeak = 0.42;
+      const outline = (ed, ev) => {
+        const a = dA - ed, b = dB + ed;
+        const sp = vSpring - ev, pk = vPeak - ev;
+        const pts = [map(a, vFloor), map(b, vFloor)];
+        for (let i = 0; i <= 9; i++) {
+          const t = i / 9;
+          pts.push(map(b + (a - b) * t, sp - (sp - pk) * Math.sin(Math.PI * t)));
+        }
+        return pts;
+      };
+      g.fillStyle(0x6a4626, 1);
+      g.fillPoints(outline(0.018, 0.035), true);
+      g.fillStyle(0x3a2614, 1);
+      g.fillPoints(outline(0.006, 0.012), true);
+      g.fillStyle(0x130d08, 1);
+      g.fillPoints(outline(-0.004, -0.004), true);
+      const c   = map((dA + dB) / 2, (vFloor + vPeak) / 2);
+      const wpx = Math.abs(map(dA, vFloor).x - map(dB, vFloor).x);
+      this.addGlow(c.x, c.y, wpx * 3.2, 0xffce86, 0.22);
+      const corners = [
+        map(dA, vFloor), map(dB, vFloor),
+        map(dA, vSpring), map(dB, vSpring), map((dA + dB) / 2, vPeak),
+      ];
+      const xs = corners.map((p) => p.x), ys = corners.map((p) => p.y);
+      return {
+        x: Math.min(...xs), y: Math.min(...ys),
+        w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys),
+      };
+    };
+    // LEFT wall: Veil (mid) then Quarters (deeper — private wing beyond the columns)
+    const leftVeilHS     = sideArch(-1, 0.26, 0.44);   // mid-depth, between column pairs
+    const leftQuartersHS = sideArch(-1, 0.60, 0.76);   // deeper, past far columns
+    // RIGHT wall: Solar only
+    const rightSolarHS   = sideArch(+1, 0.26, 0.44);
+
+    // ── Back wall — sandstone, lighter/slightly cooler than side walls ─────────
+    g.fillStyle(0x5a3c20, 1);
+    g.fillRect(bwL, bwTop, bwW, bwBot - bwTop);
+    g.lineStyle(1, 0x2e1c0c, 0.30);
+    for (let i = 1; i < 6; i++) {
+      const y = bwTop + (bwBot - bwTop) * i / 6;
+      g.lineBetween(bwL, Math.round(y), bwR, Math.round(y));
+    }
+    g.fillStyle(0x6a4a26, 1);
+    g.fillRect(bwL - 3, bwTop - 5, bwW + 6, 7);
+    g.fillStyle(GOLD, 0.55);
+    g.fillRect(bwL - 3, bwTop - 5, bwW + 6, 1);
+
+    // ── Back wall — plain sandstone, no door. The throne reads as final authority.
+    // (Quarters is reached via the left-wall passage, not through the lord's seat.)
+
+    // ── Floor — three depth-graded zones ──────────────────────────────────────
+    const floorBand = (t0, t1, col) => {
+      g.fillStyle(col, 1);
+      g.fillPoints([
+        { x: cx - floorHW(t0), y: floorYt(t0) }, { x: cx + floorHW(t0), y: floorYt(t0) },
+        { x: cx + floorHW(t1), y: floorYt(t1) }, { x: cx - floorHW(t1), y: floorYt(t1) },
+      ], true);
+    };
+    floorBand(0.0, 0.22, 0x3a2010);   // far: warm, lit by arch glow
+    floorBand(0.22, 0.58, 0x241808);  // mid: neutral warm stone
+    floorBand(0.58, 1.0, 0x1a1008);   // near: darkest, in shadow
+    // Perspective tile lines (horizontal)
+    g.lineStyle(1, 0x3a2214, 0.22);
+    for (let r = 1; r <= 6; r++) {
+      const t  = r / 7;
+      const y  = Math.round(sceneBot + (bwBot - sceneBot) * t);
+      const hw = Math.round(width / 2 + (bwW / 2 - width / 2) * t);
+      g.lineBetween(cx - hw, y, cx + hw, y);
+    }
+    // Converging vertical lines — more acute with the narrower bwW
+    for (let k = -8; k <= 8; k++) {
+      g.lineBetween(
+        Math.round(cx + k * width * 0.10), sceneBot,
+        Math.round(cx + k * bwW  * 0.10), bwBot,
+      );
+    }
+    // Arch-light pooling on the far floor
+    this.addGlow(cx, bwBot + 16, width * 0.50, 0xc8822a, 0.14);
+
+    // ── Crimson runner — wider near-width reinforces grand scale ──────────────
+    const rnFarW  = Math.round(bwW * 0.36);
+    const rnNearW = Math.round(width * 0.16);
+    g.fillStyle(0x2a0810, 1);
+    g.fillPoints([
+      { x: cx - rnFarW / 2 - 2,  y: bwBot    },
+      { x: cx + rnFarW / 2 + 2,  y: bwBot    },
+      { x: cx + rnNearW / 2 + 2, y: sceneBot },
+      { x: cx - rnNearW / 2 - 2, y: sceneBot },
+    ], true);
+    g.fillStyle(0x580810, 1);
+    g.fillPoints([
+      { x: cx - rnFarW / 2,  y: bwBot    },
+      { x: cx + rnFarW / 2,  y: bwBot    },
+      { x: cx + rnNearW / 2, y: sceneBot },
+      { x: cx - rnNearW / 2, y: sceneBot },
+    ], true);
+    // Shadowed leading end
+    g.fillStyle(0x3a0a14, 0.50);
+    g.fillPoints([
+      { x: cx - rnNearW / 2, y: sceneBot },
+      { x: cx + rnNearW / 2, y: sceneBot },
+      { x: cx + (rnNearW / 2 * 0.55 + rnFarW / 2 * 0.45), y: floorYt(0.45) },
+      { x: cx - (rnNearW / 2 * 0.55 + rnFarW / 2 * 0.45), y: floorYt(0.45) },
+    ], true);
+    const rin = 5;
+    g.lineStyle(1, GOLD, 0.50);
+    g.lineBetween(cx - rnFarW / 2,  bwBot,   cx - rnNearW / 2, sceneBot);
+    g.lineBetween(cx + rnFarW / 2,  bwBot,   cx + rnNearW / 2, sceneBot);
+    g.lineStyle(1, 0xa03040, 0.55);
+    g.lineBetween(cx - rnFarW / 2 + rin, bwBot, cx - rnNearW / 2 + rin * 2, sceneBot);
+    g.lineBetween(cx + rnFarW / 2 - rin, bwBot, cx + rnNearW / 2 - rin * 2, sceneBot);
+    // Woven Calder emblem — foreshortened diamond on the runner
+    const emY = floorYt(0.60);
+    const emW = rnNearW * 0.28;
+    const emH = emW * 0.62;
+    g.fillStyle(GOLD, 0.85);
+    g.fillTriangle(cx, emY - emH, cx + emW, emY, cx, emY + emH);
+    g.fillTriangle(cx, emY - emH, cx - emW, emY, cx, emY + emH);
+    g.fillStyle(0x580810, 1);
+    g.fillTriangle(cx, emY - emH * 0.6, cx + emW * 0.62, emY, cx, emY + emH * 0.6);
+    g.fillTriangle(cx, emY - emH * 0.6, cx - emW * 0.62, emY, cx, emY + emH * 0.6);
+
+    // ── Far column pair (d=0.52) — drawn first, flanks the dais approach ──────
+    const colFarD   = 0.52;
+    const hsFar     = hScale(colFarD);
+    const colFarOff = Math.round(width * 0.38 * hsFar);
+    this.column(g, cx - colFarOff, Math.round(ceilAtD(colFarD)), Math.round(floorAtD(colFarD)), colFarD, hsFar,  1);
+    this.column(g, cx + colFarOff, Math.round(ceilAtD(colFarD)), Math.round(floorAtD(colFarD)), colFarD, hsFar, -1);
+
+    // ── Near column pair (d=0.12) — grand entrance frame, drawn over far pair ──
+    const colNearD   = 0.12;
+    const hsNear     = hScale(colNearD);
+    const colNearOff = Math.round(width * 0.40 * hsNear);
+    this.column(g, cx - colNearOff, Math.round(ceilAtD(colNearD)), Math.round(floorAtD(colNearD)), colNearD, hsNear,  1);
+    this.column(g, cx + colNearOff, Math.round(ceilAtD(colNearD)), Math.round(floorAtD(colNearD)), colNearD, hsNear, -1);
+
+    // ── Raised Dais — three steps ascending to the High Seat ─────────────────
+    const daisSteps = 3;
+    const stepH     = Math.round((bwBot - bwTop) * 0.088);
+    const daisFullW = Math.round(bwW * 0.88);
+    for (let s = 0; s < daisSteps; s++) {
+      const sw   = Math.round(daisFullW * (1 - s * 0.18));
+      const sL   = cx - sw / 2;
+      const sTop = bwBot - (s + 1) * stepH;
+      g.fillStyle(s % 2 === 0 ? 0x241608 : 0x2e1c0e, 1);
+      g.fillRect(sL, sTop, sw, stepH);
+      g.fillStyle(lerpC(0x3a2210, 0x5a3820, s / daisSteps), 0.75);
+      g.fillRect(sL, sTop, sw, 2);
+      if (s === daisSteps - 1) {
+        g.fillStyle(GOLD, 0.35);
+        g.fillRect(sL + 1, sTop, sw - 2, 1);
+      }
+    }
+    const daisTop = bwBot - daisSteps * stepH;
+    // No tall platform face — the back-wall arch is the visual anchor;
+    // the throne sits in front of its opening rather than behind a slab.
+
+    // ── House Calder banners — flanking the throne on the back wall ──────────
+    const bScale = Math.max(0.55, bwW / 300);
+    const bOff   = Math.round(bwW * 0.26);   // symmetric about back-wall centre
+    const bTopY  = bwTop + 4;
+    const bLen   = Math.round((daisTop - bwTop) * 0.70);
+    this.banner(g, cx - bOff, bTopY, bLen, bScale);
+    this.banner(g, cx + bOff, bTopY, bLen, bScale);
+
+    // ── The High Seat ─────────────────────────────────────────────────────────
+    const sc    = Math.max(0.72, bwW / 260);
+    const seatX = cx;
+    const seatY = daisTop;
+    const backW = Math.round(54 * sc);
+    const backH = Math.round(132 * sc);
+    const backT = seatY - backH;
+
+    g.fillStyle(0x0a0602, 0.55);
+    g.fillRect(seatX - backW / 2 + 5, backT + 5, backW, backH);
+
+    g.fillStyle(0x1e120a, 1);
+    g.fillRect(seatX - backW / 2, backT, backW, backH);
+    g.fillStyle(0x3a2214, 0.75);
+    g.fillRect(seatX - backW / 2, backT, Math.round(backW * 0.35), backH);
+    g.fillStyle(0x4e3020, 0.4);
+    g.fillRect(seatX - backW / 2, backT, Math.round(backW * 0.14), backH);
+
+    const panW = Math.round(backW * 0.48);
+    const panH = Math.round(backH * 0.60);
+    const panT = backT + Math.round(backH * 0.14);
+    g.fillStyle(0x100a06, 0.85);
+    g.fillRect(cx - panW / 2, panT, panW, panH);
+    g.lineStyle(1, GOLD, 0.22);
+    g.strokeRect(cx - panW / 2, panT, panW, panH);
+    const sigY = panT + panH * 0.42;
+    const sigR = Math.round(7 * sc);
+    g.fillStyle(GOLD, 0.60);
+    g.fillTriangle(cx, sigY - sigR, cx + sigR, sigY, cx, sigY + sigR);
+    g.fillTriangle(cx, sigY - sigR, cx - sigR, sigY, cx, sigY + sigR);
+
+    const finR = Math.round(5 * sc);
+    g.fillStyle(GOLD, 0.88);
+    g.fillCircle(seatX - Math.round(backW * 0.36), backT, finR);
+    g.fillCircle(seatX + Math.round(backW * 0.36), backT, finR);
+    g.fillStyle(GOLD, 0.55);
+    g.fillRect(seatX - backW / 2 - 2, backT - 2, backW + 4, 3);
+
+    const armW = Math.round(backW * 0.72);
+    const armH = Math.round(10 * sc);
+    const armY = seatY - Math.round(46 * sc);
+    g.fillStyle(0x281808, 1);
+    g.fillRect(seatX - backW / 2 - armW, armY, armW, armH);
+    g.fillRect(seatX + backW / 2,        armY, armW, armH);
+    g.fillStyle(0x3e2410, 0.65);
+    g.fillRect(seatX - backW / 2 - armW, armY, armW, 2);
+    g.fillRect(seatX + backW / 2,        armY, armW, 2);
+    g.fillStyle(0x1e1008, 1);
+    g.fillRect(seatX - backW / 2 - armW + 2, armY + armH, Math.round(8 * sc), seatY - armY - armH);
+    g.fillRect(seatX + backW / 2 + armW - Math.round(10 * sc), armY + armH, Math.round(8 * sc), seatY - armY - armH);
+
+    const plinthW = Math.round(backW * 1.5);
+    const plinthH = Math.round(14 * sc);
+    g.fillStyle(0x160e06, 1);
+    g.fillRect(seatX - plinthW / 2, seatY - plinthH, plinthW, plinthH);
+    g.fillStyle(0x3a2214, 0.6);
+    g.fillRect(seatX - plinthW / 2, seatY - plinthH, plinthW, 2);
+    g.fillStyle(0x000000, 0.38);
+    g.fillEllipse(seatX, seatY + 3, plinthW * 1.2, Math.round(8 * sc));
+
+    // ── Overhead hanging lamp ─────────────────────────────────────────────────
+    const lampX  = cx;
+    const lampY  = Math.round(bwTop + (daisTop - bwTop) * 0.22);
+    const chainH = lampY - bwTop;
+    g.lineStyle(1, 0x8a6a3a, 0.75);
+    g.lineBetween(lampX, bwTop + 2, lampX, lampY - 8);
+    g.fillStyle(0xa88040, 0.6);
+    for (let i = 1; i < 5; i++) g.fillCircle(lampX, bwTop + chainH * i / 5, 2);
+    const lsc = Math.max(1, Math.round(bwW / 70));
+    g.fillStyle(0x2a1c0c, 1);
+    g.fillRect(lampX - 7 * lsc, lampY - 6 * lsc, 14 * lsc, 12 * lsc);
+    g.fillStyle(GOLD, 0.75);
+    g.fillRect(lampX - 7 * lsc, lampY - 7 * lsc, 14 * lsc, 2 * lsc);
+    g.fillRect(lampX - 7 * lsc, lampY + 5 * lsc, 14 * lsc, 2 * lsc);
+    g.fillStyle(0xffdd80, 0.9);
+    g.fillEllipse(lampX, lampY, 5 * lsc, 7 * lsc);
+    this.addGlow(lampX, lampY + 30, Math.round(width * 0.20), 0xffcc60, 0.52);
+    this.addGlow(lampX, lampY,      Math.round(width * 0.06), 0xfffbe0, 0.65);
+    this.addGlow(lampX, bwBot - 20, Math.round(bwW * 0.80), 0xffcc60, 0.18);
+
+    // ── Door hotspots ─────────────────────────────────────────────────────────
+    // Three side-wall arches: Veil + Quarters on the left (the living wing),
+    // Solar on the right. Nothing through the throne — that's Lord Aldric's seat.
+    this.doorHotspots = {
+      leftVeil:     { ...leftVeilHS,     key: 'veil',     label: LOCATIONS.veil.name },
+      leftQuarters: { ...leftQuartersHS, key: 'quarters', label: LOCATIONS.quarters.name },
+      right:        { ...rightSolarHS,   key: 'solar',    label: LOCATIONS.solar.name },
+    };
+
+    // ── Floor extension + vignettes ───────────────────────────────────────────
+    g.fillStyle(0x1a1008, 1);
+    g.fillRect(0, sceneBot, width, height - sceneBot);
+    this.addGlow(cx, sceneBot + 8, width * 0.9, 0x000000, 0.22);
+    g.fillStyle(0x000000, 0.55);
+    g.fillRect(0, 0, width, Math.round(sceneBot * 0.06));
+    // Narrower vignette than before — the wide walls should read, not be swallowed
+    const vigW = Math.round(width * 0.14);
+    g.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.55, 0, 0.55, 0);
+    g.fillRect(0, 0, vigW, sceneBot);
+    g.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0, 0.55, 0, 0.55);
+    g.fillRect(width - vigW, 0, vigW, sceneBot);
   }
 
   banner(g, x, topY, len, s = 1) {
