@@ -320,7 +320,8 @@ export default class ResidencyScene extends Phaser.Scene {
 
     // Painted scene — EVERY room fills the full canvas, for one consistent frame.
     this.bd.clear();
-    const useBg = USE_HALL_BG && loc.feature === 'hall' && this.textures.exists('hallBg');
+    const bgKey = BACKDROPS[loc.feature];
+    const useBg = !!bgKey && this.textures.exists(bgKey);
     if (useBg) {
       this.showBackdrop(bgKey, width, height);
       if (loc.feature === 'hall')        this.setHallHotspots(width, height);
@@ -336,11 +337,11 @@ export default class ResidencyScene extends Phaser.Scene {
         this.createCommsAnim();
       }
     } else if (loc.feature === 'comms') {
-      if (this.hallBgImg) this.hallBgImg.setVisible(false);
+      if (this.backdropImg) this.backdropImg.setVisible(false);
       this.sceneComms(this.bd, width, height);
       this.createCommsAnim();
     } else {
-      if (this.hallBgImg) this.hallBgImg.setVisible(false);
+      if (this.backdropImg) this.backdropImg.setVisible(false);
       this.drawScene(loc, width, floorY);
     }
 
@@ -379,14 +380,30 @@ export default class ResidencyScene extends Phaser.Scene {
   // --- Painted backdrop (experimental) --------------------------------------
 
   /** Draw the full-canvas PNG backdrop and place door hotspots over its doorways. */
-  showHallBackground(width, height) {
-    if (!this.hallBgImg) {
-      this.hallBgImg = this.add.image(0, 0, 'hallBg').setOrigin(0, 0).setDepth(-60);
+  /** Generic backdrop display — creates or reuses a full-canvas image for the given texture key.
+   *  Hotspot setup is handled separately by setHallHotspots / setCourtHotspots / setWingHotspots. */
+  showBackdrop(bgKey, width, height) {
+    // Hide the old backdrop if switching to a different texture.
+    if (this.backdropImg && this.backdropImg.texture.key !== bgKey) {
+      this.backdropImg.setVisible(false);
+      this.backdropImg = null;
     }
-    this.hallBgImg.setVisible(true).setDisplaySize(width, height); // 16:9 → 16:9, no stretch
+    if (!this.backdropImg) {
+      this.backdropImg = this.add.image(0, 0, bgKey).setOrigin(0, 0).setDepth(-60);
+      // Keep backwards-compat alias so legacy `hallBgImg` references still work.
+      this.hallBgImg = this.backdropImg;
+    }
+    this.backdropImg.setVisible(true).setDisplaySize(width, height);
+  }
 
-    // Four side archways + the throne arch, as fractions of the full canvas.
-    // Outer arches → everyday wings; inner arches (by the statues) → action rooms.
+  /** @deprecated Use showBackdrop('hallBg', …) + setHallHotspots(). Kept for legacy call-sites. */
+  showHallBackground(width, height) {
+    this.showBackdrop('hallBg', width, height);
+    this.setHallHotspots(width, height);
+  }
+
+  /** Door hotspots for the painted Hall backdrop. */
+  setHallHotspots(width, height) {
     const door = (x, y, w, h, key) => ({
       x: width * x, y: height * y, w: width * w, h: height * h,
       key, label: LOCATIONS[key].name,

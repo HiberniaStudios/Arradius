@@ -25,6 +25,12 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create() {
+    // Purge any stale canvas textures left by a previous BootScene run.
+    // Happens during Vite HMR cycles: the module re-executes but the Phaser
+    // TextureManager persists, so createCanvas() returns null for existing keys.
+    ['sky','glow','aurun','eren','figure','interiorWall','vignette','noise','planetSurface']
+      .forEach(k => { if (this.textures.exists(k)) this.textures.remove(k); });
+
     this.makeSky();
     this.makeGlow();
     this.makeAurun();
