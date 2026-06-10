@@ -18,7 +18,8 @@ const USE_HALL_BG = true;
 
 // Painted backdrops by room feature → BootScene texture key. Rooms without an
 // entry fall back to procedural art.
-const BACKDROPS = { hall: 'hallBg', comms: 'commsBg', court: 'courtBg' };
+const BACKDROPS    = { hall: 'hallBg', comms: 'commsBg', court: 'courtBg' };
+const CHAR_SPRITES = { 'Lord Aldric': 'aldric' };
 
 const LOCATIONS = {
   hall: {
@@ -625,12 +626,26 @@ export default class ResidencyScene extends Phaser.Scene {
       dg.strokeCircle(dx, cy, 28);
       dg.fillStyle(loc.accent, 0.18);
       dg.fillCircle(dx, cy, 24);
-      const faceCol = Phaser.Display.Color.IntegerToColor(loc.accent).darken(30).color;
-      dg.fillStyle(faceCol, 1);
-      dg.fillCircle(dx, cy - 8, 10);
-      dg.fillStyle(0x1b1228, 1);
-      dg.fillRoundedRect(dx - 13, cy + 2, 26, 20, { tl: 9, tr: 9, bl: 0, br: 0 });
+      const charTexKey = CHAR_SPRITES[loc.who];
+      const hasCharSprite = charTexKey && this.textures.exists(charTexKey);
+      if (!hasCharSprite) {
+        const faceCol = Phaser.Display.Color.IntegerToColor(loc.accent).darken(30).color;
+        dg.fillStyle(faceCol, 1);
+        dg.fillCircle(dx, cy - 8, 10);
+        dg.fillStyle(0x1b1228, 1);
+        dg.fillRoundedRect(dx - 13, cy + 2, 26, 20, { tl: 9, tr: 9, bl: 0, br: 0 });
+      }
       this.dynamic.push(dg);
+
+      if (hasCharSprite) {
+        const src = this.textures.get(charTexKey).source[0];
+        const discD = 56;
+        const scale = discD / src.width;
+        const sprite = this.add.image(dx, cy - 4, charTexKey)
+          .setDisplaySize(src.width * scale, src.height * scale)
+          .setDepth(104);
+        this.dynamic.push(sprite);
+      }
 
       const discZone = this.add
         .circle(dx, cy, 30).setInteractive({ useHandCursor: true }).setDepth(104);
