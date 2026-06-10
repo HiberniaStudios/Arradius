@@ -13,12 +13,24 @@ export default class BootScene extends Phaser.Scene {
   preload() {
     // Optional painted room backdrops. If absent, scenes fall back to procedural
     // art — the loaderror is swallowed so a missing file never blocks boot.
-    this.load.image('hallBg', 'hall.png');
-    this.load.image('commsBg', 'comms.png');
+    this.load.image('hallBg',    'hall.png');
+    this.load.image('commsBg',   'comms.png');
+    this.load.image('courtBg',   'The_Court.png');
+    // Map node sprites — optional, fall back to procedural symbols if absent
+    this.load.image('node-city',   'map/Palace_icon.png');
+    this.load.image('node-hollow', 'map/Hollow_icon.png');
+    this.load.image('node-fort',   'map/Fort_icon.png');
+    this.load.image('mapBg', 'map/enhanced_Arradius_map.png');
     this.load.on('loaderror', () => {});
   }
 
   create() {
+    // Purge any stale canvas textures left by a previous BootScene run.
+    // Happens during Vite HMR cycles: the module re-executes but the Phaser
+    // TextureManager persists, so createCanvas() returns null for existing keys.
+    ['sky','glow','aurun','eren','figure','interiorWall','vignette','noise','planetSurface','planetClouds']
+      .forEach(k => { if (this.textures.exists(k)) this.textures.remove(k); });
+
     this.makeSky();
     this.makeGlow();
     this.makeAurun();
