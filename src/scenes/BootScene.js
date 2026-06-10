@@ -13,6 +13,7 @@ export default class BootScene extends Phaser.Scene {
   preload() {
     // Optional painted room backdrops. If absent, scenes fall back to procedural
     // art — the loaderror is swallowed so a missing file never blocks boot.
+    this.load.image('aldric',    'Aldric.png');
     this.load.image('hallBg',    'hall.png');
     this.load.image('commsBg',   'comms.png');
     this.load.image('courtBg',   'The_Court.png');
@@ -41,6 +42,7 @@ export default class BootScene extends Phaser.Scene {
     this.makeNoise();
     this.makePlanetSurface();
     this.makePlanetClouds();
+    if (!this.textures.exists('aldric')) this.makeAldric();
 
     this.scene.start('ResidencyScene');
   }
@@ -184,6 +186,121 @@ export default class BootScene extends Phaser.Scene {
     }
     ctx.putImageData(img, 0, 0);
     tex.refresh();
+  }
+
+  /** Lord Aldric Calder — Duke Leto style: bare-headed, high-collared coat,
+   *  House Calder blue trim, silver temples, steel-blue eyes. */
+  makeAldric() {
+    const w = 48;
+    const h = 80;
+    const cx = 24;
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+
+    // ── Cape — left sweep; inner edge lighter so it reads against the coat ──
+    g.fillStyle(0x07050e, 1);
+    g.fillTriangle(0, 28, 22, 28, 0, 78);
+    g.fillStyle(0x1c1838, 0.55);
+    g.fillTriangle(3, 28, 6, 28, 3, 72);  // cape inner-edge highlight
+
+    // ── Coat body ────────────────────────────────────────────────────────────
+    g.fillStyle(0x0d0b1c, 1);
+    g.fillRoundedRect(11, 27, 28, 49, { tl: 3, tr: 3, bl: 2, br: 2 });
+    // Right side catch-light — depth
+    g.fillStyle(0x1a1840, 0.40);
+    g.fillRect(30, 29, 8, 45);
+
+    // ── Shoulders — squared, epaulette bar ──────────────────────────────────
+    g.fillStyle(0x161434, 1);
+    g.fillRect(5, 27, 38, 8);
+
+    // ── House Calder blue trim — top + bottom of shoulder bar ───────────────
+    g.fillStyle(0x6fb0ff, 0.80);
+    g.fillRect(5, 27, 38, 2);
+    g.fillStyle(0x6fb0ff, 0.35);
+    g.fillRect(5, 34, 38, 1);
+
+    // ── V-collar — deep shadow cut ───────────────────────────────────────────
+    g.fillStyle(0x07050e, 1);
+    g.fillTriangle(18, 27, 30, 27, cx, 40);
+    // Collar Calder-blue piping
+    g.fillStyle(0x6fb0ff, 0.50);
+    g.fillTriangle(18, 27, 20, 27, cx, 38);
+    g.fillTriangle(30, 27, 28, 27, cx, 38);
+
+    // ── Gold buttons ─────────────────────────────────────────────────────────
+    g.fillStyle(0xc8a050, 0.92);
+    [38, 47, 56, 65].forEach(y => g.fillCircle(cx, y, 1.6));
+
+    // ── House Calder signet diamond — left breast, two-tone + gold pip ──────
+    g.fillStyle(0x6fb0ff, 0.90);
+    g.fillTriangle(13, 37, 19, 31, 19, 43);
+    g.fillStyle(0x3a68a0, 0.90);
+    g.fillTriangle(19, 31, 25, 37, 19, 43);
+    g.fillStyle(0xc8a050, 1);
+    g.fillCircle(19, 37, 1.3);
+
+    // ── Cool Calder-blue rim light — right coat edge ─────────────────────────
+    g.fillStyle(0x6fb0ff, 0.20);
+    g.fillRect(38, 20, 2, 58);
+
+    // ── Neck ─────────────────────────────────────────────────────────────────
+    g.fillStyle(0xa87858, 1);
+    g.fillRect(20, 22, 8, 7);
+
+    // ── Head — layered planes for readability ─────────────────────────────────
+    // Forehead (lighter, catches light)
+    g.fillStyle(0xc49870, 1);
+    g.fillEllipse(cx, 7, 18, 12);
+    // Mid-face / cheeks
+    g.fillStyle(0xb88860, 1);
+    g.fillRect(15, 9, 18, 10);
+    // Jaw — slightly narrower + darker
+    g.fillStyle(0xa87858, 1);
+    g.fillRect(16, 17, 16, 6);
+    g.fillRect(17, 22, 14, 2);  // chin taper
+
+    // ── Hair — clearly separate from face, swept back ─────────────────────────
+    g.fillStyle(0x100e1e, 1);
+    g.fillRect(15, 0, 18, 6);   // top crown
+    g.fillRect(13, 1, 3, 16);   // left side
+    g.fillRect(32, 1, 3, 16);   // right side
+
+    // ── Silver temples — bright band, clearly hair not helmet ────────────────
+    g.fillStyle(0xb8b8c8, 0.85);
+    g.fillRect(13, 6, 3, 9);
+    g.fillRect(32, 6, 3, 9);
+
+    // ── Brows — heavy, close-set, authoritative ──────────────────────────────
+    g.fillStyle(0x100e1e, 1);
+    g.fillRect(16, 11, 5, 2);
+    g.fillRect(27, 11, 5, 2);
+
+    // ── Eyes — steel blue, wide-set, resolute ────────────────────────────────
+    g.fillStyle(0x5888b0, 1);
+    g.fillRect(16, 14, 5, 3);
+    g.fillRect(27, 14, 5, 3);
+    // Pupil
+    g.fillStyle(0x0c1828, 1);
+    g.fillRect(18, 14, 2, 3);
+    g.fillRect(29, 14, 2, 3);
+    // Catchlight — gives life to the eyes
+    g.fillStyle(0xeef6ff, 0.90);
+    g.fillRect(19, 14, 1, 1);
+    g.fillRect(30, 14, 1, 1);
+
+    // ── Nose — minimal shadow bridge ─────────────────────────────────────────
+    g.fillStyle(0x9a7050, 0.50);
+    g.fillRect(22, 18, 4, 3);
+
+    // ── Mouth — firm, set line ────────────────────────────────────────────────
+    g.fillStyle(0x7a4c38, 0.85);
+    g.fillRect(19, 22, 10, 2);
+    // Slight highlight on upper lip
+    g.fillStyle(0xbe9070, 0.50);
+    g.fillRect(20, 21, 8, 1);
+
+    g.generateTexture('aldric', w, h);
+    g.destroy();
   }
 
   /** Tileable desert-world surface for the comms-screen planet (scrolls to rotate). */
