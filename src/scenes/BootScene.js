@@ -13,6 +13,7 @@ export default class BootScene extends Phaser.Scene {
   preload() {
     // Optional painted room backdrops. If absent, scenes fall back to procedural
     // art — the loaderror is swallowed so a missing file never blocks boot.
+    this.load.image('aldric',    'Aldric.png');
     this.load.image('hallBg',    'hall.png');
     this.load.image('commsBg',   'comms.png');
     this.load.image('courtBg',   'The_Court.png');
@@ -28,7 +29,7 @@ export default class BootScene extends Phaser.Scene {
     // Purge any stale canvas textures left by a previous BootScene run.
     // Happens during Vite HMR cycles: the module re-executes but the Phaser
     // TextureManager persists, so createCanvas() returns null for existing keys.
-    ['sky','glow','aurun','eren','figure','interiorWall','vignette','noise','planetSurface','planetClouds','aldric']
+    ['sky','glow','aurun','eren','figure','interiorWall','vignette','noise','planetSurface','planetClouds']
       .forEach(k => { if (this.textures.exists(k)) this.textures.remove(k); });
 
     this.makeSky();
@@ -41,7 +42,7 @@ export default class BootScene extends Phaser.Scene {
     this.makeNoise();
     this.makePlanetSurface();
     this.makePlanetClouds();
-    this.makeAldric();
+    if (!this.textures.exists('aldric')) this.makeAldric();
 
     this.scene.start('ResidencyScene');
   }
