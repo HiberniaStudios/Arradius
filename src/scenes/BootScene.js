@@ -11,7 +11,7 @@ export default class BootScene extends Phaser.Scene {
   }
 
   preload() {
-    // Optional painted-hall backdrop. If absent, scenes fall back to procedural
+    // Optional painted room backdrops. If absent, scenes fall back to procedural
     // art — the loaderror is swallowed so a missing file never blocks boot.
     this.load.image('hallBg',    'hall.png');
     this.load.image('commsBg',   'comms.png');
@@ -28,7 +28,7 @@ export default class BootScene extends Phaser.Scene {
     // Purge any stale canvas textures left by a previous BootScene run.
     // Happens during Vite HMR cycles: the module re-executes but the Phaser
     // TextureManager persists, so createCanvas() returns null for existing keys.
-    ['sky','glow','aurun','eren','figure','interiorWall','vignette','noise','planetSurface']
+    ['sky','glow','aurun','eren','figure','interiorWall','vignette','noise','planetSurface','planetClouds']
       .forEach(k => { if (this.textures.exists(k)) this.textures.remove(k); });
 
     this.makeSky();
@@ -40,6 +40,7 @@ export default class BootScene extends Phaser.Scene {
     this.makeVignette();
     this.makeNoise();
     this.makePlanetSurface();
+    this.makePlanetClouds();
 
     this.scene.start('ResidencyScene');
   }
@@ -224,6 +225,31 @@ export default class BootScene extends Phaser.Scene {
       const br = 14 + R() * 26;
       blob(R() * w, R() * h, br, br * 0.45, 'rgba(232,216,184,0.10)');
     }
+    tex.refresh();
+  }
+
+  /** Tileable, mostly-transparent cloud layer — drifts over the painted planet. */
+  makePlanetClouds() {
+    const w = 256;
+    const h = 128;
+    const tex = this.textures.createCanvas('planetClouds', w, h);
+    const ctx = tex.getContext();
+    ctx.clearRect(0, 0, w, h); // transparent base
+    const R = Math.random;
+    // Soft radial wisps, drawn with horizontal wrap so the texture tiles.
+    const wisp = (bx, by, br) => {
+      [bx, bx - w, bx + w].forEach((px) => {
+        const g = ctx.createRadialGradient(px, by, 0, px, by, br);
+        g.addColorStop(0, 'rgba(236,230,214,0.55)');
+        g.addColorStop(0.6, 'rgba(236,230,214,0.2)');
+        g.addColorStop(1, 'rgba(236,230,214,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.ellipse(px, by, br, br * (0.5 + R() * 0.35), R() * Math.PI, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    };
+    for (let i = 0; i < 16; i += 1) wisp(R() * w, R() * h, 10 + R() * 26);
     tex.refresh();
   }
 }

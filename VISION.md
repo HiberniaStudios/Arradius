@@ -462,19 +462,30 @@ The systems are modelled on Cryo's _Dune_, refit to Aridun:
 - **Ecology** — protect and restore the Sleeper route network; a visible,
   consequential, slow transformation of the world as the rockbeds come back to
   life.
-- **Aurun & sensitivity** — Aurun is a secretion left by the Sleepers in their
-  passage channels; it is not mined but followed — collected from the rockbed
-  surface in a Sleeper's wake, never extracted from an active site. The Shadmen
-  know the routes and the timing; following requires both. Vorrin bypasses this
-  entirely: heavy boring equipment driven through the hard rockbed reaches the
-  Aurun deposits below — faster, industrial, destructive. The drilling collapses
-  the Hollows and Warrens carved into the same rock, killing the communities
-  inside. It also breaks the deep Sleeper channels, which don't reform; the
-  routes contract, the blooms follow south, the northern rockbeds die over
-  generations. Aurun itself has material properties (structural, luminescent)
-  that make it valuable to Korinth's civilization — not a narcotic or
-  life-extender. Contact with raw Aurun in the deep passages deepens Eren's
-  Veil-inherited sensitivity to Aridun's patterns — latent in him by birth; the
+- **Aurun & sensitivity** — Aurun is a substance deposited by the Sleepers in
+  their passage channels — accumulating in the deep rock over generations of
+  repeated transit, and surfacing as a luminescent bloom through porous sections
+  of the rockbed after a Sleeper has passed. It has structural and luminescent
+  material properties that make it valuable to Korinth's civilization — not a
+  narcotic or life-extender. It is a resource, and a consequential one.
+
+  **Two forms, two locations.** Surface bloom: the Shadmen collect this from the
+  rockbed after a Sleeper has passed, reading the routes and timing the seasons.
+  The collection rate matters — over-collect from the wake, even after the Sleeper
+  is gone, and the bloom thins before it can recover; stress a route enough and
+  the Sleeper shifts. Once it shifts, the bloom follows it and the old site begins
+  to die. This is the knowledge the Shadmen hold. Deep deposits: concentrated
+  Aurun in the channels and deeper rock where Sleepers have repeatedly passed.
+  This is what Vorrin drills for — bypassing surface collection entirely by going
+  straight to the source with heavy boring equipment through the hard rockbed.
+  Faster, industrial, and permanently destructive: the drilling collapses Sleeper
+  channels, kills the ecology at every scale simultaneously, and destroys the
+  Hollows and Warrens carved into the same rock.
+
+  **Sensitivity.** Contact with concentrated Aurun in the deep passages — the raw
+  form, not the surface bloom — is rare outside the channels themselves. Those
+  exposed to it report a sharpening of pattern-reading, a sensitivity to the deep
+  rock's movements. For Eren, Veil-inherited sensitivity latent from birth, the
   exposure sharpens it into something he can use.
 - **Side-scrolling expeditions** — _our addition_: the travel and Warren-delving
   between all of the above, played on foot, where the world is felt.
