@@ -619,15 +619,15 @@ export default class ResidencyScene extends Phaser.Scene {
     const identW = 172;
     if (loc.who) {
       const dx = 42;
-      const dg = this.add.graphics().setDepth(103);
-      dg.fillStyle(0x0e0a18, 1);
-      dg.fillCircle(dx, cy, 28);
-      dg.lineStyle(2, loc.accent, 0.6);
-      dg.strokeCircle(dx, cy, 28);
-      dg.fillStyle(loc.accent, 0.18);
-      dg.fillCircle(dx, cy, 24);
       const charTexKey = CHAR_SPRITES[loc.who];
       const hasCharSprite = charTexKey && this.textures.exists(charTexKey);
+
+      // Disc background fill (no stroke — border drawn on top of sprite below)
+      const dg = this.add.graphics().setDepth(102);
+      dg.fillStyle(0x0e0a18, 1);
+      dg.fillCircle(dx, cy, 28);
+      dg.fillStyle(loc.accent, 0.18);
+      dg.fillCircle(dx, cy, 24);
       if (!hasCharSprite) {
         const faceCol = Phaser.Display.Color.IntegerToColor(loc.accent).darken(30).color;
         dg.fillStyle(faceCol, 1);
@@ -638,15 +638,31 @@ export default class ResidencyScene extends Phaser.Scene {
       this.dynamic.push(dg);
 
       if (hasCharSprite) {
+        // Clip sprite to inner circle so it sits behind the border ring
+        const mskG = this.add.graphics();
+        mskG.fillStyle(0xffffff);
+        mskG.fillCircle(dx, cy, 24);
+        const geoMask = mskG.createGeometryMask();
+        this.dynamic.push(mskG);
+
+        // Scale so top 22% of sprite height fills the 48px inner disc — head + shoulders
         const src = this.textures.get(charTexKey).source[0];
-        const discD = 56;
-        const scale = discD / src.width;
-        const sprite = this.add.image(dx, cy - 4, charTexKey)
-          .setDisplaySize(src.width * scale, src.height * scale)
+        const dispH = Math.round(48 / 0.22);
+        const dispW = Math.round(dispH * src.width / src.height);
+        const sprite = this.add.image(dx, cy - 24, charTexKey)
+          .setOrigin(0.5, 0)
+          .setDisplaySize(dispW, dispH)
           .setTint(0xc8864e)
-          .setDepth(104);
+          .setMask(geoMask)
+          .setDepth(103);
         this.dynamic.push(sprite);
       }
+
+      // Border ring drawn over the sprite
+      const discRing = this.add.graphics().setDepth(104);
+      discRing.lineStyle(2, loc.accent, 0.6);
+      discRing.strokeCircle(dx, cy, 28);
+      this.dynamic.push(discRing);
 
       const discZone = this.add
         .circle(dx, cy, 30).setInteractive({ useHandCursor: true }).setDepth(104);
@@ -1193,7 +1209,7 @@ export default class ResidencyScene extends Phaser.Scene {
 
     // Large procedural portrait inside the left column.
     const portCY = dTop + (height - optH - dTop) / 2;
-    this.drawDialoguePortrait(portW / 2, portCY, loc.accent, D);
+    this.drawDialoguePortrait(portW / 2, portCY, loc, D);
 
     // Character name below portrait.
     const nameLbl = this.add
@@ -1270,34 +1286,63 @@ export default class ResidencyScene extends Phaser.Scene {
     D.push(leaveTxt);
   }
 
-  drawDialoguePortrait(cx, cy, accent, objs) {
+  drawDialoguePortrait(cx, cy, loc, objs) {
+    const accent = loc.accent;
     const w = 136;
     const h = 176;
+
+    // Frame background + border
     const g = this.add.graphics().setDepth(962);
     objs.push(g);
     g.fillStyle(0x0e0a18, 1);
     g.fillRect(cx - w / 2, cy - h / 2, w, h);
-    g.lineStyle(1.5, GOLD, 0.5);
-    g.strokeRect(cx - w / 2, cy - h / 2, w, h);
     g.fillStyle(accent, 0.14);
     g.fillRect(cx - w / 2 + 3, cy - h / 2 + 3, w - 6, h - 6);
-    // Bust.
-    const by = cy + 30;
-    g.fillStyle(0x1b1228, 1);
-    g.fillRoundedRect(cx - 46, by - 10, 92, 70, { tl: 32, tr: 32, bl: 0, br: 0 });
-    const faceCol = Phaser.Display.Color.IntegerToColor(accent).darken(40).color;
-    g.fillStyle(faceCol, 1);
-    g.fillCircle(cx, by - 36, 32);
-    // Hood.
-    g.fillStyle(0x140d20, 1);
-    g.fillRoundedRect(cx - 32, cy - h / 2 + 14, 64, 38, 14);
-    // Eyes.
-    g.fillStyle(0xffce86, 0.9);
-    g.fillCircle(cx - 10, by - 34, 3);
-    g.fillCircle(cx + 10, by - 34, 3);
-    // Accent collar detail.
-    g.fillStyle(accent, 0.65);
-    g.fillRect(cx - 26, by - 4, 52, 4);
+
+    const charTexKey = CHAR_SPRITES[loc.who];
+    const hasCharSprite = charTexKey && this.textures.exists(charTexKey);
+
+    if (hasCharSprite) {
+      // Clip sprite to portrait interior rect
+      const mskG = this.add.graphics();
+      mskG.fillStyle(0xffffff);
+      mskG.fillRect(cx - w / 2 + 2, cy - h / 2 + 2, w - 4, h - 4);
+      const geoMask = mskG.createGeometryMask();
+      objs.push(mskG);
+
+      // Scale so top 28% of sprite fills portrait height — head + shoulders
+      const src = this.textures.get(charTexKey).source[0];
+      const dispH = Math.round(h / 0.28);
+      const dispW = Math.round(dispH * src.width / src.height);
+      const sprite = this.add.image(cx, cy - h / 2, charTexKey)
+        .setOrigin(0.5, 0)
+        .setDisplaySize(dispW, dispH)
+        .setTint(0xc8864e)
+        .setMask(geoMask)
+        .setDepth(963);
+      objs.push(sprite);
+    } else {
+      // Procedural bust fallback
+      const by = cy + 30;
+      g.fillStyle(0x1b1228, 1);
+      g.fillRoundedRect(cx - 46, by - 10, 92, 70, { tl: 32, tr: 32, bl: 0, br: 0 });
+      const faceCol = Phaser.Display.Color.IntegerToColor(accent).darken(40).color;
+      g.fillStyle(faceCol, 1);
+      g.fillCircle(cx, by - 36, 32);
+      g.fillStyle(0x140d20, 1);
+      g.fillRoundedRect(cx - 32, cy - h / 2 + 14, 64, 38, 14);
+      g.fillStyle(0xffce86, 0.9);
+      g.fillCircle(cx - 10, by - 34, 3);
+      g.fillCircle(cx + 10, by - 34, 3);
+      g.fillStyle(accent, 0.65);
+      g.fillRect(cx - 26, by - 4, 52, 4);
+    }
+
+    // Border drawn over sprite
+    const border = this.add.graphics().setDepth(964);
+    border.lineStyle(1.5, GOLD, 0.5);
+    border.strokeRect(cx - w / 2, cy - h / 2, w, h);
+    objs.push(border);
   }
 
   // --- Portraits ------------------------------------------------------------
