@@ -156,6 +156,14 @@ export default class AudioManager {
    */
   prepare() {
     this.ensureContext();
+    // Build the full audio graph while the context is still suspended so the
+    // first gesture only needs to call ctx.resume() — no synchronous DSP burst.
+    if (!this.isPlaying) {
+      this.isPlaying = true;
+      this.buildMusic();
+      this.setMusicState(this.musicState || 'residency', 0);
+      this.setAmbience(this.ambienceKey || 'hall', true);
+    }
   }
 
   /** Begin the score. Idempotent. Defaults to the Residency state + hall. */
@@ -171,7 +179,7 @@ export default class AudioManager {
     }
     // Long, gentle fade-in so the bed *emerges* as you enter rather than
     // landing as a heavy drone you then wait to mellow.
-    this.applyLevel(this.enabled ? this.level : 0, 6.0);
+    this.applyLevel(this.enabled ? this.level : 0, 2.5);
   }
 
   applyLevel(v, t) {
