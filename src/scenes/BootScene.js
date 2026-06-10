@@ -17,9 +17,9 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('commsBg',   'comms.png');
     this.load.image('courtBg',   'The_Court.png');
     // Map node sprites — optional, fall back to procedural symbols if absent
-    this.load.image('node-city',   'map/Palace_icon.png');
+    this.load.image('node-city',   'map/Saltspire_icon.png');
     this.load.image('node-hollow', 'map/Hollow_icon.png');
-    this.load.image('node-fort',   'map/Fort_icon.png');
+    this.load.image('node-fort',   'map/DrillingRig_icon.png');
     this.load.image('mapBg', 'map/enhanced_Arradius_map.png');
     this.load.on('loaderror', () => {});
   }
