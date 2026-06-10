@@ -1093,10 +1093,10 @@ export default class ResidencyScene extends Phaser.Scene {
 
     if (hasCharSprite) {
       const src = this.textures.get(charTexKey).source[0];
-      const dispH = figH * 1.2;
+      const dispH = figH * 1.44;
       const dispW = Math.round(dispH * src.width / src.height);
       const sprite = this.add.image(fx, actualFloorY, charTexKey)
-        .setOrigin(0.5, 1)
+        .setOrigin(0.5, 0.97)
         .setDisplaySize(dispW, dispH)
         .setTint(0xc8864e)
         .setDepth(10);
