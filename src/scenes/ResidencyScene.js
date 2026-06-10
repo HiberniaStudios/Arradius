@@ -1065,11 +1065,24 @@ export default class ResidencyScene extends Phaser.Scene {
     const fx = cx + offX;
     const s = Phaser.Math.Clamp(actualFloorY / 360, 0.8, 1.4);
 
-    const g = this.add.graphics().setDepth(10);
-    this.drawCharacterFigure(g, fx, actualFloorY, loc.accent, s);
-    this.dynamic.push(g);
-
+    const charTexKey = CHAR_SPRITES[loc.who];
+    const hasCharSprite = charTexKey && this.textures.exists(charTexKey);
     const figH = 110 * s;
+
+    if (hasCharSprite) {
+      const src = this.textures.get(charTexKey).source[0];
+      const dispH = figH * 1.8;
+      const dispW = Math.round(dispH * src.width / src.height);
+      const sprite = this.add.image(fx, actualFloorY, charTexKey)
+        .setOrigin(0.5, 1)
+        .setDisplaySize(dispW, dispH)
+        .setDepth(10);
+      this.dynamic.push(sprite);
+    } else {
+      const g = this.add.graphics().setDepth(10);
+      this.drawCharacterFigure(g, fx, actualFloorY, loc.accent, s);
+      this.dynamic.push(g);
+    }
     const zone = this.add
       .zone(fx, actualFloorY - figH / 2, 60 * s, figH)
       .setInteractive({ useHandCursor: true })
