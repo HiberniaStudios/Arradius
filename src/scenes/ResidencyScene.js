@@ -19,7 +19,7 @@ const USE_HALL_BG = true;
 // Painted backdrops by room feature → BootScene texture key. Rooms without an
 // entry fall back to procedural art.
 const BACKDROPS    = { hall: 'hallBg', comms: 'commsBg', court: 'courtBg' };
-const CHAR_SPRITES = { 'Lord Aldric': 'aldric' };
+const CHAR_SPRITES = { 'Lord Aldric': 'aldric', 'Halix': 'halix' };
 
 const LOCATIONS = {
   hall: {
