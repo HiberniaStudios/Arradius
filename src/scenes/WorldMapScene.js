@@ -917,6 +917,9 @@ export default class WorldMapScene extends Phaser.Scene {
     this.infoDesc.setText(node.desc);
     this.actLabel.setText(node.label);
     const locked = node.action === 'locked';
+    const hideBtn = node.action === 'home';
+    this.actBtn.setVisible(!hideBtn);
+    this.actLabel.setVisible(!hideBtn);
     this.actBtn.setFillStyle(locked ? 0x1e1810 : 0x2a1e10, 1);
     this.actBtn.setStrokeStyle(1, locked ? 0x6a5a3a : 0xc8a050, locked ? 0.30 : 0.70);
     this.actLabel.setColor(locked ? '#7a6a4a' : '#ffe8c8');
