@@ -1162,16 +1162,26 @@ export default class ResidencyScene extends Phaser.Scene {
 
   // --- Dialogue overlay (Cryo Dune style) ------------------------------------
 
+  playVoiceLine(who, index) {
+    const key = `${who.toLowerCase().replace(/\s+/g, '_')}_say_${index}`;
+    if (!this.cache.audio.exists(key)) return;
+    if (this.voiceSound && this.voiceSound.isPlaying) this.voiceSound.stop();
+    this.voiceSound = this.sound.add(key, { volume: 0.9 });
+    this.voiceSound.play();
+  }
+
   enterDialogue(loc) {
     if (this.dialogueActive || this.time.now < this.inputReadyAt) return;
     this.dialogueActive = true;
     this.dialogueObjects = [];
     this.sayIndex = 0;
     this.renderDialogueOverlay(loc, this.scale.width, this.scale.height);
+    if (loc.who) this.playVoiceLine(loc.who, 0);
   }
 
   exitDialogue() {
     if (!this.dialogueActive) return;
+    if (this.voiceSound && this.voiceSound.isPlaying) this.voiceSound.stop();
     (this.dialogueObjects || []).forEach((o) => o.destroy());
     this.dialogueObjects = [];
     this.dialogueSpeechText = null;
@@ -1270,6 +1280,7 @@ export default class ResidencyScene extends Phaser.Scene {
         e?.stopPropagation();
         this.sayIndex = (this.sayIndex + 1) % loc.say.length;
         this.dialogueSpeechText.setText(loc.say[this.sayIndex]);
+        if (loc.who) this.playVoiceLine(loc.who, this.sayIndex);
       });
       D.push(talkTxt);
     }
