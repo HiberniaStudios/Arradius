@@ -35,7 +35,11 @@ const LOCATIONS = {
     feature: 'court',
     say: [
       '”Calder has kept faith with Aridun for sixty years. Korinth will hear that argument — I will make them hear it.”',
-      '”Watch Halix. Watch our own halls. Not every danger wears Vorrin\'s colours.”',
+      '”I am glad you are home. I will not pretend the timing is coincidence — you felt it too, I think. The house needs you here now more than ever.”',
+      '”I have read the decree four times. It does not name a grievance. It does not cite a failure. It simply… reassigns us. As though sixty years of stewardship were a lease arrangement and the term has expired.”',
+      '”My father stayed on Aridun when other houses sent factors and forgot the place. The Shadmen asked us to stay. Not begged — asked, with the full weight of people who have held this rock for ten thousand years. That is the foundation this house stands on. Korinth did not build it. They cannot deed it away.”',
+      '”Someone has been writing a different record of us in the capital. I do not yet know whose hand. But the decree assumes things about Calder that are not in any honest account — which means someone provided a dishonest one. Find that person before you worry about Vorrin.”',
+      '”We wait, and we prepare. You have been away — best you reacquaint yourself with the court while I consider my next arrangements.”',
     ],
   },
   comms: {
@@ -233,6 +237,7 @@ export default class ResidencyScene extends Phaser.Scene {
   create() {
     this.current = this._startRoom || 'hall';
     this.sayIndex = 0;
+    this.charSayProgress = {};
     this.dynamic = [];
     this.dialogueObjects = [];
     this.dialogueActive = false;
@@ -619,15 +624,15 @@ export default class ResidencyScene extends Phaser.Scene {
     const identW = 172;
     if (loc.who) {
       const dx = 42;
-      const dg = this.add.graphics().setDepth(103);
-      dg.fillStyle(0x0e0a18, 1);
-      dg.fillCircle(dx, cy, 28);
-      dg.lineStyle(2, loc.accent, 0.6);
-      dg.strokeCircle(dx, cy, 28);
-      dg.fillStyle(loc.accent, 0.18);
-      dg.fillCircle(dx, cy, 24);
       const charTexKey = CHAR_SPRITES[loc.who];
       const hasCharSprite = charTexKey && this.textures.exists(charTexKey);
+
+      // Disc background fill (no stroke — border drawn on top of sprite below)
+      const dg = this.add.graphics().setDepth(102);
+      dg.fillStyle(0x0e0a18, 1);
+      dg.fillCircle(dx, cy, 28);
+      dg.fillStyle(loc.accent, 0.18);
+      dg.fillCircle(dx, cy, 24);
       if (!hasCharSprite) {
         const faceCol = Phaser.Display.Color.IntegerToColor(loc.accent).darken(30).color;
         dg.fillStyle(faceCol, 1);
@@ -638,14 +643,31 @@ export default class ResidencyScene extends Phaser.Scene {
       this.dynamic.push(dg);
 
       if (hasCharSprite) {
+        // Clip sprite to inner circle so it sits behind the border ring
+        const mskG = this.add.graphics();
+        mskG.fillStyle(0xffffff);
+        mskG.fillCircle(dx, cy, 24);
+        const geoMask = mskG.createGeometryMask();
+        this.dynamic.push(mskG);
+
+        // Scale so top 22% of sprite height fills the 48px inner disc — head + shoulders
         const src = this.textures.get(charTexKey).source[0];
-        const discD = 56;
-        const scale = discD / src.width;
-        const sprite = this.add.image(dx, cy - 4, charTexKey)
-          .setDisplaySize(src.width * scale, src.height * scale)
-          .setDepth(104);
+        const dispH = Math.round(48 / 0.22);
+        const dispW = Math.round(dispH * src.width / src.height);
+        const sprite = this.add.image(dx, cy - 24, charTexKey)
+          .setOrigin(0.5, 0)
+          .setDisplaySize(dispW, dispH)
+          .setTint(0xc8864e)
+          .setMask(geoMask)
+          .setDepth(103);
         this.dynamic.push(sprite);
       }
+
+      // Border ring drawn over the sprite
+      const discRing = this.add.graphics().setDepth(104);
+      discRing.lineStyle(2, loc.accent, 0.6);
+      discRing.strokeCircle(dx, cy, 28);
+      this.dynamic.push(discRing);
 
       const discZone = this.add
         .circle(dx, cy, 30).setInteractive({ useHandCursor: true }).setDepth(104);
@@ -1071,11 +1093,12 @@ export default class ResidencyScene extends Phaser.Scene {
 
     if (hasCharSprite) {
       const src = this.textures.get(charTexKey).source[0];
-      const dispH = figH * 1.8;
+      const dispH = figH * 1.2;
       const dispW = Math.round(dispH * src.width / src.height);
       const sprite = this.add.image(fx, actualFloorY, charTexKey)
         .setOrigin(0.5, 1)
         .setDisplaySize(dispW, dispH)
+        .setTint(0xc8864e)
         .setDepth(10);
       this.dynamic.push(sprite);
     } else {
@@ -1144,16 +1167,28 @@ export default class ResidencyScene extends Phaser.Scene {
 
   // --- Dialogue overlay (Cryo Dune style) ------------------------------------
 
+  playVoiceLine(who, index) {
+    const key = `${who.toLowerCase().replace(/\s+/g, '_')}_say_${index}`;
+    if (!this.cache.audio.has(key)) return;
+    if (this.voiceSound && this.voiceSound.isPlaying) this.voiceSound.stop();
+    this.voiceSound = this.sound.add(key, { volume: 0.9 });
+    this.voiceSound.play();
+  }
+
   enterDialogue(loc) {
     if (this.dialogueActive || this.time.now < this.inputReadyAt) return;
     this.dialogueActive = true;
     this.dialogueObjects = [];
-    this.sayIndex = 0;
+    // Resume from last seen line; loop line (last index) is the ceiling
+    const loopIdx = loc.say ? loc.say.length - 1 : 0;
+    this.sayIndex = Math.min(this.charSayProgress[loc.who] || 0, loopIdx);
     this.renderDialogueOverlay(loc, this.scale.width, this.scale.height);
+    if (loc.who) this.playVoiceLine(loc.who, this.sayIndex);
   }
 
   exitDialogue() {
     if (!this.dialogueActive) return;
+    if (this.voiceSound && this.voiceSound.isPlaying) this.voiceSound.stop();
     (this.dialogueObjects || []).forEach((o) => o.destroy());
     this.dialogueObjects = [];
     this.dialogueSpeechText = null;
@@ -1191,7 +1226,7 @@ export default class ResidencyScene extends Phaser.Scene {
 
     // Large procedural portrait inside the left column.
     const portCY = dTop + (height - optH - dTop) / 2;
-    this.drawDialoguePortrait(portW / 2, portCY, loc.accent, D);
+    this.drawDialoguePortrait(portW / 2, portCY, loc, D);
 
     // Character name below portrait.
     const nameLbl = this.add
@@ -1250,8 +1285,11 @@ export default class ResidencyScene extends Phaser.Scene {
       talkTxt.on('pointerout', () => talkTxt.setColor('#a09078'));
       talkTxt.on('pointerdown', (p, x, y, e) => {
         e?.stopPropagation();
-        this.sayIndex = (this.sayIndex + 1) % loc.say.length;
+        const loopIdx = loc.say.length - 1;
+        this.sayIndex = Math.min(this.sayIndex + 1, loopIdx);
+        this.charSayProgress[loc.who] = this.sayIndex;
         this.dialogueSpeechText.setText(loc.say[this.sayIndex]);
+        if (loc.who) this.playVoiceLine(loc.who, this.sayIndex);
       });
       D.push(talkTxt);
     }
@@ -1268,34 +1306,63 @@ export default class ResidencyScene extends Phaser.Scene {
     D.push(leaveTxt);
   }
 
-  drawDialoguePortrait(cx, cy, accent, objs) {
+  drawDialoguePortrait(cx, cy, loc, objs) {
+    const accent = loc.accent;
     const w = 136;
     const h = 176;
+
+    // Frame background + border
     const g = this.add.graphics().setDepth(962);
     objs.push(g);
     g.fillStyle(0x0e0a18, 1);
     g.fillRect(cx - w / 2, cy - h / 2, w, h);
-    g.lineStyle(1.5, GOLD, 0.5);
-    g.strokeRect(cx - w / 2, cy - h / 2, w, h);
     g.fillStyle(accent, 0.14);
     g.fillRect(cx - w / 2 + 3, cy - h / 2 + 3, w - 6, h - 6);
-    // Bust.
-    const by = cy + 30;
-    g.fillStyle(0x1b1228, 1);
-    g.fillRoundedRect(cx - 46, by - 10, 92, 70, { tl: 32, tr: 32, bl: 0, br: 0 });
-    const faceCol = Phaser.Display.Color.IntegerToColor(accent).darken(40).color;
-    g.fillStyle(faceCol, 1);
-    g.fillCircle(cx, by - 36, 32);
-    // Hood.
-    g.fillStyle(0x140d20, 1);
-    g.fillRoundedRect(cx - 32, cy - h / 2 + 14, 64, 38, 14);
-    // Eyes.
-    g.fillStyle(0xffce86, 0.9);
-    g.fillCircle(cx - 10, by - 34, 3);
-    g.fillCircle(cx + 10, by - 34, 3);
-    // Accent collar detail.
-    g.fillStyle(accent, 0.65);
-    g.fillRect(cx - 26, by - 4, 52, 4);
+
+    const charTexKey = CHAR_SPRITES[loc.who];
+    const hasCharSprite = charTexKey && this.textures.exists(charTexKey);
+
+    if (hasCharSprite) {
+      // Clip sprite to portrait interior rect
+      const mskG = this.add.graphics();
+      mskG.fillStyle(0xffffff);
+      mskG.fillRect(cx - w / 2 + 2, cy - h / 2 + 2, w - 4, h - 4);
+      const geoMask = mskG.createGeometryMask();
+      objs.push(mskG);
+
+      // Scale so top 28% of sprite fills portrait height — head + shoulders
+      const src = this.textures.get(charTexKey).source[0];
+      const dispH = Math.round(h / 0.28);
+      const dispW = Math.round(dispH * src.width / src.height);
+      const sprite = this.add.image(cx, cy - h / 2, charTexKey)
+        .setOrigin(0.5, 0)
+        .setDisplaySize(dispW, dispH)
+        .setTint(0xc8864e)
+        .setMask(geoMask)
+        .setDepth(963);
+      objs.push(sprite);
+    } else {
+      // Procedural bust fallback
+      const by = cy + 30;
+      g.fillStyle(0x1b1228, 1);
+      g.fillRoundedRect(cx - 46, by - 10, 92, 70, { tl: 32, tr: 32, bl: 0, br: 0 });
+      const faceCol = Phaser.Display.Color.IntegerToColor(accent).darken(40).color;
+      g.fillStyle(faceCol, 1);
+      g.fillCircle(cx, by - 36, 32);
+      g.fillStyle(0x140d20, 1);
+      g.fillRoundedRect(cx - 32, cy - h / 2 + 14, 64, 38, 14);
+      g.fillStyle(0xffce86, 0.9);
+      g.fillCircle(cx - 10, by - 34, 3);
+      g.fillCircle(cx + 10, by - 34, 3);
+      g.fillStyle(accent, 0.65);
+      g.fillRect(cx - 26, by - 4, 52, 4);
+    }
+
+    // Border drawn over sprite
+    const border = this.add.graphics().setDepth(964);
+    border.lineStyle(1.5, GOLD, 0.5);
+    border.strokeRect(cx - w / 2, cy - h / 2, w, h);
+    objs.push(border);
   }
 
   // --- Portraits ------------------------------------------------------------
