@@ -39,6 +39,7 @@ const LOCATIONS = {
       '”I have read the decree four times. It does not name a grievance. It does not cite a failure. It simply… reassigns us. As though sixty years of stewardship were a lease arrangement and the term has expired.”',
       '”My father stayed on Aridun when other houses sent factors and forgot the place. The Shadmen asked us to stay. Not begged — asked, with the full weight of people who have held this rock for ten thousand years. That is the foundation this house stands on. Korinth did not build it. They cannot deed it away.”',
       '”Someone has been writing a different record of us in the capital. I do not yet know whose hand. But the decree assumes things about Calder that are not in any honest account — which means someone provided a dishonest one. Find that person before you worry about Vorrin.”',
+      '”We wait, and we prepare. You have been away — best you reacquaint yourself with the court while I consider my next arrangements.”',
     ],
   },
   comms: {
@@ -236,6 +237,7 @@ export default class ResidencyScene extends Phaser.Scene {
   create() {
     this.current = this._startRoom || 'hall';
     this.sayIndex = 0;
+    this.charSayProgress = {};
     this.dynamic = [];
     this.dialogueObjects = [];
     this.dialogueActive = false;
@@ -1177,9 +1179,11 @@ export default class ResidencyScene extends Phaser.Scene {
     if (this.dialogueActive || this.time.now < this.inputReadyAt) return;
     this.dialogueActive = true;
     this.dialogueObjects = [];
-    this.sayIndex = 0;
+    // Resume from last seen line; loop line (last index) is the ceiling
+    const loopIdx = loc.say ? loc.say.length - 1 : 0;
+    this.sayIndex = Math.min(this.charSayProgress[loc.who] || 0, loopIdx);
     this.renderDialogueOverlay(loc, this.scale.width, this.scale.height);
-    if (loc.who) this.playVoiceLine(loc.who, 0);
+    if (loc.who) this.playVoiceLine(loc.who, this.sayIndex);
   }
 
   exitDialogue() {
@@ -1281,7 +1285,9 @@ export default class ResidencyScene extends Phaser.Scene {
       talkTxt.on('pointerout', () => talkTxt.setColor('#a09078'));
       talkTxt.on('pointerdown', (p, x, y, e) => {
         e?.stopPropagation();
-        this.sayIndex = (this.sayIndex + 1) % loc.say.length;
+        const loopIdx = loc.say.length - 1;
+        this.sayIndex = Math.min(this.sayIndex + 1, loopIdx);
+        this.charSayProgress[loc.who] = this.sayIndex;
         this.dialogueSpeechText.setText(loc.say[this.sayIndex]);
         if (loc.who) this.playVoiceLine(loc.who, this.sayIndex);
       });
