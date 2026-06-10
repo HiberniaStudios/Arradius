@@ -1,5 +1,6 @@
 # Cloudflare Pages project config.
 # `npm run build` outputs static files to ./dist which Pages serves directly.
-name = "2d-platformer"
+name = "arradius"
+account_id = "40081f7841ada4dec3ca545afdf9ac8e"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-09-01"
