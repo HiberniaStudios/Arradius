@@ -1079,7 +1079,7 @@ export default class ResidencyScene extends Phaser.Scene {
       infirmary: -80, yard: 80,
     };
     // Some rooms draw their floor at a different fraction than the global 0.60.
-    const floorFracs = { comms: 0.75 };
+    const floorFracs = { comms: 0.76 };
     const actualFloorY = floorFracs[loc.feature]
       ? Math.round(this.scale.height * floorFracs[loc.feature])
       : floorY;
@@ -1093,9 +1093,9 @@ export default class ResidencyScene extends Phaser.Scene {
 
     if (hasCharSprite) {
       const src = this.textures.get(charTexKey).source[0];
-      const dispH = figH * 1.0;
+      const dispH = figH * 2.0;
       const dispW = Math.round(dispH * src.width / src.height);
-      const sprite = this.add.image(fx, actualFloorY - dispH * 0.06, charTexKey)
+      const sprite = this.add.image(fx, actualFloorY, charTexKey)
         .setOrigin(0.5, 1)
         .setDisplaySize(dispW, dispH)
         .setTint(0xc8864e)
