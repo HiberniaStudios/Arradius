@@ -15,6 +15,10 @@ export default class BootScene extends Phaser.Scene {
     // art — the loaderror is swallowed so a missing file never blocks boot.
     this.load.image('aldric',    'Aldric.png');
     this.load.audio('lord_aldric_say_0', 'audio/dialogue/lord_aldric_say_0.mp3');
+    this.load.audio('lord_aldric_say_1', 'audio/dialogue/lord_aldric_say_1.mp3');
+    this.load.audio('lord_aldric_say_2', 'audio/dialogue/lord_aldric_say_2.mp3');
+    this.load.audio('lord_aldric_say_3', 'audio/dialogue/lord_aldric_say_3.mp3');
+    this.load.audio('lord_aldric_say_4', 'audio/dialogue/lord_aldric_say_4.mp3');
     this.load.image('hallBg',    'hall.png');
     this.load.image('commsBg',   'comms.png');
     this.load.image('courtBg',   'The_Court.png');
