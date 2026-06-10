@@ -14,7 +14,7 @@ export default class BootScene extends Phaser.Scene {
     // Optional painted room backdrops. If absent, scenes fall back to procedural
     // art — the loaderror is swallowed so a missing file never blocks boot.
     this.load.image('aldric',    'Aldric.png');
-    this.load.audio('aldric_say_0', 'audio/dialogue/adlric_dialogue0.mp3');
+    this.load.audio('lord_aldric_say_0', 'audio/dialogue/adlric_dialogue0.mp3');
     this.load.image('hallBg',    'hall.png');
     this.load.image('commsBg',   'comms.png');
     this.load.image('courtBg',   'The_Court.png');

@@ -1164,7 +1164,7 @@ export default class ResidencyScene extends Phaser.Scene {
 
   playVoiceLine(who, index) {
     const key = `${who.toLowerCase().replace(/\s+/g, '_')}_say_${index}`;
-    if (!this.cache.audio.exists(key)) return;
+    if (!this.cache.audio.has(key)) return;
     if (this.voiceSound && this.voiceSound.isPlaying) this.voiceSound.stop();
     this.voiceSound = this.sound.add(key, { volume: 0.9 });
     this.voiceSound.play();
