@@ -643,6 +643,7 @@ export default class ResidencyScene extends Phaser.Scene {
         const scale = discD / src.width;
         const sprite = this.add.image(dx, cy - 4, charTexKey)
           .setDisplaySize(src.width * scale, src.height * scale)
+          .setTint(0xc8864e)
           .setDepth(104);
         this.dynamic.push(sprite);
       }
@@ -1076,6 +1077,7 @@ export default class ResidencyScene extends Phaser.Scene {
       const sprite = this.add.image(fx, actualFloorY, charTexKey)
         .setOrigin(0.5, 1)
         .setDisplaySize(dispW, dispH)
+        .setTint(0xc8864e)
         .setDepth(10);
       this.dynamic.push(sprite);
     } else {

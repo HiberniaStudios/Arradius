@@ -43,6 +43,7 @@ export default class BootScene extends Phaser.Scene {
     this.makePlanetSurface();
     this.makePlanetClouds();
     if (!this.textures.exists('aldric')) this.makeAldric();
+    this.textures.get('aldric').setFilter(Phaser.Textures.FilterMode.NEAREST);
 
     this.scene.start('ResidencyScene');
   }
