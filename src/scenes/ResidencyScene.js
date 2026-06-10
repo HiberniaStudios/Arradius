@@ -19,7 +19,7 @@ const USE_HALL_BG = true;
 // Painted backdrops by room feature → BootScene texture key. Rooms without an
 // entry fall back to procedural art.
 const BACKDROPS    = { hall: 'hallBg', comms: 'commsBg', court: 'courtBg' };
-const CHAR_SPRITES = { 'Lord Aldric': 'aldric' };
+const CHAR_SPRITES = { 'Lord Aldric': 'aldric', 'Halix': 'halix' };
 
 const LOCATIONS = {
   hall: {
@@ -1093,9 +1093,9 @@ export default class ResidencyScene extends Phaser.Scene {
 
     if (hasCharSprite) {
       const src = this.textures.get(charTexKey).source[0];
-      const dispH = figH * 1.2;
+      const dispH = figH * 1.0;
       const dispW = Math.round(dispH * src.width / src.height);
-      const sprite = this.add.image(fx, actualFloorY, charTexKey)
+      const sprite = this.add.image(fx, actualFloorY - dispH * 0.06, charTexKey)
         .setOrigin(0.5, 1)
         .setDisplaySize(dispW, dispH)
         .setTint(0xc8864e)

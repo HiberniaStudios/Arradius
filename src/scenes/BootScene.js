@@ -14,6 +14,7 @@ export default class BootScene extends Phaser.Scene {
     // Optional painted room backdrops. If absent, scenes fall back to procedural
     // art — the loaderror is swallowed so a missing file never blocks boot.
     this.load.image('aldric',    'Aldric.png');
+    this.load.image('halix',     'Halix.png');
     this.load.audio('lord_aldric_say_0', 'audio/dialogue/lord_aldric_say_0.mp3');
     this.load.audio('lord_aldric_say_1', 'audio/dialogue/lord_aldric_say_1.mp3');
     this.load.audio('lord_aldric_say_2', 'audio/dialogue/lord_aldric_say_2.mp3');
@@ -50,6 +51,8 @@ export default class BootScene extends Phaser.Scene {
     this.makePlanetClouds();
     if (!this.textures.exists('aldric')) this.makeAldric();
     this.textures.get('aldric').setFilter(Phaser.Textures.FilterMode.NEAREST);
+    if (!this.textures.exists('halix')) this.makeHalix();
+    this.textures.get('halix').setFilter(Phaser.Textures.FilterMode.NEAREST);
 
     this.scene.start('ResidencyScene');
   }
@@ -307,6 +310,93 @@ export default class BootScene extends Phaser.Scene {
     g.fillRect(20, 21, 8, 1);
 
     g.generateTexture('aldric', w, h);
+    g.destroy();
+  }
+
+  /** Halix — the Reckoner. Lean graphite uniform, high collar, data pad, ice-blue eyes. */
+  makeHalix() {
+    const w = 48;
+    const h = 80;
+    const cx = 24;
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+
+    // ── Coat — graphite, straight cut, no cape ────────────────────────────────
+    g.fillStyle(0x14161a, 1);
+    g.fillRoundedRect(10, 27, 28, 49, { tl: 2, tr: 2, bl: 2, br: 2 });
+    g.fillStyle(0x1e2228, 0.5);
+    g.fillRect(28, 29, 9, 45);
+
+    // ── Shoulders — straight, functional ─────────────────────────────────────
+    g.fillStyle(0x1c1e24, 1);
+    g.fillRect(8, 27, 32, 6);
+    g.fillStyle(0x8899bb, 0.65);
+    g.fillRect(8, 27, 32, 2);  // steel-blue shoulder trim
+
+    // ── High collar — closed, precise ────────────────────────────────────────
+    g.fillStyle(0x1c1e24, 1);
+    g.fillRect(18, 19, 12, 10);
+    g.fillStyle(0x8899bb, 0.55);
+    g.fillRect(18, 19, 2, 10);  // left edge
+    g.fillRect(28, 19, 2, 10);  // right edge
+
+    // ── Left arm — straight, cuff band ───────────────────────────────────────
+    g.fillStyle(0x14161a, 1);
+    g.fillRect(10, 33, 10, 35);
+    g.fillStyle(0x8899bb, 0.55);
+    g.fillRect(10, 65, 10, 2);
+
+    // ── Data pad — held at waist, faint screen glow ───────────────────────────
+    g.fillStyle(0x1a1e24, 1);
+    g.fillRoundedRect(27, 44, 10, 14, 1);
+    g.fillStyle(0x8899bb, 0.25);
+    g.fillRect(28, 45, 8, 12);
+    g.fillStyle(0x8899bb, 0.75);
+    [47, 50, 53].forEach(y => g.fillRect(29, y, 6, 1));
+
+    // ── Neck ─────────────────────────────────────────────────────────────────
+    g.fillStyle(0x9898b0, 1);
+    g.fillRect(21, 18, 6, 5);
+
+    // ── Head — angular, lean, pale indoor complexion ──────────────────────────
+    g.fillStyle(0xa8a8c0, 1);
+    g.fillEllipse(cx, 7, 15, 10);
+    g.fillStyle(0x9898b2, 1);
+    g.fillRect(17, 9, 14, 8);
+    g.fillStyle(0x8888a8, 1);
+    g.fillRect(18, 16, 12, 5);
+    g.fillRect(19, 20, 10, 2);
+
+    // ── Hair — very dark, close-cropped ──────────────────────────────────────
+    g.fillStyle(0x0c0e18, 1);
+    g.fillRect(17, 0, 14, 5);
+    g.fillRect(14, 1, 4, 11);
+    g.fillRect(30, 1, 4, 11);
+
+    // ── Brows — thin, sharp, arched — perpetually analytical ─────────────────
+    g.fillStyle(0x0c0e18, 1);
+    g.fillRect(17, 10, 5, 1);
+    g.fillRect(26, 10, 5, 1);
+
+    // ── Eyes — ice blue, intent, narrowed ─────────────────────────────────────
+    g.fillStyle(0x7a9bbc, 1);
+    g.fillRect(17, 12, 5, 2);
+    g.fillRect(26, 12, 5, 2);
+    g.fillStyle(0x0c1828, 1);
+    g.fillRect(19, 12, 2, 2);
+    g.fillRect(28, 12, 2, 2);
+    g.fillStyle(0xddeeff, 0.85);
+    g.fillRect(20, 12, 1, 1);
+    g.fillRect(29, 12, 1, 1);
+
+    // ── Nose — sharp, minimal ─────────────────────────────────────────────────
+    g.fillStyle(0x7878a0, 0.5);
+    g.fillRect(23, 15, 3, 4);
+
+    // ── Mouth — thin, neutral ─────────────────────────────────────────────────
+    g.fillStyle(0x606070, 0.9);
+    g.fillRect(20, 20, 8, 1);
+
+    g.generateTexture('halix', w, h);
     g.destroy();
   }
 
