@@ -49,8 +49,17 @@ const LOCATIONS = {
     feature: 'comms',
     flavor: 'The intelligence feeds run day and night. Halix watches everything.',
     say: [
-      '”Vorrin\'s boring rigs moved north-east overnight. Three new sites on the Keth rockbed. Korinth has not acknowledged our formal objection.”',
-      '”Every position has a counter, my lord. I am already three moves ahead of this one.”',
+      // [0] gate line — shown until Aldric has been spoken to
+      '”Speak with your father first. What I have to say follows from that conversation.”',
+      // [1]–[6] strategic briefing
+      '”Your father\'s letters will have given you the broad shape. Not the detail. That is what matters now.”',
+      '”The decree is not about conduct. It is about output. Vorrin has offered Korinth three times our yield through industrial boring. That is the only conversation the Emperor is having.”',
+      '”Your father believes there is room in the decree. He is meeting an Imperial envoy — off the record — to hear it. Perhaps he is right.”',
+      '”Vorrin are already moving — three new sites on the Keth rockbed overnight. They do not need the decree settled before they act. Every day this remains a diplomatic problem is a day they close the gap.”',
+      '”Vorrin are drilling with offworld methods — projecting triple our yield. What that does to the seam itself, no one here can say. The Shadmen at Tamir\'s Hollow have worked that ground for generations. If anyone can tell us what it can actually sustain — and what we can credibly put in front of Korinth — it is them.”',
+      '”Your father will do as he will. Focus on the Aurun numbers — that is the only argument Korinth has ever answered.”',
+      // [7] map line — permanent loop
+      '”This map shows Vorrin\'s current operation sites and the Shadmen Hollows — what we know now. As you move across Aridun, it will update. Your Nav device carries the same map. Use it to travel between any location you have already reached.”',
     ],
     actions: [{ label: 'Study the map', scene: 'WorldMapScene' }],
   },
@@ -1181,7 +1190,17 @@ export default class ResidencyScene extends Phaser.Scene {
     this.dialogueObjects = [];
     // Resume from last seen line; loop line (last index) is the ceiling
     const loopIdx = loc.say ? loc.say.length - 1 : 0;
-    this.sayIndex = Math.min(this.charSayProgress[loc.who] || 0, loopIdx);
+    if (loc.who === 'Halix') {
+      const aldricSeen = !!this.charSayProgress['Lord Aldric'];
+      if (!aldricSeen) {
+        this.sayIndex = 0; // gate: hold on the redirect line
+      } else {
+        const saved = this.charSayProgress['Halix'] || 0;
+        this.sayIndex = Math.min(saved <= 0 ? 1 : saved, loopIdx);
+      }
+    } else {
+      this.sayIndex = Math.min(this.charSayProgress[loc.who] || 0, loopIdx);
+    }
     this.renderDialogueOverlay(loc, this.scale.width, this.scale.height);
     if (loc.who) this.playVoiceLine(loc.who, this.sayIndex);
   }
@@ -1285,7 +1304,8 @@ export default class ResidencyScene extends Phaser.Scene {
       talkTxt.on('pointerout', () => talkTxt.setColor('#a09078'));
       talkTxt.on('pointerdown', (p, x, y, e) => {
         e?.stopPropagation();
-        const loopIdx = loc.say.length - 1;
+        const gated = loc.who === 'Halix' && !this.charSayProgress['Lord Aldric'];
+        const loopIdx = gated ? 0 : loc.say.length - 1;
         this.sayIndex = Math.min(this.sayIndex + 1, loopIdx);
         this.charSayProgress[loc.who] = this.sayIndex;
         this.dialogueSpeechText.setText(loc.say[this.sayIndex]);
