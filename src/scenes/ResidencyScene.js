@@ -841,33 +841,22 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
   drawCodex(cx, cy) {
-    const w = 30;
-    const h = 40;
-    const g = this.add.graphics().setDepth(103);
+    const h = 96;
+    const src = this.textures.exists('loreBook') ? this.textures.get('loreBook').source[0] : null;
+    const w = src ? Math.round(h * src.width / src.height) : 30;
 
-    const draw = (hover) => {
-      g.clear();
-      g.fillStyle(hover ? 0x5a3418 : 0x3e2210, 1);              // cover
+    let img;
+    if (src) {
+      img = this.add.image(cx, cy, 'loreBook')
+        .setDisplaySize(w, h)
+        .setDepth(103);
+    } else {
+      // fallback: plain rect if texture missing
+      const g = this.add.graphics().setDepth(103);
+      g.fillStyle(0x3e2210, 1);
       g.fillRect(cx - w / 2, cy - h / 2, w, h);
-      g.lineStyle(2, hover ? GOLD : 0xd4922e, 1);               // border — full opacity
-      g.strokeRect(cx - w / 2, cy - h / 2, w, h);
-      g.fillStyle(hover ? 0x7a4820 : 0x5c3216, 1);              // spine
-      g.fillRect(cx - w / 2, cy - h / 2, 5, h);
-      g.lineStyle(1, 0xe0a840, hover ? 0.9 : 0.7);              // spine highlight
-      g.lineBetween(cx - w / 2 + 5, cy - h / 2 + 3, cx - w / 2 + 5, cy + h / 2 - 3);
-      g.lineStyle(1, hover ? 0xe0d0a0 : 0xa89060, 0.9);         // page lines
-      [-9, -2, 5, 12].forEach((dy) => {
-        g.lineBetween(cx - w / 2 + 8, cy + dy, cx + w / 2 - 3, cy + dy);
-      });
-      const aa = hover ? 1 : 0.85;
-      g.fillStyle(hover ? GOLD : 0xd4922e, aa);                  // corner accents
-      g.fillRect(cx + w / 2 - 6, cy - h / 2, 6, 1.5);
-      g.fillRect(cx + w / 2 - 1.5, cy - h / 2, 1.5, 6);
-      g.fillRect(cx + w / 2 - 6, cy + h / 2 - 1.5, 6, 1.5);
-      g.fillRect(cx + w / 2 - 1.5, cy + h / 2 - 6, 1.5, 6);
-    };
-
-    draw(false);
+      img = g;
+    }
 
     const lbl = this.add
       .text(cx, cy + h / 2 + 5, 'CODEX', {
@@ -883,11 +872,11 @@ export default class ResidencyScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .setDepth(106);
 
-    zone.on('pointerover', () => { draw(true); lbl.setColor('#f0d060'); });
-    zone.on('pointerout', () => { draw(false); lbl.setColor('#c8922a'); });
+    zone.on('pointerover', () => { if (img.setTint) img.setTint(0xffe0a0); lbl.setColor('#f0d060'); });
+    zone.on('pointerout',  () => { if (img.clearTint) img.clearTint(); lbl.setColor('#c8922a'); });
     zone.on('pointerdown', (p, lx, ly, e) => { e?.stopPropagation(); this.openCodex(); });
 
-    this.dynamic.push(g, lbl, zone);
+    this.dynamic.push(img, lbl, zone);
   }
 
   // --- Codex overlay --------------------------------------------------------
