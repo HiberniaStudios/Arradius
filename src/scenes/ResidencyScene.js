@@ -248,6 +248,7 @@ export default class ResidencyScene extends Phaser.Scene {
     this.sayIndex = 0;
     this.charSayProgress = {};
     this.dynamic = [];
+    this.backdropImg = null;
     this.dialogueObjects = [];
     this.dialogueActive = false;
     this.codexOpen = false;
