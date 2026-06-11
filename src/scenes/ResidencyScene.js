@@ -54,7 +54,7 @@ const LOCATIONS = {
       // [1]–[6] strategic briefing
       '”You have spoken to your father. He will have given you the broad shape of things — what he will not have given you is the detail. That is what I need you to understand before anything else moves.”',
       '”The decree names no grievance and cites no failure. Your father reads that as an opening — he believes the argument has not yet been made. I read it as a decision already taken.”',
-      '”I am led to believe that Vorrin has offered the Emperor a substantial increase in Aurun yield through a new technique called industrial boring. This, and only this, is what is influencing the Emperor\'s decision.”',
+      '”What we have confirmed: Vorrin has offered the Emperor significantly more than our current yield through industrial boring. The exact figure is not established. What is established is that it is the only conversation he is having.”',
       '”Your father intends to meet with his Imperial envoy at an undisclosed location later this evening. I have warned him against such errands, and urged him to focus his mind on Aurun production. He will not hear of it. He believes sixty years of stewardship should have its say.”',
       '”Every day this remains a diplomatic problem is a day Vorrin expands its production. Our intelligence shows they have already begun boring into the rock around the Keth region and are likely to expand quickly. What we need now is to increase our output — and fast. The Shadmen at Tamir\'s Hollow have gathered Aurun for generations. If anyone can provide us a method of increased production, it is them.”',
       '”Your father will do as he will. Focus on the Aurun numbers — that is the only argument the Emperor has ever answered.”',
