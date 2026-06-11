@@ -192,6 +192,11 @@ geography.
 
 ### Places
 
+- **Sethara** — House Calder's home world; an established, civilised Imperial
+  core world. Eren was attending a house function there when the Emperor's decree
+  arrived. While Calder has held Aridun for two generations, they still maintain
+  family and business ties to Sethara. Eren returned as fast as he could when the
+  court sent word, but Aldric had already begun his plans.
 - **Saltspire** — the capital city of Aridun, seat of House Calder's rule.
 - **the Residency** — the Palace within Saltspire; your hub.
 - **Hollows** — the Shadmen's settlements; carved into hard rockbed formations,
@@ -210,14 +215,48 @@ geography.
 | --- | --- | --- |
 | The Lord (Eren's father) | Duke Leto | **Lord Aldric Calder** |
 | The Lady (his consort, of the Veil) | Lady Jessica | **Sela** |
-| The Reckoner (cold strategist) | Mentat | **Halix** |
-| The Bladewarden (weapons-master, mentor) | Gurney / Duncan | **Brannic** |
+| The Reckoner (intelligence officer) | Mentat | **Halix** |
+| The Marshal (commander of arms) | Gurney / Duncan | **Brannic** |
 | The Mender (physician, guilty knowledge) | Dr Yueh | **Master Orlin** |
 | The Steward (runs the Residency) | household | **Pell** |
-| The Sibyl (truthsayer of the Veil) | Bene Gesserit | Mother **Ysolde** |
+| The Elder (Veil watcher, Ysolde's eye on Sela) | Bene Gesserit | Mother **Ysolde** |
 
-- **the Veil** — the mystic sisterhood (our Bene Gesserit); Sela and Ysolde are
-  of it.
+- **the Veil** — an ancient ecological knowledge order; Sela and Ysolde are
+  of it. Not a prophetic sisterhood — see _The Veil_ section below.
+
+### The Veil
+
+An ancient order trained over generations to read and understand planetary
+ecology systems. Their method is integration: they embed themselves in indigenous
+communities, learn the deep knowledge the natives hold, and use that understanding
+in service of the empire. Where the houses see the Shadmen as obstacle or labour,
+the Veil see them as the holders of the most consequential knowledge on the
+planet.
+
+The Veil's knowledge is not theirs — it is the Shadmen's, shared with the Veil
+through generations of earned trust. That trust is predicated on the Veil not
+transferring the knowledge to the houses that treat Aridun as a resource. This
+is what makes the Veil's method politically distinctive and what Emperor Valkren
+finds useful: the Veil brings him ecological intelligence that his houses cannot
+gather on their own. He tolerates the order because it serves him.
+
+The Veil do not prophesy. They observe, record, and project. Their predictions
+look like foresight because their understanding of complex systems is deep enough
+that pattern-reading at this level resembles prescience to those without it.
+
+**The tension in the Veil:** Sela believes the Veil's neutrality is already
+finished — that Vorrin's destruction of Aridun has made continued neutrality a
+form of complicity. Ysolde believes neutrality is the only thing keeping the
+Veil intact and that Sela is gambling the order's survival on a cause, however
+just, that the Veil was never built to fight.
+
+**Their role in House Calder's history:** It was the Veil's connections — Sela's
+specifically — that allowed Eren's grandfather to open the first real dialogue
+with the Shadmen when Calder arrived on Aridun. The Shadmen tolerated Calder
+partly because the Veil vouched for them. This is the foundation Aldric inherited
+and maintained. It is also, from Ysolde's view, exactly the precedent that makes
+Sela dangerous: the Veil has been slowly aligning with House Calder for two
+generations, and calling it neutrality is becoming harder to sustain.
 
 ### The Shadmen
 
@@ -249,12 +288,23 @@ prices for Shadmen guidance, held the boundary. He respected the Shadmen without
 truly understanding them — a lord who knew the value of the arrangement better
 than he knew the people.
 
-Now Korinth is revoking the fief: Calder's output is steady but deliberately
-restrained (they follow Shadmen guidance on sustainable extraction); Vorrin is
-promising triple the yield through industrial methods; and a house that has
-"gone native" is, from Korinth's view, a house whose loyalty is uncertain.
-From Korinth's view this is administration, not cruelty. That indifference is
-what makes it devastating.
+Now **Emperor Valkren** of House Korinth is revoking the fief. The political
+logic has two strands, each feeding the other.
+
+The first is output. Calder's Aurun production is steady but deliberately
+restrained — they follow Shadmen guidance on sustainable extraction, which
+Vorrin has framed to Valkren as incompetence, or worse, quiet disloyalty.
+House Vorrin is promising triple the yield through industrial boring methods
+and has made that promise credible by already delivering it in test sites.
+From the Emperor's view, Calder has been sitting on his fuel supply and
+tiptoeing around the feelings of the locals.
+
+The second is perception. A house whose lord defers to indigenous custom, whose
+heir was raised speaking Shadmen dialects, whose lady is of an order that
+embeds itself in native society — this is a house whose loyalty is uncertain.
+Not traitorous, necessarily. But uncertain. And uncertain is enough. From
+Korinth's view this is administration, not cruelty. That indifference is what
+makes it devastating.
 
 ---
 
@@ -264,113 +314,149 @@ what makes it devastating.
 
 Sela is not a Calder. She is Aridun.
 
-Her people are the **Veil** — older than House Calder's presence on Aridun,
-older than the Shadmen's current form. Not a sisterhood in the Bene Gesserit
-sense; not a galactic order with a thousand-year programme. They are Aridun's
-keepers of long memory: Sleeper migration patterns, deep water tables, the
-ecology of the Aurun blooms. They watch the world that the houses treat as a
-resource and the Shadmen treat as home, and record what both miss.
+She is of the **Veil** — see the full Veil section below for the order's
+nature and method. Within the Veil, she is the urgency where Ysolde is the
+patience. She has watched the Imperium's appetite grow her entire life. She
+knew what was coming.
 
-Where Mother Ysolde is the Veil's elder and its patience, Sela is its urgency.
-She has watched the Imperium's appetite grow her entire life. She knew what was
-coming.
+**Why she married Aldric:** Sela chose him. Her conclusion, reached over years
+of watching Calder's stewardship: if Aridun is to survive what the empire will
+do to it, it needs a lord's heir who is also of Aridun — not one who respects
+it at arm's length, but one for whom it is the ground of being. You cannot grow
+that in a foreign-born heir. You have to make it. Aldric knew, at some level,
+that he was chosen — and accepted it because he loved her, and because her
+knowledge made him a better lord. They built something real together: love and
+a shared project, each knowing the other understood both halves of it.
 
-**Why she married Aldric:** Sela chose him. The Veil's conclusion, reached over
-decades: if Aridun is to survive what the empire will do to it, it needs a lord
-who is also of Aridun — not a lord who respects it, not one with good intentions,
-but one for whom Aridun is the ground of being. You cannot grow that in a
-foreign-born heir. You have to make it. Aldric knew, at some level, that he was
-chosen — and accepted it because he loved her, and because her knowledge made him
-a better lord. They built something real together: love and a shared project,
-each knowing the other understood both halves of it.
+She bore Eren knowing what she was doing and has carried that knowledge every
+day since.
 
-She bore Eren knowing exactly what she was doing, and has carried that knowledge
-every day since.
+**What she knows and cannot say:** Sela holds the full picture — the Sleeper
+routes, the ecology of the blooms, the crop dependency, the structural
+degradation Vorrin's drilling causes, the generational timeline of destruction
+she can project with precision. But this knowledge was not hers to begin with.
+It belongs to the Shadmen. The Veil received it through generations of earned
+trust — and that trust is predicated on not handing it to the houses that treat
+Aridun as a resource. If Sela gives the Shadmen's deep knowledge to Eren
+directly — a lord's son, still regarded as imperial by half the tribes — she
+betrays the relationship that makes the Veil what it is. The Shadmen would know.
+They would close. And everything the Veil has built over generations collapses.
 
-**Her specific knowledge:** The destruction operates on two timescales and Sela
-understands both. The immediate crisis: Vorrin's boring equipment drills through
-the hard rockbed plains to reach the Aurun concentration below. The rockbed is
-load-bearing for the Hollows carved into it. When a formation is drilled, the
-structural integrity of nearby Hollow chambers is compromised; the narrower
-Warren connections between Hollows collapse first. Shadmen communities built into
-those formations are destroyed. People are dying in the collapses now. Vorrin
-knows. Whether the deaths are acceptable collateral damage or a convenient means
-of clearing the rock for more drilling sites is something House Korinth has not
-asked about.
+There is a second reason she stays her hand: **Ysolde watches her.** Ysolde
+suspects Sela has gone native — that the marriage, the heir, the years on Aridun
+are not coincidence but plan. If Sela transfers the Shadmen's knowledge directly
+to Eren, Ysolde has her proof. A report to Valkren would follow.
 
-The generational crisis: drilling into active bloom sites — before the Sleeper
-has finished its passage — permanently breaks the deep channel. The Sleepers
-don't return to disrupted ground. The bloom follows the Sleeper. The Veil has
-mapped the northern routes for over a century; Sela can project the timeline with
-precision. The northern rockbed communities — including Tamir's Hollow — will be
-uninhabitable within a generation as the blooms go dark and the Sleeper network
-contracts south.
+So Sela teaches Eren the tools: the language, the customs, how to approach, what
+questions to earn the right to ask. She sends him to the people who can tell him
+what she cannot. When he comes back having learned something from the Shadmen
+themselves, she confirms it. The knowledge must come from them. That is not a
+loophole in the Veil's protocol — it is the protocol. And it is also, for Sela,
+an act of love: she is preparing him to learn, not handing him an answer that
+would belong to someone else.
 
-Sela is the only person in Saltspire who holds both timescales together. The
-court sees a political dispute. She sees an active killing and its long shadow.
+**Her direction to Eren (Act I):** She tells Eren to go and speak to Tamir —
+not for Aurun production, not for strategy, but because she believes he can
+learn more from the Shadmen than from any school on Sethara.
+
+**Her specific knowledge:** The destruction operates on two timescales. The
+immediate crisis: Vorrin's drilling through the hard rockbed compromises the
+structural integrity of Hollow chambers and collapses Warren connections.
+Shadmen communities are being destroyed. People are dying in the collapses.
+Whether the deaths are acceptable collateral or a convenient feature of clearing
+rock for more drilling sites is a question House Korinth has not asked.
+
+The generational crisis: drilling into active bloom sites permanently breaks
+the deep channel. The Sleepers don't return to disrupted ground. The bloom
+follows the Sleeper. The northern rockbed communities — including Tamir's
+Hollow — will be uninhabitable within a generation as the blooms go dark and
+the Sleeper network contracts south. Sela is the only person in Saltspire who
+holds both timescales together. The court sees a political dispute. She sees
+an active killing and its long shadow.
 
 **Her room (the Solar):** A private sitting room adjacent to the Court.
-Distinct from Ysolde's Sanctum — where Ysolde's room is ceremony and shadow,
-Sela's is personal and lived-in. Desert glass on the shelves. Rock specimens
-from the deep desert. Calder house colours alongside things that came from
-nowhere in the Calder inventory.
+Where Ysolde's Sanctum is ceremony and shadow, Sela's is personal and lived-in.
+Desert glass on the shelves. Rock specimens from the deep desert. Calder house
+colours alongside things that came from nowhere in the Calder inventory.
 
 **Her opening lines (Act I — before Aldric's death):**
-- *"The Sleepers moved east last night. I felt it. You learn to feel it,
-  growing up here — and you have."*
-- *"There are things I've been waiting for the right moment to tell you.
-  I keep believing the moment will come. It will."*
+- *"The Sleepers moved east last night. You learn to feel it, growing up here.
+  And you have."*
+- *"Go and speak to Tamir. Not about Aurun — just speak to him. You'll
+  understand why when you do."*
 
-**The revelation (Act II):** When Eren has lost enough and has started to
-understand what he's becoming, Sela tells him the truth — that she chose his
-father, that she chose to have him, that he is the preparation. She loves him
-completely and that is also fully true and she has never found a way to reconcile
-the two. This is the emotional core of Act II. It is not a villain's reveal.
-Sela is not wrong. The question the game poses: is love that also has a purpose
-still love? And does being shaped for something you didn't choose mean you can't
-freely choose it?
+**The revelation (Act II):** When Eren has lost enough and started to understand
+what he's becoming, Sela tells him the truth — that she chose his father, that
+she chose to have him, that he was prepared for this. She loves him completely
+and that is also fully true. This is the emotional core of Act II. It is not a
+villain's reveal. The question the game poses: is love that also has a purpose
+still love? And the revelation Eren reaches on his own — that she couldn't tell
+him, not because she didn't trust him, but because telling him directly would
+have broken everything she was trying to protect — is when the full weight of it
+lands.
 
-**Her relationship with Ysolde:** Deep mutual respect and a genuine disagreement
-that sharpens as the story accelerates. Ysolde believes in the long process —
-let Eren find his own way to the truth. Sela thinks there isn't time for that
-anymore. They should give Eren different, sometimes contradictory guidance.
+**Her relationship with Ysolde:** Not the deep mutual respect of the older
+draft. A genuine and sharpening disagreement. Ysolde believes the Veil's
+survival depends on its neutrality — going further risks everything. Sela
+believes that neutrality is already finished and that Ysolde is protecting a
+fiction. They give Eren different, sometimes contradictory guidance. Ysolde
+asks careful questions about what Sela has been telling him.
 
 ---
 
-#### Halix (the Reckoner — Eren's Mentat)
+#### Halix (the Reckoner — intelligence officer)
 
-Halix allowed Lord Aldric to die.
+Trained through Emperor Valkren's elite intelligence schooling. Has spent fifteen
+years in service to House Calder — long enough for something like sentiment to
+form, though he would resist the word and probably be wrong to. He has seen lords
+rise and fall. He is not sentimental about institutions.
 
-He received intelligence — from a Shadmen contact or a spy inside Vorrin — that
-Vorrin outriders were moving toward the road where Aldric was travelling to a
-private meeting with a Pale Legion envoy. He had a window of hours. He
-calculated: if Aldric survives and retaliates, the house falls within the season
-(Calder could not hold Saltspire against a full Vorrin assault). If Aldric falls
-here, three things follow — Eren takes command (more capable of the
-unconventional war ahead), Korinth witnesses Vorrin aggression and must formally
-acknowledge it, and the political sympathy shifts to Calder. Halix let the
-window close. He sent Brannic on a logistics errand that morning — deliberately,
-because Brannic would have fought to the last man and Halix needed Brannic alive.
+His admiration is almost entirely directed at Sela and what the Veil represents:
+a method of accumulating understanding that looks like wisdom from the outside
+and is, on examination, more useful than most of what passes for strategy in the
+great houses. He sees the same quality latent in Eren — a capacity for the kind
+of knowledge that cannot be taught at court, only grown from the ground up. For
+Aldric, he had respect for the office and none of the warmth. He served well. He
+did not love the man.
 
-Aldric died on the road, outnumbered, fighting — as himself, in command until the
-end. Halix didn't arrange the death. He chose not to prevent it. That distinction
-is what he holds onto, and it doesn't hold.
+**His role in Act I:** Halix's intelligence is good but not infallible. He
+received signals that Vorrin outriders were moving in the region of the road
+Aldric was likely to use for his back-channel meeting with the Pale Legion envoy.
+His assessment: probable interception risk, not certain. He knew Aldric would not
+be turned back — Aldric believed in the conversation, believed he could make the
+Emperor hear reason, and Halix had long since stopped believing that was true.
+He also knew that if Aldric survived a failed interception and retaliated, the
+house could not hold Saltspire against a full Vorrin response. The window was
+there. Halix watched it and let it close. He sent Brannic on a logistics matter
+that morning. He tells himself this was not deliberate. The question of whether
+he is right about that is one the game leaves open.
+
+**What Halix does not say to Eren (Act I):** He tells Eren that his father's
+decision to meet the envoy on the road is strategically naive — that back-channel
+conversations with Imperial diplomats carry risk — and stops short of naming the
+danger. He believes Aldric would not listen regardless. He may also believe
+something else and not examine it too closely.
+
+**His economic priority:** Halix pushes immediately for increased Aurun
+production. He suggests Eren visit Tamir's Hollow because the nearest Shadmen
+are the fastest route to improving output. He sees this in purely economic terms:
+Aurun is the only language Emperor Valkren currently speaks, and without a
+compelling production number, Aldric has no argument. He is not wrong. He is
+also not looking at the same thing Sela is looking at.
 
 **After Aldric's death:** Halix serves Eren with complete dedication. No visible
-guilt — he is exactly the cold strategist he was before, possibly more focused.
-He believes telling Eren would break his ability to lead, and a broken leader
-loses the war he calculated Aldric's death was supposed to win.
+guilt. He is exactly the cold strategist he was before, possibly more focused.
 
-**The confrontation (Act II):** Sela tells Eren — she pieced it together in the
-months after Aldric died. When Eren confronts Halix, Halix doesn't deny it and
-doesn't apologise. He presents his reasoning with the same cold clarity he
-gives everything else and asks Eren to find the flaw. He means it. Eren can't
+**The confrontation (Act II):** Sela pieces it together in the months after
+Aldric died and tells Eren. When Eren confronts Halix, Halix doesn't deny it and
+doesn't apologise. He presents his reasoning with the same cold clarity he gives
+everything else and asks Eren to find the flaw in it. He means it. Eren cannot
 show him he was wrong. That is the unbearable part.
 
-**The path question** — what Eren does with Halix after the confrontation feeds
-into the ending: keep him (win the war more efficiently, carry the cost), or cast
-him out (fight harder, end cleaner). If kept, Halix dies in the final campaign.
-He never finds peace and doesn't expect to.
+**The path question:** What Eren does with Halix after the confrontation feeds
+into the ending — keep him (win the war more efficiently, carry the weight of
+it), or cast him out (fight harder, end cleaner). If kept, Halix dies in the
+final campaign. He never finds peace and doesn't expect to.
 
 ---
 
@@ -399,7 +485,7 @@ is clean. The complication comes later, and hits differently because of it.
 
 **Brannic** carries survivor's guilt for most of the game — he doesn't know about
 Halix, only that he wasn't there and should have been. This makes him more fierce
-and more reckless in the war that follows.
+and more reckless in the war that follows. See the full Brannic profile below.
 
 ---
 
@@ -435,6 +521,63 @@ the same result), is the Act II pressure point.
 
 ---
 
+#### Marshal Brannic (commander of arms)
+
+Soldier. Black and white. His family has served House Calder for generations;
+he was raised and educated on Sethara and is by some margin the most
+institutionally Calder member of the court. He is not politically sophisticated,
+knows it, and makes no apology for it. His loyalty is not to Aldric personally
+but to House Calder as an institution — and since Aldric is House Calder, the
+distinction has never mattered until now.
+
+His instinct when the decree arrives and Vorrin moves on the planet is to ride
+out and fight immediately. Sela and Halix together talk Eren back from this:
+Halix because open war loses; Sela because there is a larger picture Brannic
+cannot yet see. Brannic accepts Eren's decision, grudgingly. He does not stop
+believing the sword is the right answer — only that the timing has been delayed.
+
+He carries enormous survivor's guilt after Aldric's death. He doesn't know about
+Halix. He only knows he wasn't there and should have been. That guilt makes him
+harder, faster to anger, more reckless in the war that follows. He is the one who
+brings Eren the idea of using the Shadmen militarily in a later act — and he is
+not wrong, only early.
+
+---
+
+#### Mother Ysolde (Elder of the Veil)
+
+Ysolde is not Eren's mother. She is an elder of the Veil, present in the
+Residency to ensure Sela honours her duty as a Veil member. She has long
+suspected Sela has gone native — that Sela's marriage to Aldric, her relationship
+with Eren, and her years on Aridun are not incidental but deliberate: a plan to
+embed Veil knowledge and Veil loyalty into House Calder, turning the house into a
+vehicle for protecting Aridun rather than governing it for the Empire.
+
+She is not wrong. She simply hasn't decided what to do with the knowledge yet.
+
+Ysolde is tolerated and valued by Emperor Valkren because the Veil's ecological
+intelligence is genuinely useful to the empire. This makes her functionally a
+check on Sela — not a spy in any formal sense, but someone whose report to the
+Emperor, if it came, would be devastating. She asks Eren careful questions about
+what Sela has been telling him. She watches how much Sela has shared.
+
+Ysolde believes the Veil's neutrality is the only thing protecting it. She thinks
+Sela is gambling that neutrality for a cause, however just, that the Veil was
+never meant to fight. The tension between them sharpens as the story accelerates:
+Ysolde is not a villain, but she may become an obstacle.
+
+---
+
+#### Pell (the Steward)
+
+Runs the house. Knows everything that moves through Saltspire. No great secrets
+of his own — Pell's value is colour, grounding, and the occasional piece of
+practical intelligence delivered with complete understatement. The kind of
+character who remembers how Lord Aldric took his tea and quietly ensures Eren
+gets it the same way without mentioning it. Loyal to the house as an institution.
+
+---
+
 ### The four forces
 
 | Force | Dune analogue | Name |
@@ -462,33 +605,106 @@ The systems are modelled on Cryo's _Dune_, refit to Aridun:
 - **Ecology** — protect and restore the Sleeper route network; a visible,
   consequential, slow transformation of the world as the rockbeds come back to
   life.
-- **Aurun & sensitivity** — Aurun is a substance deposited by the Sleepers in
-  their passage channels — accumulating in the deep rock over generations of
-  repeated transit, and surfacing as a luminescent bloom through porous sections
-  of the rockbed after a Sleeper has passed. It has structural and luminescent
-  material properties that make it valuable to Korinth's civilization — not a
-  narcotic or life-extender. It is a resource, and a consequential one.
+- **Aurun & the ecology chain** — Aurun is a substance deposited by the Sleepers
+  in their passage channels, surfacing as a bioluminescent bloom through porous
+  sections of the rockbed after a Sleeper has passed. It is the empire's primary
+  energy substrate: processed Aurun powers Korinth's fleet, city infrastructure,
+  and weapons systems. The empire has built itself around this dependency. Aridun
+  is the only viable source at scale. This is why Valkren cannot afford Calder's
+  restraint.
 
-  **Two forms, two locations.** Surface bloom: the Shadmen collect this from the
-  rockbed after a Sleeper has passed, reading the routes and timing the seasons.
-  The collection rate matters — over-collect from the wake, even after the Sleeper
-  is gone, and the bloom thins before it can recover; stress a route enough and
-  the Sleeper shifts. Once it shifts, the bloom follows it and the old site begins
-  to die. This is the knowledge the Shadmen hold. Deep deposits: concentrated
-  Aurun in the channels and deeper rock where Sleepers have repeatedly passed.
-  This is what Vorrin drills for — bypassing surface collection entirely by going
-  straight to the source with heavy boring equipment through the hard rockbed.
-  Faster, industrial, and permanently destructive: the drilling collapses Sleeper
-  channels, kills the ecology at every scale simultaneously, and destroys the
-  Hollows and Warrens carved into the same rock.
+  **The ecology chain (healthy state):**
+  Sleeper passes → Aurun deposits, bloom surfaces → bloom chemistry enhances
+  growth of surface flora (crops) around bloom sites → Shadmen harvest crops +
+  collect Aurun from the wake → bloom replenishes before next Sleeper pass →
+  route stays healthy → Sleeper returns.
 
-  **Sensitivity.** Contact with concentrated Aurun in the deep passages — the raw
-  form, not the surface bloom — is rare outside the channels themselves. Those
-  exposed to it report a sharpening of pattern-reading, a sensitivity to the deep
-  rock's movements. For Eren, Veil-inherited sensitivity latent from birth, the
+  The Shadmen's food supply is directly dependent on the bloom. The hard rockbed's
+  structural integrity is also bound up with Aurun chemistry — the rock above
+  active routes is workable and load-bearing; rock above dead routes becomes
+  brittle and unsafe. The Hollows and Warrens are carved into this rock.
+
+  **Over-extraction (sustainable method, unsustainable pace):**
+  Too much Aurun collected from the wake → bloom thins before recovery → crops
+  weaken → food scarcity → Hollow becomes stressed → sustained pressure weakens
+  the rock's binding properties → eventual tunnel degradation → Sleeper senses
+  disruption and shifts route permanently → bloom follows Sleeper → crops die →
+  structural collapse.
+
+  **Vorrin drilling (industrial destruction):**
+  Boring equipment punches through hard rockbed to deep Aurun deposits directly →
+  destroys channel structure instantly → collapses Warren tunnels → kills deep
+  breeding habitat → Sleeper abandons route permanently → bloom goes dark →
+  crops fail → Hollow uninhabitable. All of this simultaneously. All of it
+  permanent.
+
+  **Two forms, two locations.** Surface bloom: collected sustainably by the
+  Shadmen using generations of route-knowledge. Deep deposits: what Vorrin drills
+  for — bypassing surface collection entirely. Faster, industrial, and permanently
+  destructive.
+
+  **Sensitivity.** Contact with concentrated Aurun in the deep passages sharpens
+  pattern-reading. For Eren, Veil-inherited sensitivity latent from birth, the
   exposure sharpens it into something he can use.
 - **Side-scrolling expeditions** — _our addition_: the travel and Warren-delving
   between all of the above, played on foot, where the world is felt.
+
+### The economy — the triple balance
+
+The core tension of the strategy layer. Three variables in constant conflict:
+
+```
+AURUN YIELD ──────────────► IMPERIAL TRIBUTE ──► Emperor Valkren's patience
+      │
+      ▼
+HOLLOW HEALTH ──► SHADMEN LOYALTY ──► MILITARY COOPERATION ──► War capability
+```
+
+**Extract too fast:** Hollow health degrades → crops fail → Shadmen loyalty
+drops → tribes stop gathering Aurun AND refuse to fight.
+
+**Send too little tribute:** Valkren tightens the decree → Vorrin's mandate
+expands → more drilling → more Shadmen communities destroyed → loyalty drops
+anyway, faster.
+
+**Send too much tribute:** Extraction pressure increases → see above.
+
+The player cannot win by optimising any single axis. Paying the Emperor slowly
+ruins the relationship with the people needed to win. Every shipment is a choice
+about how much the player is willing to damage the thing they are fighting to
+protect.
+
+**Vorrin as active pressure:** Vorrin sends production reports to Emperor Valkren
+that trigger Imperial demand notices — hard deadlines on top of the baseline
+tribute expectation. The more Vorrin expands, the more frequent and aggressive
+their reports become. Taking down a Vorrin drilling rig silences a report and
+buys time. The rate at which Vorrin expands and demands accelerate is **variable
+per game** (not fixed/linear) — a design parameter that controls difficulty and
+replayability. _[Rate variability model: design backlog.]_
+
+**Freed Shadmen leaders:** When a Vorrin fort or rig is taken and the Hollow is
+not completely destroyed, the imprisoned tribal leader is freed and follows Eren.
+If Eren has previously visited the Hollow and learned the leader's name, the
+capture and liberation feel personal. If not, the leader is a new encounter.
+
+**The four dials — introduced gradually through the story:**
+
+| Order | Dial | Story trigger |
+|---|---|---|
+| 1 | Aurun reserves | Halix tells Eren: production is the only card Aldric has |
+| 2 | Imperial standing | Valkren's first demand notice arrives |
+| 3 | Hollow health | Eren sees a dim bloom for the first time; Tamir explains |
+| 4 | Shadmen loyalty (per tribe) | A second tribe is recruited; managing multiple relationships becomes visible |
+
+**Hollow health — visible on arrival.** When Eren reaches a Hollow, its state
+is readable at a glance before any UI number:
+
+| State | Visual | Meaning |
+|---|---|---|
+| Healthy | Bright bloom glow, active crops, Shadmen visible | Trust earnable, extraction viable |
+| Stressed | Dim bloom, thin crop growth, quieter Shadmen | Over-extraction or Vorrin pressure nearby |
+| Damaged | No bloom, dead crop patches, cracked rock face | Route disrupted — tribe in crisis |
+| Destroyed/captured | Collapsed entrance, Vorrin equipment visible | Must be retaken before engagement |
 
 ### Travel & mounts
 
@@ -523,12 +739,32 @@ come to Aridun. He was born here. He has known no other home. And the
 **Shadmen** are waiting on a prophecy about a lord's heir who must choose between
 the house he was born to and the world he belongs to.
 
-**Act I — The Fief Revoked.** The Korinth decree arrives; House Vorrin moves in.
-Establish the Residency at Saltspire, meet the court, ride the first expeditions:
-first contact with a Hollow, the first word of Aurun. Then Vorrin strikes on the
-open road — and **Lord Aldric** falls. Not by treachery from within; by a window
-a cold mind chose not to close. House Calder holds the Residency; **Eren** takes
-command, and turns to the Shadmen and the desert for the strength to answer.
+**Act I — The Fief Revoked.** Eren arrives back from Sethara — he was attending
+a house function there when the court sent word of the Emperor's decree. He
+returns as fast as he could, but Aldric has already begun his plans. The court
+conversations piece together what is happening: Aldric is arranging a
+back-channel meeting with the Pale Legion envoy on the road, hoping to understand
+whether the decree is final or negotiable. Halix hints this is strategically
+naive but does not say so plainly. Sela tells Eren to go and speak to Tamir
+before acting. Halix tells Eren to go and speak to Tamir to start improving
+Aurun output. Both are right for different reasons.
+
+**The Act I advisory triangle:** Three voices pull in different directions.
+Brannic: fight — take the war to Vorrin immediately. Halix: buy time — Aurun
+production is the only card Aldric has with the Emperor. Sela: understand the
+bigger picture before acting, and go to the Hollow to start learning it. All
+three are partly right. None is giving Eren the whole picture.
+
+**The gate before Aldric's death:** Eren must speak to Halix, Sela, and Orlin,
+and make first contact with Tamir at the nearby Hollow. After those four, the
+road ambush news arrives. Aldric does not return. Eren takes command.
+
+**What follows:** Halix pushes to begin building Shadmen relationships in the
+area — Tamir points toward 2-3 more Hollows within reach. The resource economy
+opens. Then Vorrin strikes on the open road — and **Lord Aldric** falls. Not by
+treachery from within; by a window a cold mind chose not to close. House Calder
+holds the Residency; **Eren** takes command, and turns to the Shadmen and the
+desert for the strength to answer.
 
 **Act II — The Seir Awakens.** From the Residency, Eren wins the Shadmen Hollow
 by Hollow and raises a resistance — the **Veiled Knives**. His own expeditions
@@ -648,8 +884,13 @@ official name — while the world beneath it is always _Aridun_.
 
 A three-house triangle, in Herbert's tradition:
 
-- **House Korinth** — the Imperial throne. Distant, decadent, and addicted
-  to Aurun. Owns the registry name _Arradius_.
+- **House Korinth** — the Imperial throne, ruled by **Emperor Valkren**. Distant
+  and powerful. Not addicted to Aurun — dependent on it. Aurun is the empire's
+  primary energy substrate: processed Aurun powers the fleet, city infrastructure,
+  and weapons systems. The empire has built itself around this dependency and has
+  no viable substitute at scale. Aridun is the only source that can meet demand.
+  Valkren does not hate House Calder — he simply cannot afford their restraint.
+  Owns the registry name _Arradius_.
 - **House Vorrin** — the industrial house working Aridun for Aurun. Quietly
   favoured by the throne. Their method: heavy boring equipment driven through the
   hard rockbed plains to reach Aurun deposits below. The rockbed is structural —
