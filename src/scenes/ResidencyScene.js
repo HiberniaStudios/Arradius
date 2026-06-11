@@ -1199,8 +1199,11 @@ export default class ResidencyScene extends Phaser.Scene {
     const key = `${who.toLowerCase().replace(/\s+/g, '_')}_say_${index}`;
     if (!this.cache.audio.has(key)) return;
     if (this.voiceSound && this.voiceSound.isPlaying) this.voiceSound.stop();
+    // delay: 0.05 schedules source.start(currentTime + 0.05) so the audio thread
+    // has a 50 ms window to pick up the event and start from offset 0 in the
+    // buffer — without it the thread misses the event and starts mid-buffer.
     this.voiceSound = this.sound.add(key, { volume: 0.9 });
-    this.voiceSound.play();
+    this.voiceSound.play({ delay: 0.05 });
   }
 
   enterDialogue(loc) {
