@@ -35,10 +35,10 @@ const LOCATIONS = {
     accent: 0xffd27a,
     feature: 'court',
     say: [
-      '”Calder has kept faith with Aridun for sixty years. Korinth will hear that argument — I will make them hear it.”',
+      '”Calder has kept faith with Aridun for sixty years. The Empire will hear that argument — I will make them hear it.”',
       '”I am glad you are home. I will not pretend the timing is coincidence — you felt it too, I think. The house needs you here now more than ever.”',
       '”I have read the decree four times. It does not name a grievance. It does not cite a failure. It simply… reassigns us. As though sixty years of stewardship were a lease arrangement and the term has expired.”',
-      '”My father stayed on Aridun when other houses sent factors and forgot the place. The Shadmen asked us to stay. Not begged — asked, with the full weight of people who have held this rock for ten thousand years. That is the foundation this house stands on. Korinth did not build it. They cannot deed it away.”',
+      '”My father — your grandfather — stayed on Aridun when other houses sent factors and forgot the place. The Shadmen asked us to stay. Not begged — asked, with the full weight of people who have held this rock for ten thousand years. That is the foundation this house stands on. The Empire did not build it. They cannot deed it away.”',
       '”We wait, and we prepare. You have been away — best you reacquaint yourself with the court while I consider my next arrangements.”',
     ],
   },
@@ -52,12 +52,12 @@ const LOCATIONS = {
       // [0] gate line — shown until Aldric has been spoken to
       '”Ahh Eren, it\'s been some time. I recommend speaking to your father first before we get into current events.”',
       // [1]–[6] strategic briefing
-      '”Your father\'s letters would give you the broad shape of things. They would not give you the details, they rarely do. That\'s what I need you to understand, before anything else moves.”',
-      '”The decree is not about conduct. It is about output. Vorrin has offered Korinth three times our yield through industrial boring. That is the only conversation the Emperor is having.”',
-      '”Your father believes there is room in the decree. He is meeting an Imperial envoy — off the record — to hear it. Perhaps he is right.”',
-      '”Vorrin are already moving — three new sites on the Keth rockbed overnight. They do not need the decree settled before they act. Every day this remains a diplomatic problem is a day they close the gap.”',
-      '”Vorrin are drilling with offworld methods — projecting triple our yield. What that does to the seam itself, no one here can say. The Shadmen at Tamir\'s Hollow have worked that ground for generations. If anyone can tell us what it can actually sustain — and what we can credibly put in front of Korinth — it is them.”',
-      '”Your father will do as he will. Focus on the Aurun numbers — that is the only argument Korinth has ever answered.”',
+      '”Your father will have given you the broad shape of things — you\'ve spoken to him. What he would not have given you is the detail. That is what I need you to understand before anything else moves.”',
+      '”The decree names no grievance and cites no failure. Your father reads that as an opening — he believes the argument has not yet been made. I read it as a decision already taken. Vorrin has offered the Emperor three times our yield through industrial boring. That is the only conversation he is having.”',
+      '”Your father believes there is still room for negotiation on the decree. He is meeting an Imperial envoy — off the record — to make that case. I think he is mistaken. He will argue sixty years of stewardship. The Emperor will be thinking about production numbers.”',
+      '”Vorrin are already moving — three new sites on the Keth rockbed overnight. They do not need the decree settled before they act. Every day this remains a diplomatic problem is a day Vorrin expands its production.”',
+      '”Vorrin are drilling with offworld methods — projecting triple our yield. What that does to the seam itself, no one here can say. The Shadmen at Tamir\'s Hollow have worked that ground for generations. If anyone can tell us what it can actually sustain — and what we can credibly put in front of the Emperor — it is them.”',
+      '”Your father will do as he will. Focus on the Aurun numbers — that is the only argument the Emperor has ever answered.”',
       // [7] map line — permanent loop
       '”This map shows Vorrin\'s current operation sites and the Shadmen Hollows — what we know now. As you move across Aridun, it will update. Your Nav device carries the same map. Use it to travel between any location you have already reached.”',
     ],
