@@ -1100,11 +1100,15 @@ export default class ResidencyScene extends Phaser.Scene {
     const charTexKey = CHAR_SPRITES[loc.who];
     const hasCharSprite = charTexKey && this.textures.exists(charTexKey);
     const figH = 110 * s;
+    let hitH = figH;
+    let hitW = 60 * s;
 
     if (hasCharSprite) {
       const src = this.textures.get(charTexKey).source[0];
       const dispH = figH * 1.7;
       const dispW = Math.round(dispH * src.width / src.height);
+      hitH = dispH;
+      hitW = dispW;
       const sprite = this.add.image(fx, actualFloorY, charTexKey)
         .setOrigin(0.5, 1)
         .setDisplaySize(dispW, dispH)
@@ -1117,14 +1121,14 @@ export default class ResidencyScene extends Phaser.Scene {
       this.dynamic.push(g);
     }
     const zone = this.add
-      .zone(fx, actualFloorY - figH / 2, 60 * s, figH)
+      .zone(fx, actualFloorY - hitH / 2, hitW, hitH)
       .setInteractive({ useHandCursor: true })
       .setDepth(11);
 
     let tooltip = null;
     zone.on('pointerover', () => {
       tooltip = this.add
-        .text(fx, actualFloorY - figH - 6, loc.who, {
+        .text(fx, actualFloorY - hitH - 6, loc.who, {
           fontFamily: 'monospace',
           fontSize: '12px',
           color: CREAM,
