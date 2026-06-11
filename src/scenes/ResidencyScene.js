@@ -1206,8 +1206,8 @@ export default class ResidencyScene extends Phaser.Scene {
     } else {
       this.sayIndex = Math.min(this.charSayProgress[loc.who] || 0, loopIdx);
     }
-    this.renderDialogueOverlay(loc, this.scale.width, this.scale.height);
     if (loc.who) this.playVoiceLine(loc.who, this.sayIndex);
+    this.renderDialogueOverlay(loc, this.scale.width, this.scale.height);
   }
 
   exitDialogue() {
