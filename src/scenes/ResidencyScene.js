@@ -52,7 +52,7 @@ const LOCATIONS = {
       // [0] gate line — shown until Aldric has been spoken to
       '”Ahh Eren, it\'s been some time. I recommend speaking to your father first before we get into current events.”',
       // [1]–[6] strategic briefing
-      '”Your father\'s letters will have given you the broad shape. Not the detail. That is what matters now.”',
+      '”Your father\'s letters would give you the broad shape of things. They would not give you the details, they rarely do. That\'s what I need you to understand, before anything else moves.”',
       '”The decree is not about conduct. It is about output. Vorrin has offered Korinth three times our yield through industrial boring. That is the only conversation the Emperor is having.”',
       '”Your father believes there is room in the decree. He is meeting an Imperial envoy — off the record — to hear it. Perhaps he is right.”',
       '”Vorrin are already moving — three new sites on the Keth rockbed overnight. They do not need the decree settled before they act. Every day this remains a diplomatic problem is a day they close the gap.”',
