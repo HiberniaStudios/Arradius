@@ -53,7 +53,7 @@ export default class AudioManager {
     // Master loudness. Kept deliberately low: the soundscape is meant to be felt
     // at the edge of attention — atmosphere, not a score sitting on top of the
     // game. Standing preference is conservative (err quiet); raise cautiously.
-    this.level = 0.14;
+    this.level = 0.161;
 
     this.musicVoices = []; // { osc, base } — retuned on state change
     this.droneFilter = null;
