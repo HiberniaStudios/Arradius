@@ -21,6 +21,14 @@ export default class BootScene extends Phaser.Scene {
     this.load.audio('lord_aldric_say_3', 'audio/dialogue/lord_aldric_say_3.mp3');
     this.load.audio('lord_aldric_say_4', 'audio/dialogue/lord_aldric_say_4.mp3');
     this.load.audio('lord_aldric_say_5', 'audio/dialogue/lord_aldric_say_5.mp3');
+    this.load.audio('halix_say_0', 'audio/dialogue/Halix_say_0.mp3');
+    this.load.audio('halix_say_1', 'audio/dialogue/Halix_say_1.mp3');
+    this.load.audio('halix_say_2', 'audio/dialogue/Halix_say_2.mp3');
+    this.load.audio('halix_say_3', 'audio/dialogue/Halix_say_3.mp3');
+    this.load.audio('halix_say_4', 'audio/dialogue/Halix_say_4.mp3');
+    this.load.audio('halix_say_5', 'audio/dialogue/Halix_say_5.mp3');
+    this.load.audio('halix_say_6', 'audio/dialogue/Halix_say_6.mp3');
+    this.load.audio('halix_say_7', 'audio/dialogue/Halix_say_7.mp3');
     this.load.image('hallBg',    'hall.png');
     this.load.image('commsBg',   'comms.png');
     this.load.image('courtBg',   'The_Court.png');

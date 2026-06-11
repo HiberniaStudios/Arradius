@@ -50,7 +50,7 @@ const LOCATIONS = {
     flavor: 'The intelligence feeds run day and night. Halix watches everything.',
     say: [
       // [0] gate line — shown until Aldric has been spoken to
-      '”Speak with your father first. What I have to say follows from that conversation.”',
+      '”Ahh Eren, it\'s been some time. I recommend speaking to your father first before we get into current events.”',
       // [1]–[6] strategic briefing
       '”Your father\'s letters will have given you the broad shape. Not the detail. That is what matters now.”',
       '”The decree is not about conduct. It is about output. Vorrin has offered Korinth three times our yield through industrial boring. That is the only conversation the Emperor is having.”',
