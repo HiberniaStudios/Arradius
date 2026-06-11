@@ -20,6 +20,7 @@ const USE_HALL_BG = true;
 // entry fall back to procedural art.
 const BACKDROPS    = { hall: 'hallBg', comms: 'commsBg', court: 'courtBg' };
 const CHAR_SPRITES = { 'Lord Aldric': 'aldric', 'Halix': 'halix' };
+const CHAR_SCALES  = { 'Lord Aldric': 1.4, 'Halix': 1.7 };
 
 const LOCATIONS = {
   hall: {
@@ -38,7 +39,6 @@ const LOCATIONS = {
       '”I am glad you are home. I will not pretend the timing is coincidence — you felt it too, I think. The house needs you here now more than ever.”',
       '”I have read the decree four times. It does not name a grievance. It does not cite a failure. It simply… reassigns us. As though sixty years of stewardship were a lease arrangement and the term has expired.”',
       '”My father stayed on Aridun when other houses sent factors and forgot the place. The Shadmen asked us to stay. Not begged — asked, with the full weight of people who have held this rock for ten thousand years. That is the foundation this house stands on. Korinth did not build it. They cannot deed it away.”',
-      '”Someone has been writing a different record of us in the capital. I do not yet know whose hand. But the decree assumes things about Calder that are not in any honest account — which means someone provided a dishonest one. Find that person before you worry about Vorrin.”',
       '”We wait, and we prepare. You have been away — best you reacquaint yourself with the court while I consider my next arrangements.”',
     ],
   },
@@ -251,6 +251,20 @@ export default class ResidencyScene extends Phaser.Scene {
     this.backdropImg = null;
     this.dialogueObjects = [];
     this.dialogueActive = false;
+
+    // Pre-warm the WebAudio decode cache so voice lines play without clipping.
+    // Phaser decodes ArrayBuffer → AudioBuffer asynchronously on first add();
+    // doing it now means the buffer is ready long before the first click.
+    ['lord_aldric_say_0','lord_aldric_say_1','lord_aldric_say_2',
+     'lord_aldric_say_3','lord_aldric_say_4',
+     'halix_say_0','halix_say_1','halix_say_2','halix_say_3',
+     'halix_say_4','halix_say_5','halix_say_6','halix_say_7',
+    ].forEach(k => {
+      if (this.cache.audio.has(k)) {
+        const s = this.sound.add(k, { volume: 0 });
+        this.sound.remove(s);
+      }
+    });
     this.codexOpen = false;
     this.codexObjects = [];
     this.codexSection = 'world';
@@ -1100,11 +1114,15 @@ export default class ResidencyScene extends Phaser.Scene {
     const charTexKey = CHAR_SPRITES[loc.who];
     const hasCharSprite = charTexKey && this.textures.exists(charTexKey);
     const figH = 110 * s;
+    let hitH = figH;
+    let hitW = 60 * s;
 
     if (hasCharSprite) {
       const src = this.textures.get(charTexKey).source[0];
-      const dispH = figH * 1.7;
+      const dispH = figH * (CHAR_SCALES[loc.who] ?? 1.7);
       const dispW = Math.round(dispH * src.width / src.height);
+      hitH = dispH;
+      hitW = dispW;
       const sprite = this.add.image(fx, actualFloorY, charTexKey)
         .setOrigin(0.5, 1)
         .setDisplaySize(dispW, dispH)
@@ -1117,14 +1135,14 @@ export default class ResidencyScene extends Phaser.Scene {
       this.dynamic.push(g);
     }
     const zone = this.add
-      .zone(fx, actualFloorY - figH / 2, 60 * s, figH)
+      .zone(fx, actualFloorY - hitH / 2, hitW, hitH)
       .setInteractive({ useHandCursor: true })
       .setDepth(11);
 
     let tooltip = null;
     zone.on('pointerover', () => {
       tooltip = this.add
-        .text(fx, actualFloorY - figH - 6, loc.who, {
+        .text(fx, actualFloorY - hitH - 6, loc.who, {
           fontFamily: 'monospace',
           fontSize: '12px',
           color: CREAM,
@@ -1181,8 +1199,11 @@ export default class ResidencyScene extends Phaser.Scene {
     const key = `${who.toLowerCase().replace(/\s+/g, '_')}_say_${index}`;
     if (!this.cache.audio.has(key)) return;
     if (this.voiceSound && this.voiceSound.isPlaying) this.voiceSound.stop();
+    // delay: 0.05 schedules source.start(currentTime + 0.05) so the audio thread
+    // has a 50 ms window to pick up the event and start from offset 0 in the
+    // buffer — without it the thread misses the event and starts mid-buffer.
     this.voiceSound = this.sound.add(key, { volume: 0.9 });
-    this.voiceSound.play();
+    this.voiceSound.play({ delay: 0.05 });
   }
 
   enterDialogue(loc) {
@@ -1202,8 +1223,8 @@ export default class ResidencyScene extends Phaser.Scene {
     } else {
       this.sayIndex = Math.min(this.charSayProgress[loc.who] || 0, loopIdx);
     }
-    this.renderDialogueOverlay(loc, this.scale.width, this.scale.height);
     if (loc.who) this.playVoiceLine(loc.who, this.sayIndex);
+    this.renderDialogueOverlay(loc, this.scale.width, this.scale.height);
   }
 
   exitDialogue() {
