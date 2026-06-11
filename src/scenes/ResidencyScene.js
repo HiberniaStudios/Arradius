@@ -52,7 +52,7 @@ const LOCATIONS = {
       // [0] gate line — shown until Aldric has been spoken to
       '”Ahh Eren, it\'s been some time. I recommend speaking to your father first before we get into current events.”',
       // [1]–[6] strategic briefing
-      '”You have spoken to your father, I take it. He will have given you the broad shape of things — but my guess is he has not given you much in the way of detail. It is important that you understand the machinations that may be at play.”',
+      '”You have spoken to your father. He will have given you the broad shape of things — what he will not have given you is the detail. That is what I need you to understand before anything else moves.”',
       '”The decree names no grievance and cites no failure. Your father reads that as an opening — he believes the argument has not yet been made. I read it as a decision already taken.”',
       '”I am led to believe that Vorrin has offered the Emperor a substantial increase in Aurun yield through a new technique called industrial boring. This, and only this, is what is influencing the Emperor\'s decision.”',
       '”Your father intends to meet with his Imperial envoy at an undisclosed location later this evening. I have warned him against such errands, and urged him to focus his mind on Aurun production. He will not hear of it. He believes sixty years of stewardship should have its say.”',
