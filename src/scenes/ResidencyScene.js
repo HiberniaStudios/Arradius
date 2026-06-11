@@ -251,6 +251,20 @@ export default class ResidencyScene extends Phaser.Scene {
     this.backdropImg = null;
     this.dialogueObjects = [];
     this.dialogueActive = false;
+
+    // Pre-warm the WebAudio decode cache so voice lines play without clipping.
+    // Phaser decodes ArrayBuffer → AudioBuffer asynchronously on first add();
+    // doing it now means the buffer is ready long before the first click.
+    ['lord_aldric_say_0','lord_aldric_say_1','lord_aldric_say_2',
+     'lord_aldric_say_3','lord_aldric_say_4',
+     'halix_say_0','halix_say_1','halix_say_2','halix_say_3',
+     'halix_say_4','halix_say_5','halix_say_6','halix_say_7',
+    ].forEach(k => {
+      if (this.cache.audio.has(k)) {
+        const s = this.sound.add(k, { volume: 0 });
+        this.sound.remove(s);
+      }
+    });
     this.codexOpen = false;
     this.codexObjects = [];
     this.codexSection = 'world';
