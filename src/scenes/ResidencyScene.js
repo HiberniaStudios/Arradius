@@ -39,7 +39,6 @@ const LOCATIONS = {
       '”I am glad you are home. I will not pretend the timing is coincidence — you felt it too, I think. The house needs you here now more than ever.”',
       '”I have read the decree four times. It does not name a grievance. It does not cite a failure. It simply… reassigns us. As though sixty years of stewardship were a lease arrangement and the term has expired.”',
       '”My father stayed on Aridun when other houses sent factors and forgot the place. The Shadmen asked us to stay. Not begged — asked, with the full weight of people who have held this rock for ten thousand years. That is the foundation this house stands on. Korinth did not build it. They cannot deed it away.”',
-      '”Someone has been writing a different record of us in the capital. I do not yet know whose hand. But the decree assumes things about Calder that are not in any honest account — which means someone provided a dishonest one. Find that person before you worry about Vorrin.”',
       '”We wait, and we prepare. You have been away — best you reacquaint yourself with the court while I consider my next arrangements.”',
     ],
   },
