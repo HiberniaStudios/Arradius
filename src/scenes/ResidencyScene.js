@@ -841,7 +841,7 @@ export default class ResidencyScene extends Phaser.Scene {
   }
 
   drawCodex(cx, cy) {
-    const h = 48;
+    const h = 96;
     const src = this.textures.exists('loreBook') ? this.textures.get('loreBook').source[0] : null;
     const w = src ? Math.round(h * src.width / src.height) : 30;
 
