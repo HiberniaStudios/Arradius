@@ -431,11 +431,15 @@ there. Halix watched it and let it close. He sent Brannic on a logistics matter
 that morning. He tells himself this was not deliberate. The question of whether
 he is right about that is one the game leaves open.
 
-**What Halix does not say to Eren (Act I):** He tells Eren that his father's
-decision to meet the envoy on the road is strategically naive — that back-channel
-conversations with Imperial diplomats carry risk — and stops short of naming the
-danger. He believes Aldric would not listen regardless. He may also believe
-something else and not examine it too closely.
+**What Halix says to Eren (Act I):** Halix is direct about his scepticism: the
+decree names no grievance and cites no failure, and Aldric reads that as an
+opening — as an argument not yet made. Halix reads it as a decision already
+taken. He tells Eren plainly that Aldric will argue sixty years of stewardship
+while the Emperor is thinking about production numbers. He believes Aldric's
+back-channel meeting with the Imperial envoy is mistaken about what the Emperor
+wants from that conversation. He stops short of naming the full danger — why he
+is so certain the window is closed — and does not examine that omission too
+closely.
 
 **His economic priority:** Halix pushes immediately for increased Aurun
 production. He suggests Eren visit Tamir's Hollow because the nearest Shadmen
@@ -464,8 +468,12 @@ final campaign. He never finds peace and doesn't expect to.
 
 Proud, formal, diplomatic. He maintained the Shadmen alliance his father built,
 but more as an administrator than as someone who truly understood it. He believed
-he could argue House Calder's case directly to Korinth and was wrong about what
-kind of conversation that would be.
+he could argue House Calder's case directly to the Empire and was wrong about
+what kind of conversation that would be.
+
+When Aldric refers to his own father in dialogue he says "My father — your
+grandfather" as an early signal to Eren (and the player) of the generational
+relationship.
 
 **His death:** The Pale Legion envoy refused to enter Saltspire (entering would
 imply recognition of Calder's continued authority). Aldric requested an
@@ -744,10 +752,13 @@ a house function there when the court sent word of the Emperor's decree. He
 returns as fast as he could, but Aldric has already begun his plans. The court
 conversations piece together what is happening: Aldric is arranging a
 back-channel meeting with the Pale Legion envoy on the road, hoping to understand
-whether the decree is final or negotiable. Halix hints this is strategically
-naive but does not say so plainly. Sela tells Eren to go and speak to Tamir
-before acting. Halix tells Eren to go and speak to Tamir to start improving
-Aurun output. Both are right for different reasons.
+whether the decree is final or negotiable. Halix is explicit that he believes
+this is a mistake — the decree names no reason, and Aldric reads that as an
+opening; Halix reads it as a decision already made, with the Emperor's attention
+fixed on Vorrin's production numbers rather than Calder's record. Halix stops
+short of naming why he is so certain. Sela tells Eren to go and speak to Tamir
+before acting. Halix tells Eren to go and speak to Tamir to start improving Aurun
+output. Both are right for different reasons.
 
 **The Act I advisory triangle:** Three voices pull in different directions.
 Brannic: fight — take the war to Vorrin immediately. Halix: buy time — Aurun
@@ -879,6 +890,15 @@ holding, a source of Aurun. The **Shadmen** who were born to its dunes call it
 **Aridun**. The game leans on this everywhere: signage, dialogue, and faction
 framing use the name that fits the speaker. Our **title is _Arradius_** — the
 official name — while the world beneath it is always _Aridun_.
+
+### Dialogue conventions — House Korinth
+
+In dialogue, characters do not refer to the ruling house as "Korinth" alone.
+Use **"the Empire"** or **"the Emperor"** (or **"Emperor Valkren"** when
+specific) when referring to the Imperial authority. **"Korinthian"** is
+acceptable as an adjective (e.g. "a Korinthian charter"). "House Korinth"
+is correct in formal or expository contexts. This applies to all written
+dialogue and should be matched in any recorded audio.
 
 ### The houses
 
