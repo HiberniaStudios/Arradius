@@ -38,7 +38,7 @@ const LOCATIONS = {
       '”Calder has kept faith with Aridun for sixty years. The Empire will hear that argument — I will make them hear it.”',
       '”I am glad you are home. I will not pretend the timing is coincidence — you felt it too, I think. The house needs you here now more than ever.”',
       '”I have read the decree four times. It does not name a grievance. It does not cite a failure. It simply… reassigns us. As though sixty years of stewardship were a lease arrangement and the term has expired.”',
-      '”My father — your grandfather — stayed on Aridun when other houses sent factors and forgot the place. The Shadmen asked us to stay. Not begged — asked, with the full weight of people who have held this rock for ten thousand years. That is the foundation this house stands on. The Empire did not build it. They cannot deed it away.”',
+      '”My father — your grandfather — stayed on Aridun when other houses sent factors and forgot the place. The Shadmen have never trusted the Empire, and they were right not to. What we built here — slowly, across two generations — was something different. A measure of trust. A working cooperation. That is the foundation this house stands on. The Empire did not build it. They cannot deed it away.”',
       '”We wait, and we prepare. You have been away — best you reacquaint yourself with the court while I consider my next arrangements.”',
     ],
   },
