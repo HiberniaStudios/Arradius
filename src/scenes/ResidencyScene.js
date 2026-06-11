@@ -20,6 +20,7 @@ const USE_HALL_BG = true;
 // entry fall back to procedural art.
 const BACKDROPS    = { hall: 'hallBg', comms: 'commsBg', court: 'courtBg' };
 const CHAR_SPRITES = { 'Lord Aldric': 'aldric', 'Halix': 'halix' };
+const CHAR_SCALES  = { 'Lord Aldric': 1.4, 'Halix': 1.7 };
 
 const LOCATIONS = {
   hall: {
@@ -1105,7 +1106,7 @@ export default class ResidencyScene extends Phaser.Scene {
 
     if (hasCharSprite) {
       const src = this.textures.get(charTexKey).source[0];
-      const dispH = figH * 1.7;
+      const dispH = figH * (CHAR_SCALES[loc.who] ?? 1.7);
       const dispW = Math.round(dispH * src.width / src.height);
       hitH = dispH;
       hitW = dispW;
