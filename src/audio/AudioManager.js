@@ -865,11 +865,17 @@ const RECIPES = {
     am.every(inst, 26000, 52000, () => am.gong(inst, { level: 0.08, decay: 9 }));
   },
 
-  // The Court — formal hush over a low murmur of courtiers.
+  // The Court — deep stone air, formal murmur of courtiers, rare ceremony gong,
+  // and the lonely flute drifting in from the hall beyond.
   court(am, inst) {
-    am.reverbAmount(inst, 0.35);
-    am.murmur(inst, { center: 440, level: 0.05, gustRate: 0.2 });
-    am.murmur(inst, { center: 280, Q: 1.0, level: 0.03, gustRate: 0.13 });
+    am.reverbAmount(inst, 0.5);
+    am.roomTone(inst, { cut: 160, level: 0.03, swellRate: 0.018 });
+    am.murmur(inst, { center: 380, level: 0.04, gustRate: 0.16 });
+    am.murmur(inst, { center: 250, Q: 1.0, level: 0.025, gustRate: 0.11 });
+    am.every(inst, 32000, 65000, () => am.gong(inst, { level: 0.06, decay: 10 }));
+    am.every(inst, 50000, 100000, () =>
+      am.flutePhrase(inst, { level: 0.035, pan: (Math.random() - 0.5) * 0.8 })
+    );
   },
 
   // The Communications Room — a faint relay hum under a slow rotating radar that
@@ -892,62 +898,101 @@ const RECIPES = {
     );
   },
 
-  // The Veil's Sanctum — supernatural shimmer, candle air, close bells.
+  // The Veil's Sanctum — still close air, high shimmer, inharmonic FM chimes
+  // (the Veil's language of signs), and a rare watching flute phrase.
   veil(am, inst) {
-    am.reverbAmount(inst, 0.55);
-    am.wind(inst, { band: 2400, Q: 3, level: 0.01, sweep: 400, sweepRate: 0.6 }); // airy shimmer
-    am.chord(inst, { notes: [64, 69], gains: [0.03, 0.025], type: 'triangle', cutoff: 2600 });
-    am.every(inst, 3500, 8000, () =>
-      am.ping(inst, { notes: [81, 84, 86, 88, 91], type: 'sine', level: 0.05, decay: 3.5, pan: (Math.random() - 0.5) * 1.6 })
+    am.reverbAmount(inst, 0.7);
+    am.roomTone(inst, { cut: 180, level: 0.025, swellRate: 0.012 });
+    am.wind(inst, { band: 2400, Q: 3, level: 0.008, sweep: 300, sweepRate: 0.5 });
+    am.every(inst, 4000, 9000, () =>
+      am.fmBell(inst, {
+        note: [81, 84, 86, 88][Math.floor(Math.random() * 4)],
+        level: 0.018,
+        decay: 4.5,
+        ratio: Math.random() < 0.4 ? 3.5 : 2.01,
+        pan: (Math.random() - 0.5) * 1.8,
+      })
+    );
+    am.every(inst, 28000, 56000, () =>
+      am.flutePhrase(inst, { level: 0.04, pan: (Math.random() - 0.5) * 0.6 })
     );
   },
 
-  // The Infirmary — clean on the surface, wrong underneath. Orlin's room.
+  // The Infirmary — sterile hum, a buried tritone that beats slightly (unease you
+  // can't name), sub-rumble, and a rare cold ping — almost clinical, almost wrong.
   infirmary(am, inst) {
     am.reverbAmount(inst, 0.15);
-    am.hum(inst, { f: 2000, level: 0.02, wobble: 6, wobbleRate: 0.4 }); // sterile hum
-    // A root and its tritone, detuned so they beat — an unease you can't name.
+    am.roomTone(inst, { cut: 240, level: 0.03, swellRate: 0.02 });
+    am.hum(inst, { f: 2000, level: 0.018, wobble: 6, wobbleRate: 0.4 });
     am.chord(inst, { notes: [57, 63], gains: [0.05, 0.04], cutoff: 800, Q: 0.8 });
     am.subRumble(inst, { f: 41.5, level: 0.1, lfoRate: 0.07 });
+    am.every(inst, 20000, 45000, () =>
+      am.ping(inst, { notes: [63, 69], type: 'sine', level: 0.022, decay: 2.5, pan: (Math.random() - 0.5) * 0.8 })
+    );
   },
 
-  // The Bladewarden's Yard — open air, wind, the occasional ring of steel.
+  // The Bladewarden's Yard — open air, desert wind, the ring of steel, a faint
+  // Sleeper presence below, and a rare flute phrase blown in off the dunes.
   yard(am, inst) {
     am.reverbAmount(inst, 0.1);
     am.wind(inst, { band: 650, level: 0.07, sweep: 360, sweepRate: 0.09 });
-    am.every(inst, 6000, 14000, () =>
-      am.ping(inst, { notes: [88, 91, 93], type: 'square', level: 0.025, decay: 1.6, pan: (Math.random() - 0.5) * 1.2 })
+    am.subRumble(inst, { f: 34, level: 0.06, lfoRate: 0.025 });
+    am.every(inst, 5000, 12000, () =>
+      am.ping(inst, { notes: [88, 91, 93], type: 'square', level: 0.022, decay: 1.6, pan: (Math.random() - 0.5) * 1.2 })
+    );
+    am.every(inst, 38000, 75000, () =>
+      am.flutePhrase(inst, { level: 0.03, pan: (Math.random() - 0.5) * 1.2 })
     );
   },
 
-  // Eren's Quarters — the quietest place. Night wind and faint Aurun shimmer.
+  // Eren's Quarters — the quietest place. Still night air, soft Aurun shimmer,
+  // and the lonely Phrygian flute heard only once before silence returns.
   quarters(am, inst) {
-    am.reverbAmount(inst, 0.25);
-    am.wind(inst, { band: 380, level: 0.025, sweep: 200, sweepRate: 0.04 });
-    am.every(inst, 11000, 22000, () =>
-      am.ping(inst, { notes: [88, 91, 96], type: 'sine', level: 0.035, decay: 5, pan: (Math.random() - 0.5) * 1.4 })
+    am.reverbAmount(inst, 0.35);
+    am.roomTone(inst, { cut: 180, level: 0.02, swellRate: 0.015 });
+    am.wind(inst, { band: 380, level: 0.022, sweep: 180, sweepRate: 0.04 });
+    am.every(inst, 12000, 26000, () =>
+      am.ping(inst, { notes: [88, 91, 96], type: 'sine', level: 0.028, decay: 5.5, pan: (Math.random() - 0.5) * 1.4 })
+    );
+    am.every(inst, 32000, 70000, () =>
+      am.flutePhrase(inst, { level: 0.04, pan: (Math.random() - 0.5) * 1.0 })
     );
   },
 
-  // The Corsair Deck — strong wind off the dunes, Sleepers stirring below.
+  // The Corsair Deck — strong dune wind, Sleeper rumble underfoot, a deep gong
+  // as they stir, and the desert flute calling from outside.
   deck(am, inst) {
-    am.reverbAmount(inst, 0.1);
-    am.wind(inst, { band: 700, level: 0.1, sweep: 420, sweepRate: 0.1 });
-    am.subRumble(inst, { f: 34, level: 0.15, lfoRate: 0.03 });
+    am.reverbAmount(inst, 0.12);
+    am.wind(inst, { band: 700, level: 0.09, sweep: 420, sweepRate: 0.1 });
+    am.subRumble(inst, { f: 34, level: 0.14, lfoRate: 0.03 });
+    am.every(inst, 22000, 50000, () => am.gong(inst, { roots: [29, 33], level: 0.07, decay: 8 }));
+    am.every(inst, 35000, 70000, () =>
+      am.flutePhrase(inst, { level: 0.038, pan: (Math.random() - 0.5) * 1.4 })
+    );
   },
 
-  // The War Map — the strategic overview shares the comms-room atmosphere.
+  // The War Map — shares the comms-room atmosphere.
   map(am, inst) {
     RECIPES.comms(am, inst);
   },
 
-  // Expedition — open desert: dry wind, Sleeper rumble, distant bells.
+  // Expedition — open desert. Wind, Sleeper sub, sparse FM bells (chiming
+  // fragments carrying far across the dunes), and the lonely flute, rarely.
   expedition(am, inst) {
     am.reverbAmount(inst, 0.08);
     am.wind(inst, { band: 550, level: 0.07, sweep: 300, sweepRate: 0.07 });
     am.subRumble(inst, { f: 34, level: 0.16, lfoRate: 0.03 });
-    am.every(inst, 7000, 19000, () =>
-      am.ping(inst, { notes: [69, 72, 76, 79, 81], level: 0.1, decay: 4.5, pan: (Math.random() - 0.5) * 1.4 })
+    am.every(inst, 8000, 22000, () =>
+      am.fmBell(inst, {
+        note: BELL_POOL[Math.floor(Math.random() * BELL_POOL.length)],
+        level: 0.04,
+        decay: 5.5,
+        ratio: 3.5,
+        pan: (Math.random() - 0.5) * 1.8,
+      })
+    );
+    am.every(inst, 28000, 58000, () =>
+      am.flutePhrase(inst, { level: 0.04, pan: (Math.random() - 0.5) * 1.4 })
     );
   },
 };
