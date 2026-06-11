@@ -52,11 +52,11 @@ const LOCATIONS = {
       // [0] gate line — shown until Aldric has been spoken to
       '”Ahh Eren, it\'s been some time. I recommend speaking to your father first before we get into current events.”',
       // [1]–[6] strategic briefing
-      '”Your father will have given you the broad shape of things — you\'ve spoken to him. What he would not have given you is the detail. That is what I need you to understand before anything else moves.”',
-      '”The decree names no grievance and cites no failure. Your father reads that as an opening — he believes the argument has not yet been made. I read it as a decision already taken. Vorrin has offered the Emperor three times our yield through industrial boring. That is the only conversation he is having.”',
-      '”Your father believes there is still room for negotiation on the decree. He is meeting an Imperial envoy — off the record — to make that case. I think he is mistaken. He will argue sixty years of stewardship. The Emperor will be thinking about production numbers.”',
-      '”Vorrin are already moving — three new sites on the Keth rockbed overnight. They do not need the decree settled before they act. Every day this remains a diplomatic problem is a day Vorrin expands its production.”',
-      '”Vorrin are drilling with offworld methods — projecting triple our yield. What that does to the seam itself, no one here can say. The Shadmen at Tamir\'s Hollow have worked that ground for generations. If anyone can tell us what it can actually sustain — and what we can credibly put in front of the Emperor — it is them.”',
+      '”You have spoken to your father, I take it. He will have given you the broad shape of things — but my guess is he has not given you much in the way of detail. It is important that you understand the machinations that may be at play.”',
+      '”The decree names no grievance and cites no failure. Your father reads that as an opening — he believes the argument has not yet been made. I read it as a decision already taken.”',
+      '”I am led to believe that Vorrin has offered the Emperor a substantial increase in Aurun yield through a new technique called industrial boring. This, and only this, is what is influencing the Emperor\'s decision.”',
+      '”Your father intends to meet with his Imperial envoy at an undisclosed location later this evening. I have warned him against such errands, and urged him to focus his mind on Aurun production. He will not hear of it. He believes sixty years of stewardship should have its say.”',
+      '”Every day this remains a diplomatic problem is a day Vorrin expands its production. Our intelligence shows they have already begun boring into the rock around the Keth region and are likely to expand quickly. What we need now is to increase our output — and fast. The Shadmen at Tamir\'s Hollow have gathered Aurun for generations. If anyone can provide us a method of increased production, it is them.”',
       '”Your father will do as he will. Focus on the Aurun numbers — that is the only argument the Emperor has ever answered.”',
       // [7] map line — permanent loop
       '”This map shows Vorrin\'s current operation sites and the Shadmen Hollows — what we know now. As you move across Aridun, it will update. Your Nav device carries the same map. Use it to travel between any location you have already reached.”',
